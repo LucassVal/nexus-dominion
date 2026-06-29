@@ -263,7 +263,7 @@ const ORC={
   _initEntities(eMult){
     for(let i=0;i<Math.floor(6*eMult);i++){const sc2=pk(G.cities);G.aiTraders.push({id:i,n:'Trader '+pk(['Alaric','Borin','Cedric','Doran','Eldon','Fenris']),x:sc2.x,y:sc2.y,gold:500+ri(0,1000),goods:[],tx:sc2.tx,ty:sc2.ty})}
     G.gangs=[];const gangNames=['Red Serpents','Black Crows','Iron Wolves','Shadow Blades','Crimson Vipers'];const gangColors=['rgba(200,30,30,0.7)','rgba(30,30,30,0.7)','rgba(100,100,120,0.7)','rgba(60,20,60,0.7)','rgba(180,60,20,0.7)'];
-  for(let gi=0;gi<Math.floor(3*eMult);gi++){const gn=gk(gangNames);gangNames.splice(gangNames.indexOf(gn),1);const gtiles=[];let gx=ri(5,COLS-5),gy=ri(5,ROWS-5);for(let t=0;t<ri(8,20);t++){gtiles.push({x:cl(gx+ri(-5,5),0,COLS-1),y:cl(gy+ri(-4,4),0,ROWS-1)});}
+  for(let gi=0;gi<Math.floor(3*eMult);gi++){const gn=pk(gangNames);gangNames.splice(gangNames.indexOf(gn),1);const gtiles=[];let gx=ri(5,COLS-5),gy=ri(5,ROWS-5);for(let t=0;t<ri(8,20);t++){gtiles.push({x:cl(gx+ri(-5,5),0,COLS-1),y:cl(gy+ri(-4,4),0,ROWS-1)});}
     G.gangs.push({id:'gang_'+gi,name:gn,color:gangColors[gi]||'rgba(200,30,30,0.7)',leader:pk(['Scarface','Blackbeard','Ironfist','Shadow','Viper']),territory:gtiles,members:ri(5,15),hideouts:[{x:gx*TILE+TILE/2,y:gy*TILE+TILE/2}],notoriety:ri(20,80),enemies:[],allies:[],bounty:ri(500,5000),gold:ri(1000,10000)});}
   for(let i=0;i<Math.floor(10*eMult);i++){let bx,by;do{bx=ri(2,COLS-3);by=ri(2,ROWS-3)}while(terrain[by][bx]===T.WATER);G.bandits.push({id:i,n:pk(['Mug','Scar','Blade','Fang','Rust','Crow','Ash','Dirk','Thorn','Vex']),hp:40,atk:8,def:3,x:bx*TILE+TILE/2,y:by*TILE+TILE/2,tx:bx,ty:by,type:'bandit'});
     // Hideout bandits (static camps)
