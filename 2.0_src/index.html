@@ -1645,14 +1645,6 @@ const LAYERS=[
     stars.forEach(s=>{const flicker=0.5+Math.sin(G.tick*0.05+s.x)*0.5;ctx.fillStyle=`rgba(200,220,255,${s.b*flicker})`;ctx.beginPath();ctx.arc(s.x,s.y,s.s,0,Math.PI*2);ctx.fill()});
     ctx.restore();
   }},
-  {name:'mapEdge',space:'world',order:5,enabled:true,fn(){
-    const w=COLS*TILE,h=ROWS*TILE;
-    ctx.strokeStyle='rgba(255,100,100,0.5)';ctx.lineWidth=3;ctx.setLineDash([10,5]);
-    ctx.strokeRect(0,0,w,h);ctx.setLineDash([]);
-    // Ocean label at edges
-    ctx.fillStyle='rgba(100,150,200,0.4)';ctx.font='10px sans-serif';ctx.textAlign='center';
-    ctx.fillText('🌊 OCEAN →',w-40,h/2);ctx.fillText('← OCEAN 🌊',40,h/2);
-  }},
   {name:'borderGlow',space:'screen',order:2,enabled:true,fn(){
     const grd=ctx.createRadialGradient(canvas.width/2,canvas.height/2,Math.min(canvas.width,canvas.height)*0.3,canvas.width/2,canvas.height/2,Math.max(canvas.width,canvas.height)*0.8);
     grd.addColorStop(0,'rgba(0,0,0,0)');grd.addColorStop(1,'rgba(0,0,0,0.7)');ctx.fillStyle=grd;ctx.fillRect(0,0,canvas.width,canvas.height);
