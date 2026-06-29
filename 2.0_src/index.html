@@ -1725,9 +1725,9 @@ const LAYERS=[
   {name:'player',space:'world',order:70,enabled:true,fn(){
     const p=G.player;const w=COLS*TILE;
     const pxPos=[p.x];if(p.x<200)pxPos.push(p.x+w);if(p.x>w-200)pxPos.push(p.x-w);
-    pxPos.forEach(px=>{const gl=ctx.createRadialGradient(p.x,p.y,4,p.x,p.y,22);gl.addColorStop(0,'rgba(255,215,0,0.5)');gl.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(p.x,p.y,22,0,Math.PI*2);ctx.fill();
+    pxPos.forEach(px=>{const gl=ctx.createRadialGradient(px,p.y,4,px,p.y,22);gl.addColorStop(0,'rgba(255,215,0,0.5)');gl.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(px,p.y,22,0,Math.PI*2);ctx.fill();
     // Mount visual
-    if(p.mount){const mid=p.mount;ctx.save();ctx.translate(p.x,p.y+12);
+    if(p.mount){const mid=p.mount;ctx.save();ctx.translate(px,p.y+12);
       if(mid==='griffin'||mid==='airship'){ctx.fillStyle='#daa520';ctx.beginPath();ctx.moveTo(-4,-6);ctx.lineTo(-18,-20);ctx.lineTo(-8,-8);ctx.fill();ctx.beginPath();ctx.moveTo(4,-6);ctx.lineTo(18,-20);ctx.lineTo(8,-8);ctx.fill();
         if(mid==='airship'){ctx.fillStyle='#c0c0d0';ctx.beginPath();ctx.ellipse(0,-4,14,5,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.stroke();}
       }else if(mid==='wagon'||mid==='carriage'){ctx.fillStyle=mid==='carriage'?'#8B6914':'#6B4226';ctx.fillRect(-10,-8,20,10);ctx.fillStyle='#daa520';ctx.fillRect(-11,-9,22,3);ctx.fillStyle='#333';ctx.beginPath();ctx.arc(-7,4,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(7,4,3,0,Math.PI*2);ctx.fill();
@@ -1735,13 +1735,13 @@ const LAYERS=[
       ctx.restore();}
     // Rotate toward movement direction
     let angle=-Math.PI/2;if(p.path.length>0){angle=Math.atan2(p.path[0].y-p.y,p.path[0].x-p.x)}
-    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(angle);
+    ctx.save();ctx.translate(px,p.y);ctx.rotate(angle);
     ctx.fillStyle='#ffd700';ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(-10,10);ctx.lineTo(10,10);ctx.closePath();ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
-    // Trail dots behind player (opposite direction)
     ctx.fillStyle='rgba(255,215,0,0.3)';ctx.beginPath();ctx.arc(0,14,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(0,19,1.5,0,Math.PI*2);ctx.fill();
     ctx.restore();
-    if(p.path.length>0){ctx.strokeStyle='rgba(255,215,0,0.2)';ctx.lineWidth=0.8;ctx.setLineDash([3,5]);ctx.beginPath();ctx.moveTo(p.x,p.y);p.path.forEach(pt=>ctx.lineTo(pt.x,pt.y));ctx.stroke();ctx.setLineDash([])}
-    if(p.camping){ctx.fillStyle='rgba(255,200,50,0.3)';ctx.beginPath();ctx.arc(p.x,p.y,20,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('🏕️',p.x,p.y-16)}
+    if(p.path.length>0){ctx.strokeStyle='rgba(255,215,0,0.2)';ctx.lineWidth=0.8;ctx.setLineDash([3,5]);ctx.beginPath();ctx.moveTo(px,p.y);p.path.forEach(pt=>ctx.lineTo(pt.x,pt.y));ctx.stroke();ctx.setLineDash([])}
+    if(p.camping){ctx.fillStyle='rgba(255,200,50,0.3)';ctx.beginPath();ctx.arc(px,p.y,20,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('🏕️',px,p.y-16)}
+    });
   }},
   {name:'clickMarker',space:'world',order:80,enabled:true,fn(){
     if(clickMarker){clickMarker.life-=0.015;if(clickMarker.life<=0)clickMarker=null;else{
