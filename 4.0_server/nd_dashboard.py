@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """ND Dashboard — Log aggregator + metric viewer (Hermes Agent-ready)"""
 
-import json, os, sys
+import json
+import os
+import sys
 from pathlib import Path
 from datetime import datetime, timezone
-from collections import Counter, defaultdict
+from collections import Counter
 
 LOG_FILE = Path(os.path.expanduser("~/nexus-dominion/5.0_logs/nd-runtime.log"))
 CURSOR_FILE = Path(os.path.expanduser("~/nexus-dominion/5.0_logs/.monitor_cursor.json"))
@@ -114,7 +116,7 @@ def main():
     
     # Error detail
     if error_groups:
-        print(f"🔴 TOP ERRORS:")
+        print("🔴 TOP ERRORS:")
         for msg, count in error_groups.most_common(5):
             bar = "█" * min(40, count)
             print(f"  [{count:>4}x] {msg}")
@@ -122,7 +124,7 @@ def main():
         print()
     
     # Recent activity
-    print(f"🕐 RECENT (last 5):")
+    print("🕐 RECENT (last 5):")
     for e in entries[-5:]:
         ts = e.get("ts", 0)
         try:

@@ -1,125 +1,216 @@
 #!/usr/bin/env python3
-"""Nexus Dominion v5 — Testing Harness
-Validates game logic: RNG determinism, terrain reproducibility, combat formulas, economy, save/load.
+"""
+ND Test Harness — Automated role testing + hot reload
+Usage: python3 ~/nexus-dominion/6.0_build/test_harness.py [--watch]
 """
 
-import json, hashlib, sys, os
+import http.server
+import socketserver
+import subprocess
+import time
+import os
+import sys
+import json
+import re
+from pathlib import Path
 
-HTML_FILE = "nexus-dominion.html"
+HTML_FILE = Path(os.path.expanduser("~/nexus-dominion/2.0_src/index.html"))
+LOG_FILE = Path(os.path.expanduser("~/nexus-dominion/5.0_logs/nd-runtime.log"))
+SERVER_DIR = Path(os.path.expanduser("~/nexus-dominion"))
+PORT = 8100
 
-def extract_js_functions(content):
-    """Extract key JS functions into testable form."""
-    tests = {}
-    
-    # Check RNG pattern exists
-    if 'Math.random()' in content:
-        tests['rng_deterministic'] = False
-        print("  ⚠️  RNG: Using Math.random() — not deterministic. Replace with seeded PRNG.")
-    else:
-        tests['rng_deterministic'] = True
-        print("  ✅ RNG: No Math.random found — already deterministic (or using custom RNG)")
-    
-    # Check terrain is deterministic
-    if 'genTerrain(seed)' in content or 'genTerrain(' in content:
-        tests['terrain_seeded'] = True
-        print("  ✅ Terrain: Seeded generation detected")
-    else:
-        tests['terrain_seeded'] = False
-        print("  ⚠️  Terrain: No seed parameter — not reproducible")
-    
-    # Check combat uses PRNG
-    if 'function cbtAtk' in content:
-        tests['combat_exists'] = True
-        print("  ✅ Combat: Attack function found")
-    else:
-        tests['combat_exists'] = False
-    
-    # Check economy
-    if 'function buyGood' in content and 'function sellGood' in content:
-        tests['economy_exists'] = True
-        print("  ✅ Economy: Buy/sell functions found")
-    else:
-        tests['economy_exists'] = False
-    
-    # Check save/load symmetry
-    if 'function saveGame' in content and 'function loadGame' in content:
-        tests['save_load'] = True
-        print("  ✅ Save/Load: Both functions found")
-    else:
-        tests['save_load'] = False
-    
-    # Count goods
-    goods_count = content.count(",n:'") + content.count(',n:"')
-    print(f"  📦 Goods: ~{goods_count} items in catalog")
-    
-    # Count systems
-    systems = ['countryAI', 'processDecay', 'genMissions', 'startCombat', 
-               'useTrain', 'useShip', 'dipAction', 'buyStock', 'foundCompany']
-    found = [s for s in systems if f'function {s}' in content]
-    print(f"  🔧 Systems: {len(found)}/{len(systems)} found ({', '.join(found)})")
-    
-    return tests
 
-def check_code_quality(content):
-    """Run quality checks on the game code."""
-    issues = []
+def validate_js(content):
+    """Syntactic check via node --check"""
+    scripts = re.findall(r'<script[^>]*>(.*?)</script>', content, re.DOTALL)
+    if not scripts:
+        return False, "No script blocks found"
+    biggest = max(scripts, key=len)
     
-    # Check for global Math.random usage
-    math_random_count = content.count('Math.random()')
-    if math_random_count > 0:
-        issues.append(f"Math.random() used {math_random_count} times — replace with seeded PRNG")
-    
-    # Check for console.log
-    if 'console.log' in content:
-        issues.append("console.log found — remove for production")
-    
-    # Check for var usage (use let/const)
-    var_count = len([l for l in content.split('\n') if l.strip().startswith('var ')])
-    if var_count > 0:
-        issues.append(f"'var' used {var_count} times — prefer 'let' or 'const'")
-    
-    return issues
+    try:
+        result = subprocess.run(
+            ['node', '--check', '-'],
+            input=biggest, capture_output=True, text=True, timeout=10
+        )
+        if result.returncode == 0:
+            return True, "JS OK"
+        else:
+            return False, result.stderr[:200]
+    except Exception as e:
+        return False, str(e)
 
-def generate_test_report():
-    """Generate a test report for the game."""
+
+def check_roles(content):
+    """Verify all 7 roles are wired"""
+    roles = []
+    for m in re.finditer(r"startGame\('(\w+)'\)", content):
+        roles.append(m.group(1))
+    
+    missing = []
+    expected = ['merchant', 'warrior', 'mercenary', 'ceo', 'wanderer', 'bandit', 'king']
+    for r in expected:
+        if r not in roles:
+            missing.append(r)
+        if f"case'{r}'" not in content and f"case '{r}'" not in content:
+            missing.append(f"{r} (no init)")
+
+    return roles, missing
+
+
+def check_structures(content):
+    """Verify key data structures exist"""
+    checks = {
+        'GOV_TYPES': r'GOV_TYPES\b',
+        'FT (facilities)': r'\bFT\b',
+        'GD (goods)': r'\bGD\b',
+        'EN (enemies)': r'\bEN\b',
+        'ORC': r'\bORC\b',
+        'GLOBE': r'\bGLOBE\b',
+        'LAYERS': r'\bLAYERS\b',
+        'INSTITUTIONS': r'INSTITUTIONS\b',
+        'ADVANCES': r'ADVANCES\b',
+        'SHIPS': r'SHIPS\b',
+    }
+    results = {}
+    for name, pattern in checks.items():
+        results[name] = len(re.findall(pattern, content)) > 0
+    return results
+
+
+def read_log():
+    """Read and summarize the eruda log"""
+    if not LOG_FILE.exists():
+        return {"total": 0, "errors": 0, "top": []}
+    
+    entries = []
+    with open(LOG_FILE) as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                entries.append(json.loads(line))
+            except json.JSONDecodeError:
+                pass
+    
+    errs = [e for e in entries if 'exception' in e.get('level', '') or 'error' in e.get('level', '')]
+    
+    from collections import Counter
+    msgs = Counter(e.get('msg', '')[:100] for e in errs)
+    
+    return {
+        "total": len(entries),
+        "errors": len(errs),
+        "top": msgs.most_common(5)
+    }
+
+
+def run_full_check():
+    """Full quality gate"""
     print("=" * 60)
-    print("NEXUS DOMINION v5 — TESTING HARNESS REPORT")
+    print("🔍 ND TEST HARNESS")
     print("=" * 60)
     
-    if not os.path.exists(HTML_FILE):
-        print(f"❌ {HTML_FILE} not found")
+    if not HTML_FILE.exists():
+        print("❌ HTML file not found:", HTML_FILE)
         return False
     
-    with open(HTML_FILE, 'r') as f:
-        content = f.read()
+    content = HTML_FILE.read_text()
+    all_ok = True
     
-    size_kb = len(content) / 1024
-    lines = len(content.split('\n'))
+    # 1. JS Syntax
+    ok, msg = validate_js(content)
+    print(f"\n📝 JS Syntax: {'✅' if ok else '❌'} {msg}")
+    if not ok:
+        all_ok = False
     
-    print(f"\n📄 File: {HTML_FILE}")
-    print(f"   Size: {size_kb:.1f} KB, {lines} lines\n")
+    # 2. Roles
+    roles, missing = check_roles(content)
+    print(f"\n🎮 Roles: {len(roles)} found ({', '.join(roles)})")
+    if missing:
+        print(f"   ❌ Missing: {missing}")
+        all_ok = False
     
-    print("🔍 CODE ANALYSIS:")
-    tests = extract_js_functions(content)
+    # 3. Structures
+    structs = check_structures(content)
+    missing_structs = [k for k, v in structs.items() if not v]
+    print(f"\n📦 Structures: {sum(structs.values())}/{len(structs)} present")
+    if missing_structs:
+        print(f"   ❌ Missing: {missing_structs}")
+        all_ok = False
     
-    print("\n🐛 QUALITY CHECKS:")
-    issues = check_code_quality(content)
-    if issues:
-        for i in issues:
-            print(f"  ⚠️  {i}")
+    # 4. Brace balance
+    scripts = re.findall(r'<script[^>]*>(.*?)</script>', content, re.DOTALL)
+    if scripts:
+        big = max(scripts, key=len)
+        opens = big.count('{')
+        closes = big.count('}')
+        balanced = opens == closes
+        print(f"\n🔧 Braces: {opens}/{closes} {'✅' if balanced else '❌ diff=' + str(opens - closes)}")
+        if not balanced:
+            all_ok = False
+    
+    # 5. Log
+    log = read_log()
+    print(f"\n📋 Log: {log['total']} entries, {log['errors']} errors")
+    if log['errors'] > 0:
+        print(f"   🔴 TOP ERRORS:")
+        for msg, count in log['top']:
+            print(f"      [{count}x] {msg}")
+    
+    # 6. File stats
+    lines = content.count('\n')
+    size = len(content)
+    print(f"\n📏 File: {lines} lines, {size:,} bytes")
+    
+    # 7. Health check steps
+    hc_steps = re.findall(r"hc\.step='(\w+)'", content)
+    print(f"\n🏥 Health Check: {len(hc_steps)} steps ({' → '.join(hc_steps)})")
+    
+    print(f"\n{'=' * 60}")
+    if all_ok:
+        print("✅ ALL CHECKS PASSED")
     else:
-        print("  ✅ No quality issues found")
+        print("❌ SOME CHECKS FAILED")
+    print(f"{'=' * 60}")
     
-    # Summary
-    total = len(tests)
-    passed = sum(1 for v in tests.values() if v)
-    print(f"\n📊 SUMMARY: {passed}/{total} checks passed")
+    return all_ok
+
+
+def watch_mode():
+    """Hot reload: watch file changes and auto-restart"""
+    last_mtime = HTML_FILE.stat().st_mtime if HTML_FILE.exists() else 0
     
-    if math_random_count := content.count('Math.random()'):
-        print(f"\n🎯 PRIORITY: Replace {math_random_count} Math.random() calls with seeded PRNG")
-        print("   This is the single highest-impact change for reproducibility.")
+    print(f"👁️  Watching {HTML_FILE}... (Ctrl+C to stop)")
+    print(f"🌐 http://127.0.0.1:{PORT}/2.0_src/index.html")
     
-    return True
+    # Start server
+    server_proc = subprocess.Popen(
+        ['python3', '-m', 'http.server', str(PORT), '--bind', '127.0.0.1'],
+        cwd=str(SERVER_DIR),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL
+    )
+    
+    try:
+        while True:
+            time.sleep(2)
+            if HTML_FILE.exists():
+                mtime = HTML_FILE.stat().st_mtime
+                if mtime > last_mtime:
+                    last_mtime = mtime
+                    print(f"\n🔄 File changed at {time.strftime('%H:%M:%S')} — running checks...")
+                    run_full_check()
+                    print(f"👁️  Watching...")
+    except KeyboardInterrupt:
+        print("\n🛑 Stopping...")
+    finally:
+        server_proc.terminate()
+        server_proc.wait()
+
 
 if __name__ == '__main__':
-    generate_test_report()
+    if '--watch' in sys.argv:
+        watch_mode()
+    else:
+        run_full_check()

@@ -151,18 +151,14 @@ body{background:radial-gradient(ellipse at 50% 0%,#0a1628 0%,#050a14 60%,#020510
 <div class="rc" onclick="startGame('warrior')"><div class="ri">⚔️</div><div class="rn">Warrior</div><div class="rb">+25% combat<br>+15% HP, sword</div></div>
 <div class="rc" onclick="startGame('mercenary')"><div class="ri">🛡️</div><div class="rn">Mercenary</div><div class="rb">-30% hire cost<br>3 free units</div></div>
 <div class="rc" onclick="startGame('ceo')"><div class="ri">🏢</div><div class="rn">CEO</div><div class="rb">$100K + company<br>Stock access</div></div>
-<div class="rc" onclick="startGame('wanderer')"><div class="ri">🎒</div><div class="rn">Wanderer</div><div class="rb">+10% all skills<br>Versatile</div>
+<div class="rc" onclick="startGame('wanderer')"><div class="ri">🎒</div><div class="rn">Wanderer</div><div class="rb">+10% all skills<br>Versatile</div></div>
 <div class="rc" onclick="startGame('bandit')" style="border-color:rgba(255,71,87,0.3)"><div class="ri">🦹</div><div class="rn">Bandit</div><div class="rb">Outlaw life<br>Gang + heists</div></div>
 <div class="rc" onclick="startGame('king')" style="border-color:rgba(255,215,0,0.3)"><div class="ri">👑</div><div class="rn">King</div><div class="rb">Rule a kingdom<br>$200K + army</div></div>
-<button onclick="foundKingdom()" style="margin-top:12px;background:linear-gradient(180deg,rgba(255,215,0,0.2),rgba(200,160,0,0.1));color:var(--gold);border:2px solid rgba(255,215,0,0.3);padding:10px 20px;border-radius:10px;font-size:12px;cursor:pointer;font-weight:600;transition:all .2s"
- onmouseover="this.style.boxShadow='0 0 20px rgba(255,215,0,0.4)';this.style.transform='translateY(-2px)'"
- onmouseout="this.style.boxShadow='none';this.style.transform='none'"
->👑 Found Your Own Kingdom</button></div></div>
 </div>
 <button onclick="foundKingdom()" style="margin-top:12px;background:linear-gradient(180deg,rgba(255,215,0,0.2),rgba(200,160,0,0.1));color:var(--gold);border:2px solid rgba(255,215,0,0.3);padding:10px 20px;border-radius:10px;font-size:12px;cursor:pointer;font-weight:600;transition:all .2s"
  onmouseover="this.style.boxShadow='0 0 20px rgba(255,215,0,0.4)';this.style.transform='translateY(-2px)'"
  onmouseout="this.style.boxShadow='none';this.style.transform='none'"
->👑 Found Your Own Kingdom</button></div></div>
+>👑 Found Your Own Kingdom</button></div>
 
 <canvas id="mapCanvas"></canvas>
 
@@ -211,7 +207,10 @@ body{background:radial-gradient(ellipse at 50% 0%,#0a1628 0%,#050a14 60%,#020510
 // ═══ ORQUESTRADOR (DDD: main loop coordinator) ═══
 const ORC={
   init(role,cfg){
-    G=newState();G.player.role=role;G.seed=cfg.seed||Math.floor(Date.now()%99999)+1;
+    const hc={step:'start',errors:[]};
+    try{
+    G=newState();hc.step='newState';G.player.role=role;G.seed=cfg.seed||Math.floor(Date.now()%99999)+1;
+    hc.step='mapSize';
     const sizes={tiny:[30,22],small:[40,30],medium:[60,45],large:[80,60],epic:[100,75]};
     const sz=sizes[cfg.mapSize]||[60,45];G.mapCols=sz[0];G.mapRows=sz[1];
     G.player.name=document.getElementById('charName')?.value||'Traveler';
@@ -219,7 +218,7 @@ const ORC={
     if(G.player.race==='elf')G.player.skills.trading+=1;
     if(G.player.race==='dwarf')G.player.skills.leadership+=1;
     if(G.player.race==='orc'){G.player.atk+=2;G.player.mhp+=10;G.player.hp+=10;}
-    seedRNG(G.seed);genTerrain(G.seed,cfg.mapType);
+    hc.step='seedRNG';seedRNG(G.seed);hc.step='genTerrain';genTerrain(G.seed,cfg.mapType);
     // Kingdom mode: generate player kingdom + opponent countries
     if(cfg.kingdomName){
       const gt=GOV_TYPES[cfg.kingdomGov]||GOV_TYPES['monarchy'];
@@ -231,8 +230,8 @@ const ORC={
       GD.forEach(g=>{capital.supply[g.id]=ri(10,100);capital.demand[g.id]=ri(10,100);capital.prices[g.id]=g.p});
       const cc=[capital];const cityNames=['Northhold','Eastgate','Southport','Westwatch','Riverbend'];
       for(let i=0;i<5;i++){let tx=cx+ri(-8,8),ty=cy+ri(-6,6),at2=0;while((tx<0||tx>=sz[0]||ty<0||ty>=sz[1]||terrain[ty][tx]===T.WATER||terrain[ty][tx]===T.MOUNTAIN)&&at2<50){tx=cx+ri(-8,8);ty=cy+ri(-6,6);at2++}
-        const isCap=i===0;const ctype=isCap?'town':i===1?'castle':i===2?'castle':'village';const cpop=isCap?200000+ri(0,800000):ctype==='castle'?8000+ri(0,40000):2000+ri(0,18000);
-        const ct={id:cid++,name:cn,cIdx:ci,tx,ty,x:tx*TILE+TILE/2,y:ty*TILE+TILE/2,pops:{farmers:ri(1000,50000),laborers:ri(500,20000),artisans:ri(100,5000),merchants:ri(50,2000),aristocrats:ri(10,500),clergy:ri(20,1000),soldiers:ri(0,500)},pop:cpop,bldgs:[],gdp:ctype==='town'?20+RNG.next()*80:ctype==='castle'?5+RNG.next()*20:1+RNG.next()*10,stab:30+RNG.next()*70,owner:null,supply:{},demand:{},prices:{},facilities:[],type:ctype};
+        const ctype=i===0?'town':i===1?'castle':i===2?'castle':'village';const cpop=ctype==='town'?200000+ri(0,800000):ctype==='castle'?8000+ri(0,40000):2000+ri(0,18000);
+        const ct2={id:i+1,name:cityNames[i]||'Town'+i,cIdx:0,tx,ty,x:tx*TILE+TILE/2,y:ty*TILE+TILE/2,pops:{farmers:ri(1000,50000),laborers:ri(500,20000),artisans:ri(100,5000),merchants:ri(50,2000),aristocrats:ri(10,500),clergy:ri(20,1000),soldiers:ri(0,500)},pop:cpop,bldgs:[],gdp:ctype==='town'?20+RNG.next()*80:ctype==='castle'?5+RNG.next()*20:1+RNG.next()*10,stab:30+RNG.next()*70,owner:null,supply:{},demand:{},prices:{},facilities:[],type:ctype};
         GD.forEach(g=>{ct2.supply[g.id]=ri(5,60);ct2.demand[g.id]=ri(5,60);ct2.prices[g.id]=g.p});cc.push(ct2);}
       const roads=[];for(let i=0;i<cc.length;i++)for(let j=i+1;j<cc.length;j++)roads.push({fx:cc[i].tx,fy:cc[i].ty,tx:cc[j].tx,ty:cc[j].ty});
       const pkd={name:cfg.kingdomName,color,cities:cc,cx:cx*TILE+TILE/2,cy:cy*TILE+TILE/2,gov:{type:cfg.kingdomGov,name:gt.n,ic:gt.ic,taxRate:gt.tax.corp,tradeTax:gt.tax.trade,licenseFee:gt.tax.license,stab:gt.stab,corpPolicy:gt.corp},mil:40+RNG.next()*60,treasury:2e5+RNG.next()*3e5,tax:gt.tax.corp+ri(-3,3),rel:{},armies:[{id:'pk_0',c:cfg.kingdomName,sz:ri(800,2000),x:capital.x,y:capital.y,tx:cx,ty:cy,ord:'patrol'}],atWar:[],pop:0,pers:'peaceful',coastal:false,investments:[],embassies:[],territory:[],factions:[]};
@@ -240,13 +239,14 @@ const ORC={
       G.cities=[...cc,...oppWorld.cities];G.countries=[pkd,...oppWorld.countries];G.roads=[...roads,...oppWorld.roads];G.trains=oppWorld.trains;G.ships=oppWorld.ships;
       G.player.kingdom=pkd;const sc2=pk(cc);G.player.x=sc2.x;G.player.y=sc2.y;G.player.vis=cc.map(c=>c.id);
     }else{
-      const w=genWorld(cfg.countries);G.cities=w.cities;G.countries=w.countries;G.roads=w.roads;G.trains=w.trains;G.ships=w.ships;
+      hc.step='genWorld';const w=genWorld(cfg.countries);G.cities=w.cities;G.countries=w.countries;G.roads=w.roads;G.trains=w.trains;G.ships=w.ships;
       const sc=pk(G.cities);G.player.x=sc.x;G.player.y=sc.y;G.player.vis.push(sc.id);
     }
-    this._initRole(role);this._initEntities(cfg.entities);this._initCompanies();
+    hc.step='initRole';this._initRole(role);hc.step='initEntities';this._initEntities(cfg.entities);hc.step='initCompanies';this._initCompanies();
     genMissions();document.getElementById('rm').style.display='none';
     G.logs=[{t:1,m:'World generated. Role: '+role.toUpperCase()+'. Seed: '+G.seed}];
-    AE.ok();notify('Living world generated!','inf');updateUI();saveGame();
+    hc.step='done';AE.ok();notify('Living world generated!','inf');updateUI();saveGame();
+    }catch(e){G.logs=[{t:1,m:'❌ INIT FAILED at step: '+hc.step+' — '+e.message}];console.error('ORC.init failed at',hc.step,e);notify('World gen failed: '+e.message,'er');G.cities=[];G.countries=[];G.roads=[];G.trains=[];G.ships=[];G.player.x=200;G.player.y=200;updateUI();}
   },
   _initRole(role){
     const p=G.player;
@@ -531,11 +531,11 @@ function genWorld(cfgCountries){
   useCN.forEach((cd,ci)=>{
     let cx,cy,att=0;do{cx=ri(4,COLS-5);cy=ri(4,ROWS-5);att++}while((terrain[cy][cx]===T.WATER||terrain[cy][cx]===T.MOUNTAIN)&&att<50);
     const cc=[];
-    cd.ct.forEach(cn=>{
+    cd.ct.forEach((cn,cti)=>{
       let tx,ty,at=0;do{tx=cx+ri(-5,5);ty=cy+ri(-4,4);at++}while((tx<0||tx>=COLS||ty<0||ty>=ROWS||terrain[ty][tx]===T.WATER||terrain[ty][tx]===T.MOUNTAIN)&&at<50);
       tx=cl(tx,1,COLS-2);ty=cl(ty,1,ROWS-2);
       const bldgs=[];const bn=ri(3,8);for(let bi=0;bi<bn;bi++){const a=RNG.next()*Math.PI*2,d=12+RNG.next()*20;bldgs.push({rx:Math.cos(a)*d,ry:Math.sin(a)*d,w:4+RNG.next()*8,h:6+RNG.next()*14,c:pk(['#5a4a3a','#4a4a5a','#6a5a4a','#8a7a6a'])});}
-      const isCap=i===0;const ctype=isCap?'town':i===1?'castle':i===2?'castle':'village';const cpop=isCap?200000+ri(0,800000):ctype==='castle'?8000+ri(0,40000):2000+ri(0,18000);
+      const isCap=cti===0;const ctype=isCap?'town':cti===1?'castle':cti===2?'castle':'village';const cpop=isCap?200000+ri(0,800000):ctype==='castle'?8000+ri(0,40000):2000+ri(0,18000);
       const ct={id:cid++,name:cn,cIdx:ci,tx,ty,x:tx*TILE+TILE/2,y:ty*TILE+TILE/2,pops:{farmers:ri(1000,50000),laborers:ri(500,20000),artisans:ri(100,5000),merchants:ri(50,2000),aristocrats:ri(10,500),clergy:ri(20,1000),soldiers:ri(0,500)},pop:cpop,bldgs:[],gdp:ctype==='town'?20+RNG.next()*80:ctype==='castle'?5+RNG.next()*20:1+RNG.next()*10,stab:30+RNG.next()*70,owner:null,supply:{},demand:{},prices:{},facilities:[],type:ctype};
       GD.forEach(g=>{ct.supply[g.id]=ri(10,100);ct.demand[g.id]=ri(10,100);ct.prices[g.id]=g.p});
       // Assign facilities based on city type
@@ -1588,6 +1588,12 @@ const canvas=document.getElementById('mapCanvas'),ctx=canvas.getContext('2d');
 let camX=600,camY=450,zoom=0.5,drag=false,dsx,dsy,dscx,dscy,particles=[],clickMarker=null;
 function rz(){canvas.width=window.innerWidth;canvas.height=window.innerHeight-68}
 window.addEventListener('resize',rz);
+function recruitTroop(){
+  if(!G||!G.player)return;if(G.player.gold<30)return notify('Need $30','er');
+  G.player.gold-=30;const tn=pk(['Militia','Spearman','Archer','Footman','Crossbowman']);
+  G.player.units.push({n:tn,hp:50+ri(0,30),atk:6+ri(0,4),def:3+ri(0,3)});
+  notify(tn+' recruited!','ok');AE.ok();updateUI();
+}
 function handleClick(e){
   if(!G||!G.player)return;
   const cx=e.clientX||(e.touches&&e.touches[0]?e.touches[0].clientX:0);

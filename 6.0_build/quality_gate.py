@@ -3,7 +3,8 @@
 Validates the single HTML file for syntax, structure, size, and game logic.
 """
 
-import re, sys, json
+import re
+import sys
 
 HTML_FILE = "nexus-dominion.html"
 MAX_SIZE_KB = 200
@@ -123,7 +124,7 @@ def main():
         print(f"❌ FAIL: File too large ({size_kb:.1f} > {MAX_SIZE_KB} KB)")
         all_ok = False
     else:
-        print(f"✅ PASS: Size OK")
+        print("✅ PASS: Size OK")
 
     # HTML structure
     html_errs = check_html_structure(content)
@@ -132,7 +133,7 @@ def main():
         for e in html_errs: print(f"   - {e}")
         all_ok = False
     else:
-        print(f"✅ HTML: Structure OK")
+        print("✅ HTML: Structure OK")
 
     # CSS
     css_warns = check_css(content)
@@ -140,7 +141,7 @@ def main():
         print(f"⚠️  CSS: {len(css_warns)} warnings")
         for w in css_warns: print(f"   - {w}")
     else:
-        print(f"✅ CSS: Clean")
+        print("✅ CSS: Clean")
 
     # JS
     js_warns = check_js(content)
@@ -148,7 +149,7 @@ def main():
         print(f"⚠️  JS: {len(js_warns)} warnings")
         for w in js_warns: print(f"   - {w}")
     else:
-        print(f"✅ JS: Clean")
+        print("✅ JS: Clean")
 
     # Game structures
     struct_missing = check_game_structures(content)
@@ -157,14 +158,14 @@ def main():
         for m in struct_missing: print(f"   - {m}")
         all_ok = False
     else:
-        print(f"✅ GAME STRUCTURES: All present")
+        print("✅ GAME STRUCTURES: All present")
 
     # Save roundtrip
     save_missing = check_save_roundtrip(content)
     if save_missing:
         print(f"⚠️  SAVE: Missing keys: {save_missing}")
     else:
-        print(f"✅ SAVE: All keys present")
+        print("✅ SAVE: All keys present")
 
     # Goods count
     goods_count = len(re.findall(r"id:'(\w+)',\s*name:'", content))
@@ -172,10 +173,10 @@ def main():
 
     print(f"{'='*60}")
     if all_ok:
-        print(f"✅ ALL GATES PASSED")
+        print("✅ ALL GATES PASSED")
         sys.exit(0)
     else:
-        print(f"❌ SOME GATES FAILED")
+        print("❌ SOME GATES FAILED")
         sys.exit(1)
 
 if __name__ == '__main__':
