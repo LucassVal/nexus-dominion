@@ -561,13 +561,14 @@ function genWorld(cfgCountries){
     const gtype=pk(Object.keys(GOV_TYPES));const gt=GOV_TYPES[gtype];
     countries.push({name:cd.n,color:cd.c,cities:cc,cx:cx*TILE+TILE/2,cy:cy*TILE+TILE/2,
       gov:{type:gtype,name:gt.n,ic:gt.ic,taxRate:gt.tax.corp,tradeTax:gt.tax.trade,licenseFee:gt.tax.license,stab:gt.stab,corpPolicy:gt.corp},
-      mil:20+RNG.next()*80,treasury:1e5+RNG.next()*9e5,tax:gt.tax.corp+ri(-5,5),rel:{},armies:[],atWar:[],pop:0,pers:pk(['aggressive','peaceful','trading','expansionist']),coastal,investments:[],embassies:[],territory:[],factions:(()=>{const ft2=['royalists','merchants','clergy','military','populists','technocrats','nobles'];const f2=[];for(let i=0;i<ri(2,4);i++){const t=pk(ft2);ft2.splice(ft2.indexOf(t),1);f2.push({type:t,power:20+RNG.next()*60,name:t==='royalists'?'Royal Court':t==='merchants'?'Trade Guild':t==='clergy'?'Temple Council':t==='military'?'War Council':t==='populists'?'People Assembly':t==='technocrats'?'Science Academy':'Noble Houses'});}return f2;})()});// Generate provinces from country cities
-    const provinces=[];
-    co.cities.forEach((c,ci)=>{
+      mil:20+RNG.next()*80,treasury:1e5+RNG.next()*9e5,tax:gt.tax.corp+ri(-5,5),rel:{},armies:[],atWar:[],pop:0,pers:pk(['aggressive','peaceful','trading','expansionist']),coastal,investments:[],embassies:[],territory:[],factions:(()=>{const ft2=['royalists','merchants','clergy','military','populists','technocrats','nobles'];const f2=[];for(let i=0;i<ri(2,4);i++){const t=pk(ft2);ft2.splice(ft2.indexOf(t),1);f2.push({type:t,power:20+RNG.next()*60,name:t==='royalists'?'Royal Court':t==='merchants'?'Trade Guild':t==='clergy'?'Temple Council':t==='military'?'War Council':t==='populists'?'People Assembly':t==='technocrats'?'Science Academy':'Noble Houses'});}return f2;})()});
+    // Province generation for this country
+    const co=countries[countries.length-1];const provinces=[];
+    co.cities.forEach((c,ci2)=>{
       const nearby=co.cities.filter(c2=>c2!==c&&GLOBE.dist(c.x,c.y,c2.x,c2.y)<800);
-      if(ci===0||nearby.length===0||RNG.next()<0.3){
+      if(ci2===0||nearby.length===0||RNG.next()<0.3){
         const pn=pk(['Heartlands','Coast','Highlands','Valley','March','Fields','Woods','Peak','Falls','Reach']);
-        provinces.push({id:'prov_'+co.name+'_'+ci,name:pn+' of '+co.name,capital:c.id,cities:[c.id,...nearby.map(n=>n.id)],owner:co.name,development:ri(5,25),resources:[]});
+        provinces.push({id:'prov_'+co.name+'_'+ci2,name:pn+' of '+co.name,capital:c.id,cities:[c.id,...nearby.map(n=>n.id)],owner:co.name,development:ri(5,25),resources:[]});
       }
     });
     if(provinces.length===0)provinces.push({id:'prov_'+co.name+'_0',name:co.name+' Proper',capital:co.cities[0].id,cities:co.cities.map(c=>c.id),owner:co.name,development:ri(10,40),resources:[]});
