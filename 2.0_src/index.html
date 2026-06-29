@@ -1102,7 +1102,8 @@ function gameTick(){
 }
 function movePlayer(){
   const p=G.player;if(p.path.length===0){p.moving=false;return}
-  const tgt=p.path[0],dx=tgt.x-p.x,dy=tgt.y-p.y,d=Math.hypot(dx,dy);
+  const tgt=p.path[0];
+  const dx=GLOBE.shortestDX(p.x,tgt.x),dy=tgt.y-p.y,d=Math.hypot(dx,dy);
   // Base speed: terrain modifier
   let spd=5*(TS[getTile(p.x,p.y)]||1);
   // Sprint boost (Shift key or auto-sprint when far from target)
@@ -1118,7 +1119,7 @@ function movePlayer(){
       }
     }
   }
-  if(d<spd){p.x=tgt.x;p.y=tgt.y;p.path.shift();if(p.path.length===0){p.moving=false;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<30);if(nc&&!p.vis.includes(nc.id)){p.vis.push(nc.id)}}}
+  if(d<spd){p.x=GLOBE.wrapX(tgt.x);p.y=tgt.y;p.path.shift();if(p.path.length===0){p.moving=false;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<30);if(nc&&!p.vis.includes(nc.id)){p.vis.push(nc.id)}}}
   else{p.x=GLOBE.wrapX(p.x+dx/d*spd);p.y+=dy/d*spd}
 }
 function findPath(sx,sy,tx,ty,fly){
