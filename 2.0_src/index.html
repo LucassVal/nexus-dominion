@@ -1602,6 +1602,7 @@ function handleClick(e){
   const mx=(cx-camX)/zoom,my=(cy-camY)/zoom;
   drag=true;dsx=cx;dsy=cy;dscx=camX;dscy=camY;
   if(G.player.role==='bandit'&&G.player.hideouts&&G.player.hideouts.length<3){const tt=getTile(mx,my);if(tt===T.FOREST||tt===T.MOUNTAIN){const dist=G.player.hideouts.reduce((m,h)=>Math.min(m,dt(mx,my,h.x,h.y)),9999);if(dist>200){G.player.hideouts.push({x:mx,y:my,name:'Hideout '+(G.player.hideouts.length+1)});addLog('🏚️ Established hideout!');notify('Hideout created!','ok');updateUI();return}}}
+  const canFly=G.player.mount&&MNT[G.player.mount]&&(MNT[G.player.mount].terrain||{})[0]>=2;
   G.player.path=findPath(G.player.x,G.player.y,mx,my,canFly);
   G.player.moving=G.player.path.length>0;
   clickMarker={x:mx,y:my,life:1.0};
@@ -1687,7 +1688,7 @@ const LAYERS=[
     G.countries.forEach(co=>{if(co.cities.length>1){ctx.fillStyle=co.color.replace(/[\d.]+\)$/,'0.04)');ctx.beginPath();const pts=co.cities;for(let i=0;i<pts.length;i++){const a=(i/pts.length)*Math.PI*2;i===0?ctx.moveTo(co.cx+Math.cos(a)*110,co.cy+Math.sin(a)*110):ctx.lineTo(co.cx+Math.cos(a)*110,co.cy+Math.sin(a)*110)}ctx.closePath();ctx.fill();ctx.fillStyle=co.color.replace(/[\d.]+\)$/,'0.35)');ctx.font='18px sans-serif';ctx.textAlign='center';ctx.strokeStyle='rgba(0,0,0,0.85)';ctx.lineWidth=6;ctx.strokeText(co.name,co.cx,co.cy-90);ctx.fillStyle='#ffffff';ctx.fillText(co.name,co.cx,co.cy-90);ctx.strokeStyle='rgba(0,0,0,0.5)';ctx.lineWidth=2;ctx.strokeText(co.name,co.cx,co.cy-90);ctx.fillText(co.name,co.cx,co.cy-90)}});
   }},
   {name:'cities',space:'world',order:40,enabled:true,fn(){
-    G.cities.forEach(ct=>{const ty=CT[ct.type||'village'];const r=ty.ring,co=G.countries[ct.cIdx];
+    G.cities.forEach(ct=>{const ty=CT[getCityType(ct.pop)];const r=ty.ring,co=G.countries[ct.cIdx];
       if(G.player.vis.includes(ct.id)){const gl=ctx.createRadialGradient(ct.x,ct.y,2,ct.x,ct.y,r+4);gl.addColorStop(0,'rgba(0,212,255,0.15)');gl.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(ct.x,ct.y,r+4,0,Math.PI*2);ctx.fill()}
       ctx.beginPath();ctx.arc(ct.x,ct.y,r,0,Math.PI*2);ctx.fillStyle=co.color;ctx.fill();ctx.strokeStyle=ty.color;ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#ffffff';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
       ctx.strokeStyle='rgba(0,0,0,0.95)';ctx.lineWidth=5;
