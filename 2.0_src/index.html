@@ -164,6 +164,7 @@ body{background:radial-gradient(ellipse at 50% 0%,#0a1628 0%,#050a14 60%,#020510
 
 <div id="newsTicker" style="position:fixed;top:52px;left:0;right:0;height:16px;background:#0a0f18;border-bottom:1px solid #1e2d45;overflow:hidden;z-index:100;font-size:8px;color:#5a6a80;display:flex;align-items:center;padding:0 8px"><span id="newsScroll">Nexus Dominion — Living World</span></div>
 
+<div id="debugBar" style="position:fixed;top:70px;right:4px;background:rgba(0,0,0,0.8);color:#0f0;font-size:8px;padding:2px 4px;border-radius:3px;z-index:200;font-family:monospace;max-width:200px">click to move</div>
 <div id="topBar">
 <span class="it"><span class="lb">Name</span><span class="vl cyn" id="tbN">—</span></span>
 <span class="it"><span class="lb">HP</span><span class="vl red" id="tbH">—</span></span>
@@ -1247,6 +1248,9 @@ function updateUI(){
   document.getElementById('tbNear').parentElement.title=hudExtra;
   // Log overlay
   const lo=document.getElementById('logOverlay');
+  // Debug bar
+  var dbg=document.getElementById('debugBar');
+  if(dbg){dbg.innerHTML='x:'+p.x.toFixed(0)+' y:'+p.y.toFixed(0)+' | path:'+(p.path?p.path.length:0)+' | '+p.role.toUpperCase()+(p.moving?' ▶':' ·')+(G.cbt?' ⚔️':'')+' | D'+G.day}
   lo.innerHTML=G.logs.slice(0,10).map(l=>`<div class="le"><span class="ld">D${l.t}</span>${l.m}</div>`).join('');
   // Minimap Pro — pre-baked terrain + layer stack
   const mm=document.getElementById('miniMap'),mmc=mm.getContext('2d');
@@ -1828,8 +1832,31 @@ function start(){
   requestAnimationFrame(loop);
   document.addEventListener('click',()=>{if(AE.c&&AE.c.state==='suspended')AE.c.resume()},{once:true});
 }
+// Triple-tap canvas to toggle eruda console
+var _tapCount=0,_tapTimer=null;
+canvas.addEventListener('click',function(e){
+  _tapCount++;if(_tapCount===1){_tapTimer=setTimeout(function(){_tapCount=0},400)}
+  else if(_tapCount>=3){_tapCount=0;clearTimeout(_tapTimer);if(window.eruda){eruda.toggle?eruda.toggle():eruda.show()}else{alert('Eruda not loaded')}}
+});
 window.onload=start;
 </script>
 <script src="../3.0_devtools/loader.js"></script>
+<div id="errOverlay" style="position:fixed;bottom:0;left:0;right:0;max-height:120px;overflow-y:auto;background:rgba(200,0,0,0.9);color:#fff;font-size:10px;padding:4px;z-index:9999;display:none;font-family:monospace"></div>
+<script>
+// Global error catcher — mostra erros NA TELA (Android sem F12)
+window.onerror=function(msg,url,line,col,err){
+  var el=document.getElementById('errOverlay');
+  el.style.display='block';
+  el.innerHTML+='<div style="border-bottom:1px solid rgba(255,255,255,0.2);padding:2px">❌ L'+line+': '+msg+'</div>';
+  if(el.children.length>8)el.removeChild(el.firstChild);
+  // Auto-hide after 6s
+  clearTimeout(window._errTimer);
+  window._errTimer=setTimeout(function(){el.style.display='none';el.innerHTML=''},6000);
+};
+// Also catch unhandled promise rejections
+window.onunhandledrejection=function(e){
+  window.onerror(e.reason.message||String(e.reason),'',0,0,e.reason);
+};
+</script>
 </body>
 </html>
