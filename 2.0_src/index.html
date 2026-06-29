@@ -1002,10 +1002,10 @@ function getStateSnapshot(){
 function gameTick(){
   if(!G||!G.player)return;
   G.tick++;
+  // Player movement — every tick
+  if(G.player.path&&G.player.path.length>0&&G.player.moving)movePlayer();
   if(G.tick%3===0){
     G.day++;
-    // Player movement
-    if(G.player.path.length>0&&G.player.moving)movePlayer();
     // AI traders - actually trade + smooth movement
     G.aiTraders.forEach(t=>{
       // Check if at a city
@@ -1130,8 +1130,8 @@ function findPath(sx,sy,tx,ty,fly){
   const sdx=GLOBE.shortestDX(stx,etx),sdy=ety-sty,steps=Math.max(Math.abs(sdx),Math.abs(sdy))+1;
   const path=[];let blocked=false;
   for(let i=0;i<=steps;i++){const t=i/steps,cx=GLOBE.wrapX(Math.floor(stx+sdx*t)),cy=cl(Math.floor(sty+sdy*t),0,ROWS-1);if(terrain[cy][cx]===T.WATER||terrain[cy][cx]===T.MOUNTAIN){blocked=true;break}}
-  if(!blocked){path.push({x:tx,y:ty});return path}
-  const mx=GLOBE.wrapX(stx+sdx/2),my=sty+sdy/2;path.push({x:mx*TILE+TILE/2,y:my*TILE+TILE/2});path.push({x:tx,y:ty});return path;
+  if(!blocked){path.push({x:GLOBE.wrapX(tx),y:ty});return path}
+  const mx=GLOBE.wrapX(stx+sdx/2),my=sty+sdy/2;path.push({x:mx*TILE+TILE/2,y:my*TILE+TILE/2});path.push({x:GLOBE.wrapX(tx),y:ty});return path;
 }
 
 // ─── APPLICATION: CITY INTERACTION ───
