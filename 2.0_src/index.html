@@ -265,9 +265,9 @@ const ORC={
     G.gangs=[];const gangNames=['Red Serpents','Black Crows','Iron Wolves','Shadow Blades','Crimson Vipers'];const gangColors=['rgba(200,30,30,0.7)','rgba(30,30,30,0.7)','rgba(100,100,120,0.7)','rgba(60,20,60,0.7)','rgba(180,60,20,0.7)'];
   for(let gi=0;gi<Math.floor(3*eMult);gi++){const gn=pk(gangNames);gangNames.splice(gangNames.indexOf(gn),1);const gtiles=[];let gx=ri(5,COLS-5),gy=ri(5,ROWS-5);for(let t=0;t<ri(8,20);t++){gtiles.push({x:cl(gx+ri(-5,5),0,COLS-1),y:cl(gy+ri(-4,4),0,ROWS-1)});}
     G.gangs.push({id:'gang_'+gi,name:gn,color:gangColors[gi]||'rgba(200,30,30,0.7)',leader:pk(['Scarface','Blackbeard','Ironfist','Shadow','Viper']),territory:gtiles,members:ri(5,15),hideouts:[{x:gx*TILE+TILE/2,y:gy*TILE+TILE/2}],notoriety:ri(20,80),enemies:[],allies:[],bounty:ri(500,5000),gold:ri(1000,10000)});}
-  for(let i=0;i<Math.floor(10*eMult);i++){let bx,by;do{bx=ri(2,COLS-3);by=ri(2,ROWS-3)}while(terrain[by][bx]===T.WATER);G.bandits.push({id:i,n:pk(['Mug','Scar','Blade','Fang','Rust','Crow','Ash','Dirk','Thorn','Vex']),hp:40,atk:8,def:3,x:bx*TILE+TILE/2,y:by*TILE+TILE/2,tx:bx,ty:by,type:'bandit'});
+  for(let i=0;i<Math.floor(10*eMult);i++){let bx,by;do{bx=ri(2,COLS-3);by=ri(2,ROWS-3)}while(terrain[cl(by,0,ROWS-1)][GLOBE.wrapX(bx)]===T.WATER);G.bandits.push({id:i,n:pk(['Mug','Scar','Blade','Fang','Rust','Crow','Ash','Dirk','Thorn','Vex']),hp:40,atk:8,def:3,x:bx*TILE+TILE/2,y:by*TILE+TILE/2,tx:bx,ty:by,type:'bandit'});
     // Hideout bandits (static camps)
-    if(i%3===0){let hx,hy,at3=0;do{hx=ri(3,COLS-4);hy=ri(3,ROWS-4);at3++}while(terrain[hy][hx]===T.WATER&&at3<30);G.bandits.push({id:100+i,n:pk(['Bandit Camp','Raider Den','Outlaw Nest']),hp:80,atk:12,def:6,x:hx*TILE+TILE/2,y:hy*TILE+TILE/2,tx:hx,ty:hy,type:'hideout',loot:ri(200,800)})}}
+    if(i%3===0){let hx,hy,at3=0;do{hx=ri(3,COLS-4);hy=ri(3,ROWS-4);at3++}while(terrain[cl(hy,0,ROWS-1)][GLOBE.wrapX(hx)]===T.WATER&&at3<30);G.bandits.push({id:100+i,n:pk(['Bandit Camp','Raider Den','Outlaw Nest']),hp:80,atk:12,def:6,x:hx*TILE+TILE/2,y:hy*TILE+TILE/2,tx:hx,ty:hy,type:'hideout',loot:ri(200,800)})}}
     G.countries.forEach(co=>{for(let i=0;i<ri(1,Math.floor(3*eMult));i++){const ct=pk(co.cities);co.armies.push({id:'a_'+co.name+'_'+i,c:co.name,sz:ri(500,3000),x:ct.x,y:ct.y,tx:ct.tx,ty:ct.ty,ord:'patrol'})}});
     genIslands();
   },
@@ -374,7 +374,7 @@ function setTradeRoute(shipIdx,cityAId,cityBId){
 function genIslands(){
   G.islands=[];const sz=[G.mapCols||COLS,G.mapRows||ROWS];
   for(let i=0;i<ri(3,8);i++){
-    let ix,iy,att=0;do{ix=ri(5,sz[0]-5);iy=ri(5,sz[1]-5);att++}while((!GLOBE.isOcean(ix,iy)||GLOBE.isOcean(ix+1,iy+1))&&att<50);
+    let ix,iy,att=0;do{ix=ri(5,sz[0]-5);iy=cl(ri(5,sz[1]-5),0,sz[1]-1);att++}while((!GLOBE.isOcean(GLOBE.wrapX(ix),iy)||GLOBE.isOcean(GLOBE.wrapX(ix+1),iy+1))&&att<50);
     const iname=pk(['Coral Isle','Emerald Key','Obsidian Rock','Pearl Atoll','Serpent Cay','Whisper Reef','Storm Island','Dragonmaw Isle']);
     G.islands.push({id:'isl_'+i,name:iname,tx:ix,ty:iy,resource:pk(GD).id,colonized:false,settlement:null});
   }
@@ -1640,6 +1640,14 @@ const LAYERS=[
     ctx.save();ctx.translate(camX*0.2,camY*0.2);
     stars.forEach(s=>{const flicker=0.5+Math.sin(G.tick*0.05+s.x)*0.5;ctx.fillStyle=`rgba(200,220,255,${s.b*flicker})`;ctx.beginPath();ctx.arc(s.x,s.y,s.s,0,Math.PI*2);ctx.fill()});
     ctx.restore();
+  }},
+  {name:'mapEdge',space:'world',order:5,enabled:true,fn(){
+    const w=COLS*TILE,h=ROWS*TILE;
+    ctx.strokeStyle='rgba(255,100,100,0.5)';ctx.lineWidth=3;ctx.setLineDash([10,5]);
+    ctx.strokeRect(0,0,w,h);ctx.setLineDash([]);
+    // Ocean label at edges
+    ctx.fillStyle='rgba(100,150,200,0.4)';ctx.font='10px sans-serif';ctx.textAlign='center';
+    ctx.fillText('🌊 OCEAN →',w-40,h/2);ctx.fillText('← OCEAN 🌊',40,h/2);
   }},
   {name:'borderGlow',space:'screen',order:2,enabled:true,fn(){
     const grd=ctx.createRadialGradient(canvas.width/2,canvas.height/2,Math.min(canvas.width,canvas.height)*0.3,canvas.width/2,canvas.height/2,Math.max(canvas.width,canvas.height)*0.8);
