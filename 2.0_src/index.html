@@ -1719,7 +1719,8 @@ const LAYERS=[
     G.aiTraders.forEach(t=>{
       const tdAt=[t.x];if(t.x<200)tdAt.push(t.x+w2);if(t.x>w2-200)tdAt.push(t.x-w2);
       tdAt.forEach(tx=>{ctx.fillStyle='rgba(0,160,70,0.8)';ctx.beginPath();ctx.arc(t.x,t.y,7,0,Math.PI*2);ctx.fill();
-      ctx.fillStyle='#ffd700';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText('$',t.x,t.y+3);
+      ctx.fillStyle='#ffd700';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText('$',tx,t.y+3);
+      });
     });
   }},
   {name:'player',space:'world',order:70,enabled:true,fn(){
