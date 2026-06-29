@@ -1019,7 +1019,7 @@ function gameTick(){
       // Move toward target (lerp smooth)
       if(!nc||RNG.next()<0.15){if(RNG.next()<0.08){const tc=pk(G.cities);t.tx=tc.tx;t.ty=tc.ty}}
       const ttx=t.tx*TILE+TILE/2,tty=t.ty*TILE+TILE/2,dx=ttx-t.x,dy=tty-t.y,d=Math.hypot(dx,dy);
-      if(d>3){t.x+=dx*0.08;t.y+=dy*0.08}
+      if(d>3){t.x=GLOBE.wrapX(t.x+dx*0.08);t.y+=dy*0.08}
     });
     // Bandits
     G.bandits.forEach(b=>{if(RNG.next()<0.15){b.tx=cl(b.tx+ri(-2,2),1,COLS-2);b.ty=cl(b.ty+ri(-2,2),1,ROWS-2)}b.x+=(b.tx*TILE+TILE/2-b.x)*0.08;b.y+=(b.ty*TILE+TILE/2-b.y)*0.08});
@@ -1715,12 +1715,17 @@ const LAYERS=[
     });
   }},
   {name:'traders',space:'world',order:61,enabled:true,fn(){
-    G.aiTraders.forEach(t=>{ctx.fillStyle='rgba(0,160,70,0.8)';ctx.beginPath();ctx.arc(t.x,t.y,7,0,Math.PI*2);ctx.fill();
+    const w2=COLS*TILE;
+    G.aiTraders.forEach(t=>{
+      const tdAt=[t.x];if(t.x<200)tdAt.push(t.x+w2);if(t.x>w2-200)tdAt.push(t.x-w2);
+      tdAt.forEach(tx=>{ctx.fillStyle='rgba(0,160,70,0.8)';ctx.beginPath();ctx.arc(t.x,t.y,7,0,Math.PI*2);ctx.fill();
       ctx.fillStyle='#ffd700';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText('$',t.x,t.y+3);
     });
   }},
   {name:'player',space:'world',order:70,enabled:true,fn(){
-    const p=G.player;const gl=ctx.createRadialGradient(p.x,p.y,4,p.x,p.y,22);gl.addColorStop(0,'rgba(255,215,0,0.5)');gl.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(p.x,p.y,22,0,Math.PI*2);ctx.fill();
+    const p=G.player;const w=COLS*TILE;
+    const pxPos=[p.x];if(p.x<200)pxPos.push(p.x+w);if(p.x>w-200)pxPos.push(p.x-w);
+    pxPos.forEach(px=>{const gl=ctx.createRadialGradient(p.x,p.y,4,p.x,p.y,22);gl.addColorStop(0,'rgba(255,215,0,0.5)');gl.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(p.x,p.y,22,0,Math.PI*2);ctx.fill();
     // Mount visual
     if(p.mount){const mid=p.mount;ctx.save();ctx.translate(p.x,p.y+12);
       if(mid==='griffin'||mid==='airship'){ctx.fillStyle='#daa520';ctx.beginPath();ctx.moveTo(-4,-6);ctx.lineTo(-18,-20);ctx.lineTo(-8,-8);ctx.fill();ctx.beginPath();ctx.moveTo(4,-6);ctx.lineTo(18,-20);ctx.lineTo(8,-8);ctx.fill();
