@@ -1194,7 +1194,7 @@ function saveGame(){
     countries:G.countries.map(co=>({name:co.name,color:co.color,cIds:co.cities.map(c=>c.id),cx:co.cx,cy:co.cy,gov:co.gov||co.gov,mil:co.mil,treasury:co.treasury,tax:co.tax,rel:co.rel,atWar:co.atWar,personality:co.pers,coastal:co.coastal,investments:co.investments.slice(-5),embassies:co.embassies,armies:co.armies.map(a=>({id:a.id,c:a.c,sz:a.sz,x:a.x,y:a.y,tx:a.tx,ty:a.ty,ord:a.ord}))})),
     bandits:G.bandits,aiTraders:G.aiTraders,gangs:G.gangs||[],misions:G.missions,roads:G.roads,trains:G.trains,ships:G.ships,comps:G.comps,aiCEOs:G.aiCEOs||[],
     terrain:terrain.map(r=>[...r]),islands:G.islands||[],ships:G.player.ships||[],nextEventDay:G.nextEventDay,weather:G.weather};
-  try{localStorage.setItem('nd4_save',JSON.stringify(d));AE.ok()}catch(e){}
+  try{d.savedAt=Date.now();localStorage.setItem('nd4_save',JSON.stringify(d));AE.ok()}catch(e){}
 }
 function loadGame(){
   try{const r=localStorage.getItem('nd4_save');if(!r)return false;const d=JSON.parse(r);
