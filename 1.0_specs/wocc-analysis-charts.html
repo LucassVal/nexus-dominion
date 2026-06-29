@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World of ClaudeCraft — Code Analysis Charts</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0f18;color:#c0c8d4;font-family:'Segoe UI',system-ui,sans-serif;padding:20px;max-width:1100px;margin:0 auto}
+h1{color:#ffd700;text-align:center;margin-bottom:4px;font-size:22px}
+.sub{text-align:center;color:#5a6a80;margin-bottom:24px;font-size:11px}
+.chart{background:#101827;border:1px solid #1e2d45;border-radius:12px;padding:16px;margin-bottom:18px}
+.chart h2{color:#00d4ff;font-size:14px;margin-bottom:10px;border-bottom:1px solid #1e2d45;padding-bottom:6px}
+.bar-row{display:flex;align-items:center;margin:3px 0;font-size:11px}
+.bar-label{width:140px;text-align:right;padding-right:8px;color:#8899aa;flex-shrink:0}
+.bar-track{flex:1;height:18px;background:#1a2740;border-radius:4px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s;display:flex;align-items:center;padding-left:6px;font-size:9px;color:#fff;font-weight:600}
+.bar-val{width:80px;padding-left:8px;font-size:10px;color:#c0c8d4;flex-shrink:0}
+.bar-val2{width:50px;text-align:right;padding-left:8px;font-size:9px;color:#5a6a80;flex-shrink:0}
+.colors{display:flex;gap:2px;flex-wrap:wrap;margin-bottom:10px}
+.colors span{padding:2px 8px;border-radius:3px;font-size:9px;color:#fff}
+.t{color:#ffd700}.b{font-weight:700}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.metric{text-align:center;padding:10px;background:#0d1320;border-radius:8px;border:1px solid #1e2d45}
+.metric .val{font-size:26px;font-weight:700}
+.metric .lbl{font-size:9px;color:#5a6a80;margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:10px}
+th{text-align:left;padding:4px 8px;color:#5a6a80;border-bottom:1px solid #1e2d45;font-size:9px;text-transform:uppercase}
+td{padding:4px 8px;border-bottom:1px solid #0d1320}
+.compact{font-size:9px}
+.note{color:#5a6a80;font-size:9px;margin-top:6px;font-style:italic}
+svg text{font-family:'Segoe UI',system-ui,sans-serif}
+</style>
+</head>
+<body>
+
+<h1>🔬 World of ClaudeCraft — Code Analysis</h1>
+<p class="sub">levy-street/world-of-claudecraft · 1.4K ★ · 2,539 commits · 265.5 MB · 3,273 files</p>
+
+<!-- METRIC CARDS -->
+<div class="grid3" style="margin-bottom:18px">
+<div class="metric"><div class="val" style="color:#ffd700">3,273</div><div class="lbl">Total Files</div></div>
+<div class="metric"><div class="val" style="color:#00d4ff">673K</div><div class="lbl">Lines of Code</div></div>
+<div class="metric"><div class="val" style="color:#2ed573">2,174</div><div class="lbl">Functions</div></div>
+<div class="metric"><div class="val" style="color:#ff8c42">347</div><div class="lbl">Classes</div></div>
+<div class="metric"><div class="val" style="color:#c0a0ff">702</div><div class="lbl">Interfaces</div></div>
+<div class="metric"><div class="val" style="color:#ff4757">793</div><div class="lbl">Type Aliases</div></div>
+</div>
+
+<!-- CHART 1: FILE TYPE DISTRIBUTION -->
+<div class="chart">
+<h2>📁 File Type Distribution</h2>
+<div class="bar-row"><span class="bar-label">TypeScript (.ts)</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#3178c6">1,127</div></div><div class="bar-val">34.4%</div></div>
+<div class="bar-row"><span class="bar-label">3D Models (.glb)</span><div class="bar-track"><div class="bar-fill" style="width:66%;background:#ff8c42">747</div></div><div class="bar-val">22.8%</div></div>
+<div class="bar-row"><span class="bar-label">JS Modules (.mjs)</span><div class="bar-track"><div class="bar-fill" style="width:26%;background:#f7df1e">291</div></div><div class="bar-val">8.9%</div></div>
+<div class="bar-row"><span class="bar-label">Audio (.mp3)</span><div class="bar-track"><div class="bar-fill" style="width:25%;background:#e74c3c">286</div></div><div class="bar-val">8.7%</div></div>
+<div class="bar-row"><span class="bar-label">Images (.webp)</span><div class="bar-track"><div class="bar-fill" style="width:14%;background:#2ecc71">162</div></div><div class="bar-val">5.0%</div></div>
+<div class="bar-row"><span class="bar-label">Markdown (.md)</span><div class="bar-track"><div class="bar-fill" style="width:13%;background:#8899aa">154</div></div><div class="bar-val">4.7%</div></div>
+<div class="bar-row"><span class="bar-label">PNG Images</span><div class="bar-track"><div class="bar-fill" style="width:13%;background:#3498db">149</div></div><div class="bar-val">4.6%</div></div>
+<div class="bar-row"><span class="bar-label">Svelte (.svelte)</span><div class="bar-track"><div class="bar-fill" style="width:4%;background:#ff3e00">42</div></div><div class="bar-val">1.3%</div></div>
+<div class="bar-row"><span class="bar-label">Other (json,css,html,xml)</span><div class="bar-track"><div class="bar-fill" style="width:12%;background:#5a6a80">315</div></div><div class="bar-val">9.6%</div></div>
+</div>
+
+<!-- CHART 2: DIRECTORY SIZE -->
+<div class="chart">
+<h2>📂 Directory Size (file count)</h2>
+<div class="bar-row"><span class="bar-label">public/ (assets)</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#ff8c42">1,384</div></div><div class="bar-val">42.3%</div></div>
+<div class="bar-row"><span class="bar-label">tests/</span><div class="bar-track"><div class="bar-fill" style="width:44%;background:#2ecc71">605</div></div><div class="bar-val">18.5%</div></div>
+<div class="bar-row"><span class="bar-label">src/ (source)</span><div class="bar-track"><div class="bar-fill" style="width:42%;background:#3178c6">583</div></div><div class="bar-val">17.8%</div></div>
+<div class="bar-row"><span class="bar-label">scripts/</span><div class="bar-track"><div class="bar-fill" style="width:23%;background:#f7df1e">314</div></div><div class="bar-val">9.6%</div></div>
+<div class="bar-row"><span class="bar-label">docs/</span><div class="bar-track"><div class="bar-fill" style="width:11%;background:#8899aa">148</div></div><div class="bar-val">4.5%</div></div>
+<div class="bar-row"><span class="bar-label">server/</span><div class="bar-track"><div class="bar-fill" style="width:4%;background:#e74c3c">55</div></div><div class="bar-val">1.7%</div></div>
+<div class="bar-row"><span class="bar-label">android/ + ios/</span><div class="bar-track"><div class="bar-fill" style="width:6%;background:#aed6f1">78</div></div><div class="bar-val">2.4%</div></div>
+<div class="bar-row"><span class="bar-label">Other</span><div class="bar-track"><div class="bar-fill" style="width:8%;background:#5a6a80">106</div></div><div class="bar-val">3.2%</div></div>
+</div>
+
+<!-- CHART 3: ARCHITECTURE LAYERS -->
+<div class="chart">
+<h2>🏗️ Architecture Layers (src/)</h2>
+<div class="bar-row"><span class="bar-label">🎮 Game Orchestration</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#ffd700">main.ts (248KB)</div></div><div class="bar-val2">orchestrator</div></div>
+<div class="bar-row"><span class="bar-label">🧠 Simulation Engine</span><div class="bar-track"><div class="bar-fill" style="width:90%;background:#3178c6">src/sim/ (12 modules)</div></div><div class="bar-val2">deterministic</div></div>
+<div class="bar-row"><span class="bar-label">🎨 Render Engine</span><div class="bar-track"><div class="bar-fill" style="width:55%;background:#2ecc71">src/render/ (4 modules)</div></div><div class="bar-val2">WebGL 3D</div></div>
+<div class="bar-row"><span class="bar-label">🖥️ UI (Svelte + vanilla)</span><div class="bar-track"><div class="bar-fill" style="width:70%;background:#ff3e00">src/ui/ + hud.ts (10.7K loc)</div></div><div class="bar-val2">42 components</div></div>
+<div class="bar-row"><span class="bar-label">🌐 Networking</span><div class="bar-track"><div class="bar-fill" style="width:30%;background:#e74c3c">src/net/ + server/</div></div><div class="bar-val2">WebSocket</div></div>
+<div class="bar-row"><span class="bar-label">🔧 Admin Panel</span><div class="bar-track"><div class="bar-fill" style="width:20%;background:#c0a0ff">src/admin/</div></div><div class="bar-val2">separate app</div></div>
+</div>
+
+<!-- CHART 4: CODE COMPOSITION -->
+<div class="chart">
+<h2>📊 Code Composition (510 TS/TSX files · 417K lines)</h2>
+<div class="bar-row"><span class="bar-label">Functions</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#3178c6">2,174</div></div><div class="bar-val">avg 4.3/file</div></div>
+<div class="bar-row"><span class="bar-label">Type Aliases</span><div class="bar-track"><div class="bar-fill" style="width:36%;background:#ff4757">793</div></div><div class="bar-val">avg 1.6/file</div></div>
+<div class="bar-row"><span class="bar-label">Interfaces</span><div class="bar-track"><div class="bar-fill" style="width:32%;background:#c0a0ff">702</div></div><div class="bar-val">avg 1.4/file</div></div>
+<div class="bar-row"><span class="bar-label">Classes</span><div class="bar-track"><div class="bar-fill" style="width:16%;background:#ff8c42">347</div></div><div class="bar-val">avg 0.7/file</div></div>
+<div class="bar-row"><span class="bar-label">Avg lines per file</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#2ecc71">819 lines</div></div><div class="bar-val">median ~200</div></div>
+</div>
+
+<!-- CHART 5: LARGEST FILES -->
+<div class="chart">
+<h2>📏 Top 8 Largest Source Files</h2>
+<div class="bar-row"><span class="bar-label">hud.ts</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#ff3e00">10,775 lines</div></div><div class="bar-val">43 funcs</div></div>
+<div class="bar-row"><span class="bar-label">talent_i18n.ts</span><div class="bar-track"><div class="bar-fill" style="width:64%;background:#c0a0ff">6,949</div></div><div class="bar-val">14 funcs</div></div>
+<div class="bar-row"><span class="bar-label">abilities.ts</span><div class="bar-track"><div class="bar-fill" style="width:61%;background:#ff4757">6,577</div></div><div class="bar-val">1 func</div></div>
+<div class="bar-row"><span class="bar-label">i18n/locales/ (×20)</span><div class="bar-track"><div class="bar-fill" style="width:60%;background:#2ecc71">6,442 each</div></div><div class="bar-val">24 locales</div></div>
+<div class="bar-row"><span class="bar-label">sim.ts</span><div class="bar-track"><div class="bar-fill" style="width:70%;background:#3178c6">7,500+</div></div><div class="bar-val">221 KB</div></div>
+</div>
+
+<!-- CHART 6: 13-CHAIN SCORES -->
+<div class="chart">
+<h2>📊 13-Chain Evaluation Scores</h2>
+<div class="bar-row"><span class="bar-label">Sim Engine</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:#2ed573">10/10</div></div></div>
+<div class="bar-row"><span class="bar-label">Documentation</span><div class="bar-track"><div class="bar-fill" style="width:95%;background:#2ed573">9.5/10</div></div></div>
+<div class="bar-row"><span class="bar-label">Combat System</span><div class="bar-track"><div class="bar-fill" style="width:95%;background:#2ed573">9.5/10</div></div></div>
+<div class="bar-row"><span class="bar-label">Architecture</span><div class="bar-track"><div class="bar-fill" style="width:90%;background:#00d4ff">9/10</div></div></div>
+<div class="bar-row"><span class="bar-label">Render Engine</span><div class="bar-track"><div class="bar-fill" style="width:90%;background:#00d4ff">9/10</div></div></div>
+<div class="bar-row"><span class="bar-label">Progression</span><div class="bar-track"><div class="bar-fill" style="width:90%;background:#00d4ff">9/10</div></div></div>
+<div class="bar-row"><span class="bar-label">Test Infra</span><div class="bar-track"><div class="bar-fill" style="width:90%;background:#00d4ff">9/10</div></div></div>
+<div class="bar-row"><span class="bar-label">UI/UX</span><div class="bar-track"><div class="bar-fill" style="width:85%;background:#ffd700">8.5/10</div></div></div>
+<div class="bar-row"><span class="bar-label">Assets</span><div class="bar-track"><div class="bar-fill" style="width:80%;background:#ffd700">8/10</div></div></div>
+<div class="bar-row"><span class="bar-label">Multiplayer</span><div class="bar-track"><div class="bar-fill" style="width:75%;background:#ff8c42">7.5/10</div></div></div>
+<div class="bar-row"><span class="bar-label">Deploy</span><div class="bar-track"><div class="bar-fill" style="width:75%;background:#ff8c42">7.5/10</div></div></div>
+<div class="bar-row"><span class="bar-label">Patterns Extractable</span><div class="bar-track"><div class="bar-fill" style="width:60%;background:#ff4757">6/10</div></div></div>
+<div style="text-align:center;margin-top:8px;font-size:18px;font-weight:700;color:#ffd700">GLOBAL SCORE: 8.6 / 10</div>
+</div>
+
+<!-- CHART 7: WoCC vs NEXUS DOMINION -->
+<div class="chart">
+<h2>⚔️ WoCC vs Nexus Dominion — Side-by-Side</h2>
+<table>
+<tr><th>Dimension</th><th style="color:#ff8c42">World of ClaudeCraft</th><th style="color:#00d4ff">Nexus Dominion v5.6</th></tr>
+<tr><td>Language</td><td>TypeScript (strict)</td><td>Vanilla JavaScript</td></tr>
+<tr><td>Size</td><td>265.5 MB · 3,273 files</td><td>108 KB · 1 file</td></tr>
+<tr><td>Render</td><td>WebGL 3D</td><td>Canvas 2D</td></tr>
+<tr><td>Multiplayer</td><td>WebSocket (MMO)</td><td>Single-player</td></tr>
+<tr><td>Assets</td><td>747 3D models + audio</td><td>Zero (Canvas-drawn)</td></tr>
+<tr><td>Classes/Roles</td><td>9 classes · 27 talent specs</td><td>5 roles</td></tr>
+<tr><td>i18n</td><td>24 locales</td><td>PT-BR only</td></tr>
+<tr><td>PRNG</td><td>Mulberry32 ✅</td><td>Mulberry32 ✅</td></tr>
+<tr><td>Sim/Render Sep</td><td>✅ Pure separation</td><td>❌ Mixed</td></tr>
+<tr><td>Documentation</td><td>154 .md files</td><td>1 SKILL.md</td></tr>
+<tr><td>Tests</td><td>605 test files</td><td>Node --check only</td></tr>
+<tr><td>Platforms</td><td>Web + Android + iOS</td><td>Web (HTTP server)</td></tr>
+<tr><td>Facilities/Economy</td><td>Não (RPG puro)</td><td>13 facilities · 5 sectors ✅</td></tr>
+<tr><td>Stock Market</td><td>Não</td><td>Sim (8 companies)</td></tr>
+<tr><td>CEO/Takeover</td><td>Não</td><td>Sim ✅</td></tr>
+</table>
+</div>
+
+<!-- CHART 8: PATTERNS EXTRACTED -->
+<div class="chart">
+<h2>🧬 Patterns Transferíveis → Nexus Dominion</h2>
+<table>
+<tr><th>#</th><th>Pattern</th><th>Status ND</th><th>Impact</th><th>Effort</th></tr>
+<tr><td>1</td><td><span class="t">PRNG Deterministico</span> — Mulberry32 seed</td><td style="color:#2ed573">✅ Done</td><td>High</td><td>2h</td></tr>
+<tr><td>2</td><td><span class="t">Sim/Render Separation</span> — StateSnapshot puro</td><td style="color:#ff4757">❌ Missing</td><td>High</td><td>8h</td></tr>
+<tr><td>3</td><td><span class="t">Entity Component System</span> — composição</td><td style="color:#ff4757">❌ Missing</td><td>Medium</td><td>12h</td></tr>
+<tr><td>4</td><td><span class="t">Canvas-drawn Icons</span> — zero emoji</td><td style="color:#ffd700">⚠️ Partial</td><td>Medium</td><td>4h</td></tr>
+<tr><td>5</td><td><span class="t">Weather Render-only</span> — clima visual</td><td style="color:#ffd700">⚠️ Partial</td><td>Low</td><td>2h</td></tr>
+<tr><td>6</td><td>WebGL 3D Rendering</td><td style="color:#5a6a80">N/A</td><td>—</td><td>—</td></tr>
+<tr><td>7</td><td>Multiplayer WebSocket</td><td style="color:#5a6a80">N/A</td><td>—</td><td>—</td></tr>
+<tr><td>8</td><td>i18n 24 locales</td><td style="color:#5a6a80">N/A</td><td>—</td><td>—</td></tr>
+<tr><td>9</td><td>Svelte UI Framework</td><td style="color:#5a6a80">N/A</td><td>—</td><td>—</td></tr>
+<tr><td>10</td><td>Dungeon Procedural Gen</td><td style="color:#ff4757">❌ Missing</td><td>Medium</td><td>16h</td></tr>
+</table>
+</div>
+
+<p class="note" style="text-align:center;margin-top:20px">
+Generated from repo: github.com/levy-street/world-of-claudecraft · 13-chain sequential thinking analysis · June 2026
+</p>
+
+</body>
+</html>

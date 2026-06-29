@@ -1,0 +1,1811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexus Dominion v5 — Living World Complete</title>
+<script>
+// Auto-reload if version changed (cache buster)
+var V='5.6.0';
+if(localStorage.getItem('nd_ver')!==V){localStorage.setItem('nd_ver',V)}else if(location.search.indexOf('force')<0&&performance.navigation&&performance.navigation.type===1){} 
+</script>
+<script src="../3.0_devtools/console_interceptor.js?v=5.5"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --glass-bg:rgba(13,19,32,0.65);--glass-border:rgba(255,255,255,0.07);
+  --glass-highlight:rgba(255,255,255,0.04);--glass-shadow:0 8px 32px rgba(0,0,0,0.4);
+  --accent:#00d4ff;--gold:#ffd700;--green:#2ed573;--red:#ff4757;
+  --text:#c0c8d4;--muted:#5a6a80;
+  --glow-cyan:0 0 12px rgba(0,212,255,0.3);--glow-gold:0 0 12px rgba(255,215,0,0.3);
+}
+body{background:radial-gradient(ellipse at 50% 0%,#0a1628 0%,#050a14 60%,#020510 100%);color:var(--text);font-family:'Inter','Segoe UI',system-ui,sans-serif;overflow:hidden;height:100vh;user-select:none}
+#mapCanvas{position:absolute;top:68px;left:0;width:100%;height:calc(100% - 68px);cursor:grab}
+#mapCanvas:active{cursor:grabbing}
+/* ─── GLASS TOP BAR ─── */
+#topBar{position:fixed;top:0;left:0;right:0;height:52px;background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--glass-border);display:flex;align-items:center;padding:0 10px;z-index:101;gap:10px;font-size:11px;box-shadow:0 2px 20px rgba(0,0,0,0.3)}
+#topBar .it{display:flex;align-items:center;gap:3px}
+#topBar .lb{color:var(--muted);font-size:7px;text-transform:uppercase;letter-spacing:.5px}
+#topBar .vl{color:#e0e8f0;font-weight:600;text-shadow:0 0 8px rgba(0,212,255,0.3)}
+.gld{color:var(--gold);text-shadow:0 0 6px rgba(255,215,0,0.4)}.cyn{color:var(--accent)}.grn{color:var(--green)}.red{color:var(--red)}
+#topBar button{padding:4px 10px;border-radius:6px;font-size:9px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);font-weight:500;background:rgba(255,255,255,0.04);color:#8899aa;transition:all .2s;backdrop-filter:blur(4px)}
+#topBar button:hover{background:rgba(0,212,255,0.12);color:var(--accent);border-color:rgba(0,212,255,0.2);box-shadow:var(--glow-cyan)}
+/* ─── GLASS HUD ─── */
+#hud{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:4px;background:var(--glass-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--glass-border);border-radius:12px;padding:6px 10px;box-shadow:var(--glass-shadow)}
+#hud button{padding:6px 12px;border-radius:7px;font-size:10px;cursor:pointer;border:1px solid transparent;background:transparent;color:#8899aa;transition:all .2s;font-weight:500}
+#hud button:hover{background:rgba(255,255,255,0.06);color:var(--accent);border-color:rgba(0,212,255,0.15);box-shadow:var(--glow-cyan);transform:translateY(-1px)}
+#hud .sp{width:1px;background:var(--glass-border)}
+/* ─── GLASS MODAL ─── */
+#modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#modalOverlay.on{display:flex}
+.modal{background:var(--glass-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:16px;width:94vw;max-width:820px;max-height:85vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,0.7),inset 0 1px 0 var(--glass-highlight)}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--glass-border);position:sticky;top:0;background:rgba(13,19,32,0.85);backdrop-filter:blur(20px);z-index:1;border-radius:16px 16px 0 0}
+.mh h2{font-size:14px;color:#e0e8f0;font-weight:600;text-shadow:0 0 10px rgba(0,212,255,0.2)}
+.mc{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 10px;border-radius:6px;transition:all .2s}
+.mc:hover{color:var(--red);background:rgba(255,71,87,0.1)}
+.mb{padding:12px}
+/* ─── 3D BUTTONS ─── */
+.btn{display:inline-block;padding:6px 12px;border-radius:7px;font-size:10px;cursor:pointer;border:1px solid transparent;font-weight:500;transition:all .2s;text-shadow:0 1px 2px rgba(0,0,0,0.5)}
+.btn1{background:linear-gradient(180deg,rgba(0,212,255,0.15),rgba(0,150,200,0.08));color:var(--accent);border-color:rgba(0,212,255,0.2)}
+.btn1:hover{background:linear-gradient(180deg,rgba(0,212,255,0.25),rgba(0,180,220,0.15));box-shadow:var(--glow-cyan);transform:translateY(-1px)}
+.btn2{background:linear-gradient(180deg,rgba(46,213,115,0.15),rgba(30,160,80,0.08));color:var(--green);border-color:rgba(46,213,115,0.2)}
+.btn2:hover{background:linear-gradient(180deg,rgba(46,213,115,0.25),rgba(30,180,90,0.15));box-shadow:0 0 12px rgba(46,213,115,0.3);transform:translateY(-1px)}
+.btn3{background:linear-gradient(180deg,rgba(255,71,87,0.15),rgba(200,40,60,0.08));color:var(--red);border-color:rgba(255,71,87,0.2)}
+.btn3:hover{background:linear-gradient(180deg,rgba(255,71,87,0.25),rgba(220,50,70,0.15));box-shadow:0 0 12px rgba(255,71,87,0.3);transform:translateY(-1px)}
+.btn4{background:linear-gradient(180deg,rgba(255,215,0,0.15),rgba(200,160,0,0.08));color:var(--gold);border-color:rgba(255,215,0,0.2)}
+.btn4:hover{background:linear-gradient(180deg,rgba(255,215,0,0.25),rgba(220,180,0,0.15));box-shadow:var(--glow-gold);transform:translateY(-1px)}
+.bs{padding:3px 8px;font-size:8px}
+.mt8{margin-top:8px}.mb8{margin-bottom:8px}
+/* ─── GLASS CARDS ─── */
+.card{background:rgba(16,24,39,0.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--glass-border);border-radius:10px;padding:10px;margin-bottom:6px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.card:hover{border-color:rgba(255,255,255,0.12);box-shadow:0 4px 16px rgba(0,0,0,0.3)}
+.card h3{font-size:11px;color:#8899aa;margin-bottom:4px;font-weight:600;letter-spacing:.3px}
+.sr{display:flex;justify-content:space-between;padding:1px 0;font-size:10px}
+.sr .sl{color:var(--muted)}.sr .sv{color:#d0d8e4}
+.pb{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;margin-top:3px;box-shadow:inset 0 1px 3px rgba(0,0,0,0.3)}
+.pf{height:100%;border-radius:3px;box-shadow:0 0 8px currentColor}
+.flex-row{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+/* ─── GLASS MINIMAP ─── */
+#miniMap{position:fixed;bottom:44px;right:4px;width:200px;height:150px;background:rgba(5,10,20,0.8);backdrop-filter:blur(4px);border:2px solid var(--glass-border);border-radius:10px;z-index:99;image-rendering:pixelated;box-shadow:0 4px 16px rgba(0,0,0,0.4)}
+/* ─── GLASS LOG OVERLAY ─── */
+#logOverlay{position:fixed;bottom:54px;left:6px;right:146px;height:60px;background:var(--glass-bg);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--glass-border);border-radius:8px;z-index:99;overflow-y:auto;padding:4px 8px;font-size:9px;box-shadow:0 2px 12px rgba(0,0,0,0.3)}
+#logOverlay .le{color:#6a7a90;padding:1px 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+#logOverlay .le .ld{color:#3a4a60;margin-right:6px}
+/* ─── NOTIFICATIONS ─── */
+.note{position:fixed;top:62px;right:10px;z-index:250;background:var(--glass-bg);backdrop-filter:blur(16px);border:1px solid var(--glass-border);border-radius:10px;padding:8px 12px;font-size:10px;animation:si .3s ease;max-width:280px;pointer-events:none;box-shadow:var(--glass-shadow)}
+.note.ok{border-color:rgba(46,213,115,0.3);box-shadow:0 4px 20px rgba(46,213,115,0.15)}
+.note.er{border-color:rgba(255,71,87,0.3);box-shadow:0 4px 20px rgba(255,71,87,0.15)}
+.note.inf{border-color:rgba(0,212,255,0.3);box-shadow:0 4px 20px rgba(0,212,255,0.15)}
+@keyframes si{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+/* ─── 3D TEXT EFFECT ─── */
+.text3d{text-shadow:0 1px 0 rgba(255,255,255,0.1),0 2px 4px rgba(0,0,0,0.5),0 0 12px var(--glow-cyan)}
+.text3d-gold{text-shadow:0 1px 0 rgba(255,255,255,0.2),0 2px 4px rgba(0,0,0,0.6),0 0 16px rgba(255,215,0,0.5)}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
+#rm{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:500;display:flex;align-items:center;justify-content:center;flex-direction:column;backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+#rm h1{color:var(--gold);font-size:28px;margin-bottom:4px;text-shadow:0 0 20px rgba(255,215,0,0.4),0 2px 8px rgba(0,0,0,0.8)}
+#rm .sub{color:#6a7a90;margin-bottom:18px;font-size:11px}
+#rm .rs{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#rm .rc{background:var(--glass-bg);backdrop-filter:blur(12px);border:2px solid var(--glass-border);border-radius:14px;padding:16px;width:140px;text-align:center;cursor:pointer;transition:all .25s}
+#rm .rc:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:var(--glow-cyan),0 8px 30px rgba(0,0,0,0.4)}
+#rm .rc .ri{font-size:30px;margin-bottom:4px}
+#rm .rc .rn{color:#e0e8f0;font-size:13px;font-weight:600;margin-bottom:2px;text-shadow:0 0 8px rgba(0,212,255,0.2)}
+#rm .rc .rb{color:var(--muted);font-size:8px}
+/* ─── NEWS TICKER ─── */
+#newsTicker{position:fixed;top:52px;left:0;right:0;height:16px;background:rgba(10,15,24,0.6);backdrop-filter:blur(8px);border-bottom:1px solid var(--glass-border);overflow:hidden;z-index:100;font-size:8px;color:var(--muted);display:flex;align-items:center;padding:0 8px}
+</style>
+</head>
+<body>
+
+<div id="rm"><h1>Nexus Dominion</h1><p class="sub">Choose your destiny</p>
+<p style="color:#8899aa;font-size:10px;margin-bottom:6px"><input id="charName" placeholder="Your name..." style="background:rgba(16,24,39,0.6);color:#c0c8d4;border:1px solid rgba(255,255,255,0.1);padding:6px 12px;border-radius:8px;font-size:12px;text-align:center;width:200px" value="Traveler"></p>
+<p style="color:#8899aa;font-size:10px;margin-bottom:4px">Race: 
+<select id="charRace" style="background:rgba(16,24,39,0.6);color:#c0c8d4;border:1px solid rgba(255,255,255,0.1);padding:4px 8px;border-radius:6px;font-size:10px">
+<option value="human">👤 Human (balanced)</option>
+<option value="elf">🧝 Elf (+trading)</option>
+<option value="dwarf">⛏️ Dwarf (+mining)</option>
+<option value="orc">👹 Orc (+combat)</option>
+</select></p>
+<!-- WORLD CONFIG -->
+<div id="worldCfg" style="display:none;margin-bottom:12px;padding:12px;background:var(--glass-bg);backdrop-filter:blur(12px);border:1px solid var(--glass-border);border-radius:12px;max-width:420px;text-align:left;font-size:10px">
+<h3 style="color:var(--accent);margin-bottom:8px;font-size:12px">⚙️ World Configuration</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+<div><span style="color:var(--muted)">🗺️ Map Type</span><br>
+<select id="cfgMapType" style="background:rgba(16,24,39,0.6);color:#c0c8d4;border:1px solid rgba(255,255,255,0.1);padding:3px 6px;border-radius:4px;font-size:9px;width:100%">
+<option value="default">🌍 Default (balanced)</option>
+<option value="archipelago">🏝️ Archipelago (more water)</option>
+<option value="pangea">🏔️ Pangea (more land)</option>
+<option value="highlands">⛰️ Highlands (more mountains)</option>
+</select></div>
+<div><span style="color:var(--muted)">📏 Map Size</span><br>
+<select id="cfgMapSize" style="background:rgba(16,24,39,0.6);color:#c0c8d4;border:1px solid rgba(255,255,255,0.1);padding:3px 6px;border-radius:4px;font-size:9px;width:100%">
+<option value="tiny">📱 Tiny (30×22)</option>
+<option value="small">📱 Small (40×30)</option>
+<option value="medium" selected>💻 Medium (60×45)</option>
+<option value="large">🖥️ Large (80×60)</option>
+<option value="epic">🏰 Epic (100×75)</option>
+</select></div>
+<div><span style="color:var(--muted)">🏛️ Countries</span><br>
+<select id="cfgCountries" style="background:rgba(16,24,39,0.6);color:#c0c8d4;border:1px solid rgba(255,255,255,0.1);padding:3px 6px;border-radius:4px;font-size:9px;width:100%">
+<option value="4">4 Countries</option>
+<option value="6" selected>6 Countries</option>
+<option value="8">8 Countries</option>
+<option value="10">10 Countries</option>
+</select></div>
+<div><span style="color:var(--muted)">👥 Entities</span><br>
+<select id="cfgEntities" style="background:rgba(16,24,39,0.6);color:#c0c8d4;border:1px solid rgba(255,255,255,0.1);padding:3px 6px;border-radius:4px;font-size:9px;width:100%">
+<option value="low">😴 Low (sparse)</option>
+<option value="medium" selected>⚖️ Medium</option>
+<option value="high">🔥 High (crowded)</option>
+</select></div>
+<div style="grid-column:1/-1"><span style="color:var(--muted)">🎲 Seed</span><br>
+<input id="cfgSeed" placeholder="Random" style="background:rgba(16,24,39,0.6);color:#c0c8d4;border:1px solid rgba(255,255,255,0.1);padding:4px 8px;border-radius:4px;font-size:10px;width:100%;text-align:center">
+<button onclick="document.getElementById('cfgSeed').value=Math.floor(Math.random()*99999)+1" style="background:rgba(255,255,255,0.05);color:var(--accent);border:1px solid rgba(0,212,255,0.2);padding:2px 8px;border-radius:4px;font-size:8px;cursor:pointer;margin-top:3px">🎲 Random Seed</button></div>
+</div></div>
+<button onclick="var c=document.getElementById('worldCfg');c.style.display=c.style.display==='none'?'block':'none'" style="background:rgba(255,255,255,0.04);color:var(--accent);border:1px solid rgba(0,212,255,0.15);padding:5px 14px;border-radius:8px;font-size:10px;cursor:pointer;margin-bottom:8px">⚙️ Configure World</button>
+<div class="rs">
+<div class="rc" onclick="startGame('merchant')"><div class="ri">🐪</div><div class="rn">Merchant</div><div class="rb">+30% trade profit<br>Caravan +500g</div></div>
+<div class="rc" onclick="startGame('warrior')"><div class="ri">⚔️</div><div class="rn">Warrior</div><div class="rb">+25% combat<br>+15% HP, sword</div></div>
+<div class="rc" onclick="startGame('mercenary')"><div class="ri">🛡️</div><div class="rn">Mercenary</div><div class="rb">-30% hire cost<br>3 free units</div></div>
+<div class="rc" onclick="startGame('ceo')"><div class="ri">🏢</div><div class="rn">CEO</div><div class="rb">$100K + company<br>Stock access</div></div>
+<div class="rc" onclick="startGame('wanderer')"><div class="ri">🎒</div><div class="rn">Wanderer</div><div class="rb">+10% all skills<br>Versatile</div>
+<div class="rc" onclick="startGame('bandit')" style="border-color:rgba(255,71,87,0.3)"><div class="ri">🦹</div><div class="rn">Bandit</div><div class="rb">Outlaw life<br>Gang + heists</div></div>
+<div class="rc" onclick="startGame('king')" style="border-color:rgba(255,215,0,0.3)"><div class="ri">👑</div><div class="rn">King</div><div class="rb">Rule a kingdom<br>$200K + army</div></div>
+<button onclick="foundKingdom()" style="margin-top:12px;background:linear-gradient(180deg,rgba(255,215,0,0.2),rgba(200,160,0,0.1));color:var(--gold);border:2px solid rgba(255,215,0,0.3);padding:10px 20px;border-radius:10px;font-size:12px;cursor:pointer;font-weight:600;transition:all .2s"
+ onmouseover="this.style.boxShadow='0 0 20px rgba(255,215,0,0.4)';this.style.transform='translateY(-2px)'"
+ onmouseout="this.style.boxShadow='none';this.style.transform='none'"
+>👑 Found Your Own Kingdom</button></div></div>
+</div>
+<button onclick="foundKingdom()" style="margin-top:12px;background:linear-gradient(180deg,rgba(255,215,0,0.2),rgba(200,160,0,0.1));color:var(--gold);border:2px solid rgba(255,215,0,0.3);padding:10px 20px;border-radius:10px;font-size:12px;cursor:pointer;font-weight:600;transition:all .2s"
+ onmouseover="this.style.boxShadow='0 0 20px rgba(255,215,0,0.4)';this.style.transform='translateY(-2px)'"
+ onmouseout="this.style.boxShadow='none';this.style.transform='none'"
+>👑 Found Your Own Kingdom</button></div></div>
+
+<canvas id="mapCanvas"></canvas>
+
+<div id="newsTicker" style="position:fixed;top:52px;left:0;right:0;height:16px;background:#0a0f18;border-bottom:1px solid #1e2d45;overflow:hidden;z-index:100;font-size:8px;color:#5a6a80;display:flex;align-items:center;padding:0 8px"><span id="newsScroll">Nexus Dominion — Living World</span></div>
+
+<div id="topBar">
+<span class="it"><span class="lb">Name</span><span class="vl cyn" id="tbN">—</span></span>
+<span class="it"><span class="lb">HP</span><span class="vl red" id="tbH">—</span></span>
+<span class="it"><span class="lb">Lvl</span><span class="vl" id="tbL">1</span></span>
+<span class="it"><span class="lb">Gold</span><span class="vl gld" id="tbG">0</span></span>
+<span class="it"><span class="lb">Day</span><span class="vl" id="tbD">1</span></span>
+<span class="it"><span class="lb">Role</span><span class="vl grn" id="tbR">—</span></span>
+<span class="it"><span class="lb">Near</span><span class="vl cyn" id="tbNear">—</span></span>
+<button style="margin-left:auto" onclick="saveGame()">💾 Save</button>
+<button onclick="openModal('settings')" style="background:#1a2740;color:#ffd700;font-weight:bold;padding:4px 10px;font-size:10px">⚙️ SET</button>
+<button onclick="openModal('profile')" style="background:#1a1020;color:#c0a0ff;padding:4px 8px;font-size:10px">👤</button>
+<button id="tbDiplo" onclick="openModal('diplomacy')" style="display:none">🏛️</button>
+<button id="tbFin" onclick="openModal('finance')" style="display:none">📈</button>
+</div>
+
+<div id="hud">
+<button id="hudCity" onclick="interactCity()" title="Interagir com cidade (precisa estar perto)">🏙️ City</button><span class="sp"></span>
+<button id="hudTrade" onclick="openModal('market')" title="Comprar e vender mercadorias">💰 Trade</button><span class="sp"></span>
+<button id="hudItems" onclick="openModal('inv')" title="Ver inventario e equipamentos">🎒 Items</button><span class="sp"></span>
+<button id="hudSkills" onclick="openModal('skills')" title="Ver habilidades e atributos">⭐ Skills</button><span class="sp"></span>
+<button id="hudTravel" onclick="openModal('transport')" title="Viajar de trem ou navio (precisa estar na cidade)">🚂 Travel</button><span class="sp"></span>
+<button id="hudBiz" onclick="openModal('finance')" title="Stock market e suas empresas">🏢 Biz</button><span class="sp"></span>
+<button id="hudTech" onclick="openModal('techtree')" title="Tech Tree — facility chains">🔬</button><span class="sp"></span>
+<button id="hudAch" onclick="openModal('achievements')" title="Conquistas desbloqueadas">🏆</button><span class="sp"></span>
+<button id="hudCamp" onclick="campAction()" title="Acampar para recuperar HP (precisa estar parado)">🏕️ Camp</button><span class="sp"></span>
+<button onclick="zoomMap(0.15)" title="Zoom in">🔍+</button>
+<button onclick="zoomMap(-0.15)" title="Zoom out">🔍-</button>
+</div>
+
+<div id="modalOverlay" onclick="if(event.target===this)closeModal()"><div class="modal" id="modalC"></div></div>
+<div id="logOverlay"></div>
+<canvas id="miniMap" width="200" height="150"></canvas>
+
+<script>
+// ═══════════════════════════════════════════════
+//  NEXUS DOMINION v6.5 — DDD Architecture
+//  7 Bounded Contexts: WORLD STATE ECONOMY POLITICS COMBAT PLAYER RENDER
+//  Orquestrador: ORC (init→tick→save→load)
+// ═══════════════════════════════════════════════
+
+// ═══ ORQUESTRADOR (DDD: main loop coordinator) ═══
+const ORC={
+  init(role,cfg){
+    G=newState();G.player.role=role;G.seed=cfg.seed||Math.floor(Date.now()%99999)+1;
+    const sizes={tiny:[30,22],small:[40,30],medium:[60,45],large:[80,60],epic:[100,75]};
+    const sz=sizes[cfg.mapSize]||[60,45];G.mapCols=sz[0];G.mapRows=sz[1];
+    G.player.name=document.getElementById('charName')?.value||'Traveler';
+    G.player.race=document.getElementById('charRace')?.value||'human';
+    if(G.player.race==='elf')G.player.skills.trading+=1;
+    if(G.player.race==='dwarf')G.player.skills.leadership+=1;
+    if(G.player.race==='orc'){G.player.atk+=2;G.player.mhp+=10;G.player.hp+=10;}
+    seedRNG(G.seed);genTerrain(G.seed,cfg.mapType);
+    // Kingdom mode: generate player kingdom + opponent countries
+    if(cfg.kingdomName){
+      const gt=GOV_TYPES[cfg.kingdomGov]||GOV_TYPES['monarchy'];
+      const colors=['rgba(42,138,90,1)','rgba(90,58,138,1)','rgba(58,106,138,1)','rgba(138,58,58,1)','rgba(200,150,30,1)','rgba(100,140,180,1)'];
+      const color=colors[Math.floor(Math.random()*colors.length)];
+      let cx=Math.floor(sz[0]/2),cy=Math.floor(sz[1]/2),att=0;
+      while((terrain[cy]&&terrain[cy][cx]===T.WATER||terrain[cy]&&terrain[cy][cx]===T.MOUNTAIN)&&att<100){cx+=ri(-5,5);cy+=ri(-3,3);att++}
+      const capital={id:0,name:cfg.kingdomName,cIdx:0,tx:cx,ty:cy,x:cx*TILE+TILE/2,y:cy*TILE+TILE/2,pop:200000+ri(0,300000),bldgs:[],gdp:10+RNG.next()*30,stab:70,owner:null,supply:{},demand:{},prices:{},facilities:[]};
+      GD.forEach(g=>{capital.supply[g.id]=ri(10,100);capital.demand[g.id]=ri(10,100);capital.prices[g.id]=g.p});
+      const cc=[capital];const cityNames=['Northhold','Eastgate','Southport','Westwatch','Riverbend'];
+      for(let i=0;i<5;i++){let tx=cx+ri(-8,8),ty=cy+ri(-6,6),at2=0;while((tx<0||tx>=sz[0]||ty<0||ty>=sz[1]||terrain[ty][tx]===T.WATER||terrain[ty][tx]===T.MOUNTAIN)&&at2<50){tx=cx+ri(-8,8);ty=cy+ri(-6,6);at2++}
+        const isCap=i===0;const ctype=isCap?'town':i===1?'castle':i===2?'castle':'village';const cpop=isCap?200000+ri(0,800000):ctype==='castle'?8000+ri(0,40000):2000+ri(0,18000);
+        const ct={id:cid++,name:cn,cIdx:ci,tx,ty,x:tx*TILE+TILE/2,y:ty*TILE+TILE/2,pops:{farmers:ri(1000,50000),laborers:ri(500,20000),artisans:ri(100,5000),merchants:ri(50,2000),aristocrats:ri(10,500),clergy:ri(20,1000),soldiers:ri(0,500)},pop:cpop,bldgs:[],gdp:ctype==='town'?20+RNG.next()*80:ctype==='castle'?5+RNG.next()*20:1+RNG.next()*10,stab:30+RNG.next()*70,owner:null,supply:{},demand:{},prices:{},facilities:[],type:ctype};
+        GD.forEach(g=>{ct2.supply[g.id]=ri(5,60);ct2.demand[g.id]=ri(5,60);ct2.prices[g.id]=g.p});cc.push(ct2);}
+      const roads=[];for(let i=0;i<cc.length;i++)for(let j=i+1;j<cc.length;j++)roads.push({fx:cc[i].tx,fy:cc[i].ty,tx:cc[j].tx,ty:cc[j].ty});
+      const pkd={name:cfg.kingdomName,color,cities:cc,cx:cx*TILE+TILE/2,cy:cy*TILE+TILE/2,gov:{type:cfg.kingdomGov,name:gt.n,ic:gt.ic,taxRate:gt.tax.corp,tradeTax:gt.tax.trade,licenseFee:gt.tax.license,stab:gt.stab,corpPolicy:gt.corp},mil:40+RNG.next()*60,treasury:2e5+RNG.next()*3e5,tax:gt.tax.corp+ri(-3,3),rel:{},armies:[{id:'pk_0',c:cfg.kingdomName,sz:ri(800,2000),x:capital.x,y:capital.y,tx:cx,ty:cy,ord:'patrol'}],atWar:[],pop:0,pers:'peaceful',coastal:false,investments:[],embassies:[],territory:[],factions:[]};
+      const oppWorld=genWorld(cfg.countries||ri(3,6));
+      G.cities=[...cc,...oppWorld.cities];G.countries=[pkd,...oppWorld.countries];G.roads=[...roads,...oppWorld.roads];G.trains=oppWorld.trains;G.ships=oppWorld.ships;
+      G.player.kingdom=pkd;const sc2=pk(cc);G.player.x=sc2.x;G.player.y=sc2.y;G.player.vis=cc.map(c=>c.id);
+    }else{
+      const w=genWorld(cfg.countries);G.cities=w.cities;G.countries=w.countries;G.roads=w.roads;G.trains=w.trains;G.ships=w.ships;
+      const sc=pk(G.cities);G.player.x=sc.x;G.player.y=sc.y;G.player.vis.push(sc.id);
+    }
+    this._initRole(role);this._initEntities(cfg.entities);this._initCompanies();
+    genMissions();document.getElementById('rm').style.display='none';
+    G.logs=[{t:1,m:'World generated. Role: '+role.toUpperCase()+'. Seed: '+G.seed}];
+    AE.ok();notify('Living world generated!','inf');updateUI();saveGame();
+  },
+  _initRole(role){
+    const p=G.player;
+    switch(role){
+      case'merchant':p.gold=500;p.caravan={cap:50,goods:[],guards:0};p.skills.trading=3;break;
+      case'warrior':p.gold=200;p.mhp=115;p.hp=115;p.atk=8;p.skills.combat=3;p.eq.weapon='sword';break;
+      case'mercenary':p.gold=300;for(let i=0;i<3;i++)p.units.push({n:'Unit '+pk(['Alpha','Bravo','Delta']),hp:60,atk:8,def:4});p.skills.leadership=3;break;
+      case'ceo':p.gold=100000;p.skills.trading=2;p.skills.leadership=2;foundCompany('general');break;
+      case'wanderer':p.gold=100;p.skills.stealth=2;break;
+      case'king':p.gold=200000;p.skills.leadership=4;p.skills.diplomacy=3;break;
+      case'bandit':p.gold=50;p.bounty=500;p.skills.stealth=3;p.skills.combat=2;p.notoriety=0;p.gang=[];p.hideouts=[];break;
+    }
+  },
+  _initEntities(eMult){
+    for(let i=0;i<Math.floor(6*eMult);i++){const sc2=pk(G.cities);G.aiTraders.push({id:i,n:'Trader '+pk(['Alaric','Borin','Cedric','Doran','Eldon','Fenris']),x:sc2.x,y:sc2.y,gold:500+ri(0,1000),goods:[],tx:sc2.tx,ty:sc2.ty})}
+    G.gangs=[];const gangNames=['Red Serpents','Black Crows','Iron Wolves','Shadow Blades','Crimson Vipers'];const gangColors=['rgba(200,30,30,0.7)','rgba(30,30,30,0.7)','rgba(100,100,120,0.7)','rgba(60,20,60,0.7)','rgba(180,60,20,0.7)'];
+  for(let gi=0;gi<Math.floor(3*eMult);gi++){const gn=gk(gangNames);gangNames.splice(gangNames.indexOf(gn),1);const gtiles=[];let gx=ri(5,COLS-5),gy=ri(5,ROWS-5);for(let t=0;t<ri(8,20);t++){gtiles.push({x:cl(gx+ri(-5,5),0,COLS-1),y:cl(gy+ri(-4,4),0,ROWS-1)});}
+    G.gangs.push({id:'gang_'+gi,name:gn,color:gangColors[gi]||'rgba(200,30,30,0.7)',leader:pk(['Scarface','Blackbeard','Ironfist','Shadow','Viper']),territory:gtiles,members:ri(5,15),hideouts:[{x:gx*TILE+TILE/2,y:gy*TILE+TILE/2}],notoriety:ri(20,80),enemies:[],allies:[],bounty:ri(500,5000),gold:ri(1000,10000)});}
+  for(let i=0;i<Math.floor(10*eMult);i++){let bx,by;do{bx=ri(2,COLS-3);by=ri(2,ROWS-3)}while(terrain[by][bx]===T.WATER);G.bandits.push({id:i,n:pk(['Mug','Scar','Blade','Fang','Rust','Crow','Ash','Dirk','Thorn','Vex']),hp:40,atk:8,def:3,x:bx*TILE+TILE/2,y:by*TILE+TILE/2,tx:bx,ty:by,type:'bandit'});
+    // Hideout bandits (static camps)
+    if(i%3===0){let hx,hy,at3=0;do{hx=ri(3,COLS-4);hy=ri(3,ROWS-4);at3++}while(terrain[hy][hx]===T.WATER&&at3<30);G.bandits.push({id:100+i,n:pk(['Bandit Camp','Raider Den','Outlaw Nest']),hp:80,atk:12,def:6,x:hx*TILE+TILE/2,y:hy*TILE+TILE/2,tx:hx,ty:hy,type:'hideout',loot:ri(200,800)})}}
+    G.countries.forEach(co=>{for(let i=0;i<ri(1,Math.floor(3*eMult));i++){const ct=pk(co.cities);co.armies.push({id:'a_'+co.name+'_'+i,c:co.name,sz:ri(500,3000),x:ct.x,y:ct.y,tx:ct.tx,ty:ct.ty,ord:'patrol'})}});
+    genIslands();
+  },
+  _initCompanies(){
+    for(let i=0;i<8;i++){const n=pk(['Apex','Nova','Quantum','Atlas','Titan','Vertex','Omega','Sigma'])+' '+pk(['Dynamics','Holdings','Corp','Global','Systems','Enterprises']);const bp=10+RNG.next()*90;G.comps.push({id:i,name:n,cash:50000+RNG.next()*500000,ct:5+RNG.next()*95,emp:50+ri(0,500),rev:5000+ri(0,20000),stock:bp,hist:Array(30).fill(bp),shares:10000+ri(0,90000),avail:0,owner:'public',ownerType:'ai_public'});}
+    G.comps.forEach(c=>{c.avail=Math.floor(c.shares*0.4)});
+    G.aiCEOs=[];for(let i=0;i<4;i++){const ai={id:'ceo_'+i,name:pk(['Lord Ashford','Lady Vex','Baron Krul','Duchess Mira']),personality:pk(['aggressive','conservative','innovative']),wealth:50000+ri(0,200000),companies:[],territory:pk(G.countries).name};G.aiCEOs.push(ai)}
+    G.countries.forEach(co=>{if(RNG.next()<0.4){const sn=pk(['Royal','Crown','Imperial'])+' '+pk(['Resources','Trading Co','Armory']);const cid=G.comps.length;const bp2=15+RNG.next()*60;G.comps.push({id:cid,name:sn+' ('+co.name+')',cash:100000+RNG.next()*500000,ct:10+RNG.next()*70,emp:ri(100,1000),rev:10000+ri(0,50000),stock:bp2,hist:Array(30).fill(bp2),shares:20000+ri(0,80000),avail:0,owner:co.name,ownerType:'kingdom_state'});G.comps[G.comps.length-1].avail=Math.floor(G.comps[G.comps.length-1].shares*0.2)}});
+  }
+};
+
+// ─── INFRASTRUCTURE: AUDIO [CONTEXT: RENDER] ───
+const AE={c:null,gain:null,vol:0.5,i(){this.c=new(window.AudioContext||window.webkitAudioContext)();this.gain=this.c.createGain();this.gain.gain.value=this.vol;this.gain.connect(this.c.destination)},
+  p(f,t='sine',d=0.1,v=0.05){if(!this.c)return;const o=this.c.createOscillator(),g=this.c.createGain();o.type=t;o.frequency.value=f;g.gain.setValueAtTime(v,this.c.currentTime);g.gain.exponentialRampToValueAtTime(0.001,this.c.currentTime+d);o.connect(g);g.connect(this.c.destination);o.start();o.stop(this.c.currentTime+d)},
+  tk(){this.p(800,'square',0.03,0.02)},al(){this.p(1200,'sine',0.1,0.03)},ok(){this.p(523,'sine',0.08);setTimeout(()=>this.p(659,'sine',0.08),70);setTimeout(()=>this.p(784,'sine',0.1),140)},
+  er(){this.p(150,'sawtooth',0.12,0.03)},cn(){this.p(900,'triangle',0.05,0.03)},ht(){this.p(200,'square',0.08,0.04)},am(){if(!this.c)return;const o=this.c.createOscillator(),g=this.c.createGain();o.type='sine';o.frequency.value=55;g.gain.value=0.01;o.connect(g);g.connect(this.c.destination);o.start()}};
+
+// ─── DOMAIN: CONSTANTS ───
+const COLS=60,ROWS=45,TILE=40;
+function MC(){return (G&&G.mapCols)?G.mapCols:COLS}
+function MR(){return (G&&G.mapRows)?G.mapRows:ROWS}
+const T={WATER:0,PLAINS:1,FOREST:2,MOUNTAIN:3,DESERT:4};
+const TC=['#1a3a5c','#3a6b35','#1e4a1e','#4a4a4a','#c4a64a'];
+const TN=['Water','Plains','Forest','Mountain','Desert'];
+const TS={0:0,1:1,2:0.7,3:0.4,4:0.8};
+// ═══ CONTEXT: GLOBE (world wrap) ═══
+// ═══ TECH: EU5 Institutions + Victoria Advances ═══
+const INSTITUTIONS=[
+  {id:'feudalism',n:'Feudalism',era:1,cost:500,effects:'Castles, vassalage',unlocks:['garrison','walls']},
+  {id:'renaissance',n:'Renaissance',era:2,cost:1500,effects:'+20% trade, banking',unlocks:['market','bank']},
+  {id:'colonialism',n:'Colonialism',era:2,cost:2000,effects:'Naval range, colonies',unlocks:['stable']},
+  {id:'printing',n:'Printing Press',era:2,cost:1200,effects:'+30% diplomacy, faster integration',unlocks:[]},
+  {id:'global_trade',n:'Global Trade',era:3,cost:3000,effects:'Trade routes, ships',unlocks:[]},
+  {id:'manufactories',n:'Manufactories',era:3,cost:3500,effects:'+40% production, factories',unlocks:['factory']},
+  {id:'enlightenment',n:'Enlightenment',era:3,cost:2500,effects:'-10% corruption, +stability',unlocks:[]},
+  {id:'industrialization',n:'Industrialization',era:4,cost:5000,effects:'+50% production, railways',unlocks:['powerplant','refinery']},
+  {id:'nationalism',n:'Nationalism',era:4,cost:4000,effects:'+20% military, levies',unlocks:[]},
+  {id:'mass_production',n:'Mass Production',era:5,cost:8000,effects:'+60% production, mega factories',unlocks:['foodplant']},
+];
+const ADVANCES=[
+  {id:'agriculture',n:'Agriculture',branch:'production',era:1,cost:300,prereq:[],effect:{farmers:200}},
+  {id:'mining',n:'Mining',branch:'production',era:1,cost:300,prereq:[],effect:{laborers:150}},
+  {id:'bronze_working',n:'Bronze Working',branch:'military',era:1,cost:400,prereq:[],effect:{atk:1}},
+  {id:'currency',n:'Currency',branch:'society',era:1,cost:500,prereq:[],effect:{tax:2}},
+  {id:'irrigation',n:'Irrigation',branch:'production',era:2,cost:800,prereq:['agriculture'],effect:{farmers:500}},
+  {id:'steel',n:'Steel',branch:'military',era:2,cost:1000,prereq:['mining'],effect:{atk:2,def:1}},
+  {id:'guilds',n:'Guilds',branch:'society',era:2,cost:700,prereq:['currency'],effect:{artisans:100}},
+  {id:'machinery',n:'Machinery',branch:'production',era:3,cost:1500,prereq:['irrigation'],effect:{laborers:300}},
+  {id:'gunpowder',n:'Gunpowder',branch:'military',era:3,cost:2000,prereq:['steel'],effect:{atk:3}},
+  {id:'banking',n:'Banking',branch:'society',era:3,cost:1200,prereq:['guilds'],effect:{gold:2000}},
+  {id:'steam_power',n:'Steam Power',branch:'production',era:4,cost:3000,prereq:['machinery'],effect:{production:20}},
+  {id:'rifling',n:'Rifling',branch:'military',era:4,cost:3500,prereq:['gunpowder'],effect:{atk:4,def:2}},
+  {id:'constitution',n:'Constitution',branch:'society',era:4,cost:2000,prereq:['banking'],effect:{stab:10}},
+  {id:'electricity',n:'Electricity',branch:'production',era:5,cost:6000,prereq:['steam_power'],effect:{gdp:20}},
+  {id:'tanks',n:'Armored Warfare',branch:'military',era:5,cost:7000,prereq:['rifling'],effect:{atk:6,def:4}},
+  {id:'globalism',n:'Globalism',branch:'society',era:5,cost:4000,prereq:['constitution'],effect:{trade:15}},
+];
+// Advancing an institution spreads it to your country
+function advanceInstitution(instId){
+  const inst=INSTITUTIONS.find(i=>i.id===instId);if(!inst)return;
+  if(G.player.gold<inst.cost)return notify('Need $'+inst.cost,'er');
+  G.player.gold-=inst.cost;G.player.institutions=G.player.institutions||[];
+  if(!G.player.institutions.includes(instId))G.player.institutions.push(instId);
+  // Unlock buildings
+  inst.unlocks.forEach(uk=>{if(FT[uk]&&!FT[uk].unlocked)FT[uk].unlocked=true;});
+  addLog('📚 Institution: '+inst.n+' adopted!');AE.tk();notify(inst.n+' adopted!','ok');updateUI();
+}
+function researchAdvance(advId){
+  const adv=ADVANCES.find(a=>a.id===advId);if(!adv)return;
+  if(G.player.gold<adv.cost)return notify('Need $'+adv.cost,'er');
+  if(adv.prereq.length>0&&!adv.prereq.every(p=>(G.player.advances||[]).includes(p)))return notify('Missing prerequisites','er');
+  G.player.gold-=adv.cost;G.player.advances=G.player.advances||[];
+  if(!G.player.advances.includes(advId))G.player.advances.push(advId);
+  // Apply effects
+  if(adv.effect.farmers)G.player.skills.trading+=1;
+  if(adv.effect.atk)G.player.atk+=adv.effect.atk;
+  if(adv.effect.def)G.player.def+=adv.effect.def;
+  if(adv.effect.gold)G.player.gold+=adv.effect.gold;
+  addLog('🔬 Research: '+adv.n+' completed!');AE.ok();notify(adv.n+' researched!','ok');updateUI();
+}
+
+// ═══ CONTEXT: NAVAL (Anno 1800 — ships, trade routes, islands) ═══
+const SHIPS=[
+  {id:'schooner',n:'Schooner',ic:'⛵',cost:500,cargo:50,speed:4,era:1},
+  {id:'clipper',n:'Clipper',ic:'🚢',cost:2000,cargo:100,speed:5,era:2},
+  {id:'cargo',n:'Cargo Ship',ic:'🛳️',cost:8000,cargo:300,speed:2,era:3},
+  {id:'tanker',n:'Tanker',ic:'🚛',cost:12000,cargo:200,speed:2.5,era:4},
+  {id:'great_eastern',n:'Great Eastern',ic:'🏴‍☠️',cost:30000,cargo:500,speed:1.5,era:5}
+];
+function buyShip(shipId){
+  const ship=SHIPS.find(s=>s.id===shipId);if(!ship)return;
+  if(G.player.gold<ship.cost)return notify('Need $'+ship.cost,'er');
+  G.player.gold-=ship.cost;G.player.ships=G.player.ships||[];
+  G.player.ships.push({id:'s_'+Date.now(),type:shipId,name:ship.n,cargo:[],cap:ship.cargo,speed:ship.speed,route:null,home:null});
+  notify(ship.n+' purchased!','ok');AE.ok();updateUI();
+}
+function setTradeRoute(shipIdx,cityAId,cityBId){
+  const s=G.player.ships[shipIdx];if(!s)return;
+  const a=G.cities.find(c=>c.id===cityAId),b=G.cities.find(c=>c.id===cityBId);
+  if(!a||!b)return;s.route={from:cityAId,to:cityBId,progress:0};s.home=cityAId;
+  addLog('⛵ Trade route: '+a.name+' ↔ '+b.name);notify('Trade route set!','ok');updateUI();
+}
+// Island generation in oceans
+function genIslands(){
+  G.islands=[];const sz=[G.mapCols||COLS,G.mapRows||ROWS];
+  for(let i=0;i<ri(3,8);i++){
+    let ix,iy,att=0;do{ix=ri(5,sz[0]-5);iy=ri(5,sz[1]-5);att++}while((!GLOBE.isOcean(ix,iy)||GLOBE.isOcean(ix+1,iy+1))&&att<50);
+    const iname=pk(['Coral Isle','Emerald Key','Obsidian Rock','Pearl Atoll','Serpent Cay','Whisper Reef','Storm Island','Dragonmaw Isle']);
+    G.islands.push({id:'isl_'+i,name:iname,tx:ix,ty:iy,resource:pk(GD).id,colonized:false,settlement:null});
+  }
+}
+
+const GLOBE={
+  wrapX(x){return((x%COLS)+COLS)%COLS;},
+  shortestDX(x1,x2){const dx=x2-x1;return Math.abs(dx)>COLS/2?(dx>0?dx-COLS:dx+COLS):dx;},
+  dist(ax,ay,bx,by){return Math.hypot(this.shortestDX(ax,bx),by-ay);},
+  isOcean(x,y){return terrain[cl(y,0,ROWS-1)][this.wrapX(x)]===T.WATER;}
+};
+const KNAMES=[{n:'Aurelia',c:'rgba(42,138,90,1)'},{n:'Valdoria',c:'rgba(90,58,138,1)'},{n:'Meridian',c:'rgba(58,106,138,1)'},{n:'Korvath',c:'rgba(138,58,58,1)'},{n:'Sylvaris',c:'rgba(58,138,58,1)'},{n:'Zenobia',c:'rgba(138,138,58,1)'},{n:'Eldoria',c:'rgba(100,60,140,1)'},{n:'Nyxhaven',c:'rgba(30,30,60,1)'},{n:'Thalassia',c:'rgba(30,100,140,1)'},{n:'Drakemoor',c:'rgba(120,30,30,1)'},{n:'Solara',c:'rgba(200,150,30,1)'},{n:'Frostgard',c:'rgba(100,140,180,1)'},{n:'Ironveil',c:'rgba(80,80,90,1)'},{n:'Shadowmere',c:'rgba(40,20,50,1)'},{n:'Emberfall',c:'rgba(180,80,20,1)'},{n:'Stormwatch',c:'rgba(60,70,100,1)'}];
+const CITY_NAMES=[['Goldcrest','Silverport','Ironforge','Copperfield'],['Darkwater','Starhaven','Mistvale','Thornwall'],['Sunreach','Moontide','Skybreak','Oceanview'],['Ironpeak','Ashford','Blackmoor','Redcliff'],['Greenhaven','Riverbend','Forestedge','Dewspring'],['Dunemarket','Brightstone','Sandport','Crystalpeak'],['Dawnhaven','Nightport','Stonewall','Copperdale'],['Ravenrock','Frostpeak','Silverbrook','Thornfield'],['Deepwater','Shellport','Coralbay','Pearlcoast'],['Dragonmaw','Ashmoor','Scorchfield','Emberforge'],['Suncrest','Goldfield','Radiant','Lighthold'],['Icepeak','Wintervale','Snowport','Glaciergate'],['Forgeburg','Anvilrest','Steelwater','Ironton'],['Darkmoor','Shadewick','Gloomhaven','Veilgate'],['Cinderhollow','Ambervale','Flintmark','Coalridge'],['Thunderpeak','Windmere','Rainhold','Galeport']];
+const CN=KNAMES.slice(0,6).map((k,i)=>({n:k.n,c:k.c,ct:CITY_NAMES[i]||['CityA','CityB','CityC','CityD']}));
+// ─── GOVERNMENT TYPES ───
+const GOV_TYPES={
+  monarchy:{n:'Monarchy',ic:'👑',tax:{corp:25,trade:15,license:'high'},stab:70,corp:'Royal monopolies',desc:'Rule by hereditary sovereign'},
+  parliament:{n:'Parliament',ic:'🏛️',tax:{corp:15,trade:8,license:'medium'},stab:55,corp:'Open market',desc:'Elected representative body'},
+  theocracy:{n:'Theocracy',ic:'⛪',tax:{corp:20,trade:10,license:'medium'},stab:75,corp:'Tithe-based',desc:'Rule by religious authority'},
+  technocracy:{n:'Technocracy',ic:'🔬',tax:{corp:8,trade:5,license:'low'},stab:85,corp:'Innovation grants',desc:'Rule by experts/scientists'},
+  barony:{n:'Barony',ic:'🏰',tax:{corp:30,trade:20,license:'high'},stab:45,corp:'Land-grant only',desc:'Feudal lords and vassals'},
+  merchant_rep:{n:'Merchant Republic',ic:'⚖️',tax:{corp:10,trade:3,license:'low'},stab:50,corp:'Free enterprise',desc:'Rule by trade guilds'},
+  junta:{n:'Military Junta',ic:'🎖️',tax:{corp:20,trade:12,license:'medium'},stab:70,corp:'Arms contracts',desc:'Military command rule'},
+  city_state:{n:'City-State',ic:'🏙️',tax:{corp:5,trade:2,license:'low'},stab:55,corp:'Open to all',desc:'Independent city governance'}
+};
+
+// ─── DOMAIN: 110+ GOODS CATALOG ───
+const GD=[
+  // FOOD (15)
+  {id:'grain',n:'Grain',p:8,w:1,cat:'food',per:20},{id:'rice',n:'Rice',p:10,w:1,cat:'food',per:25},{id:'bread',n:'Bread',p:5,w:1,cat:'food',per:7},{id:'cheese',n:'Cheese',p:15,w:1,cat:'food',per:15},{id:'meat',n:'Meat',p:20,w:2,cat:'food',per:5},{id:'fish',n:'Fish',p:12,w:1,cat:'food',per:3},{id:'fruits',n:'Fruits',p:14,w:1,cat:'food',per:8},{id:'vegetables',n:'Vegetables',p:9,w:1,cat:'food',per:10},{id:'honey',n:'Honey',p:22,w:1,cat:'food',per:60},{id:'salt',n:'Salt',p:8,w:1,cat:'food'},{id:'sugar',n:'Sugar',p:18,w:1,cat:'food'},{id:'spices',n:'Spices',p:45,w:1,cat:'food'},{id:'wine',n:'Wine',p:35,w:2,cat:'food'},{id:'ale',n:'Ale',p:12,w:2,cat:'food',per:30},{id:'tea',n:'Tea',p:28,w:1,cat:'food'},
+  // MATERIALS (12)
+  {id:'wood',n:'Timber',p:12,w:3,cat:'material'},{id:'stone',n:'Stone',p:8,w:4,cat:'material'},{id:'clay',n:'Clay',p:5,w:3,cat:'material'},{id:'sand',n:'Sand',p:3,w:2,cat:'material'},{id:'iron_ore',n:'Iron Ore',p:18,w:3,cat:'material'},{id:'copper_ore',n:'Copper Ore',p:15,w:2,cat:'material'},{id:'coal',n:'Coal',p:10,w:3,cat:'material'},{id:'oil',n:'Oil',p:35,w:2,cat:'material'},{id:'cotton',n:'Cotton',p:14,w:1,cat:'material'},{id:'wool',n:'Wool',p:12,w:1,cat:'material'},{id:'leather',n:'Leather',p:20,w:2,cat:'material'},{id:'silk',n:'Silk',p:50,w:1,cat:'material'},
+  // METALS (10)
+  {id:'iron',n:'Iron Ingot',p:30,w:3,cat:'metal'},{id:'steel',n:'Steel',p:55,w:3,cat:'metal'},{id:'copper',n:'Copper',p:22,w:2,cat:'metal'},{id:'bronze',n:'Bronze',p:40,w:3,cat:'metal'},{id:'silver',n:'Silver',p:80,w:1,cat:'metal'},{id:'gold_ingot',n:'Gold Ingot',p:200,w:1,cat:'metal'},{id:'platinum',n:'Platinum',p:350,w:1,cat:'metal'},{id:'mithril',n:'Mithril',p:800,w:2,cat:'metal',r:'epic'},{id:'adamantite',n:'Adamantite',p:1500,w:3,cat:'metal',r:'legendary'},{id:'orichalcum',n:'Orichalcum',p:3000,w:2,cat:'metal',r:'legendary'},
+  // WEAPONS (12)
+  {id:'dagger',n:'Dagger',atk:4,p:30,w:1,cat:'weapon',dur:50,eq:'weapon'},{id:'sword',n:'Sword',atk:7,p:80,w:3,cat:'weapon',dur:80,eq:'weapon'},{id:'longsword',n:'Longsword',atk:10,p:180,w:4,cat:'weapon',dur:100,eq:'weapon'},{id:'axe',n:'Battle Axe',atk:12,p:200,w:5,cat:'weapon',dur:90,eq:'weapon'},{id:'mace',n:'War Mace',atk:9,p:120,w:4,cat:'weapon',dur:110,eq:'weapon'},{id:'spear',n:'Spear',atk:8,p:100,w:3,cat:'weapon',dur:70,eq:'weapon'},{id:'halberd',n:'Halberd',atk:13,p:280,w:6,cat:'weapon',dur:95,eq:'weapon'},{id:'bow',n:'Longbow',atk:7,p:90,w:2,cat:'weapon',dur:60,eq:'weapon'},{id:'crossbow',n:'Crossbow',atk:11,p:220,w:3,cat:'weapon',dur:75,eq:'weapon'},{id:'staff',n:'Mage Staff',atk:6,p:150,w:2,cat:'weapon',dur:50,eq:'weapon'},{id:'wand',n:'Magic Wand',atk:5,p:250,w:1,cat:'weapon',dur:40,eq:'weapon'},{id:'enchanted_blade',n:'Enchanted Blade',atk:16,p:600,w:3,cat:'weapon',dur:120,eq:'weapon',r:'epic'},
+  // ARMOR (10)
+  {id:'leather_armor',n:'Leather Armor',def:3,p:60,w:4,cat:'armor',dur:60,eq:'armor'},{id:'chainmail',n:'Chainmail',def:7,p:200,w:8,cat:'armor',dur:100,eq:'armor'},{id:'plate',n:'Plate Armor',def:12,p:500,w:12,cat:'armor',dur:140,eq:'armor'},{id:'shield',n:'Shield',def:5,p:120,w:6,cat:'armor',dur:80,eq:'armor'},{id:'helmet',n:'Helmet',def:3,p:80,w:2,cat:'armor',dur:70,eq:'armor'},{id:'boots',n:'Iron Boots',def:2,p:70,w:3,cat:'armor',dur:65,eq:'armor'},{id:'gauntlets',n:'Gauntlets',def:3,p:100,w:2,cat:'armor',dur:75,eq:'armor'},{id:'magic_robe',n:'Magic Robe',def:8,p:400,w:2,cat:'armor',dur:50,eq:'armor',r:'rare'},{id:'dragon_scale',n:'Dragon Scale',def:16,p:2000,w:8,cat:'armor',dur:200,eq:'armor',r:'epic'},{id:'aegis',n:'Aegis Shield',def:10,p:1500,w:5,cat:'armor',dur:180,eq:'armor',r:'legendary'},
+  // MAGIC (12)
+  {id:'mana_potion',n:'Mana Potion',p:30,w:1,cat:'magic',use:'restore_mp',val:50},{id:'health_potion',n:'Health Potion',p:40,w:1,cat:'magic',use:'restore_hp',val:50},{id:'scroll_fire',n:'Fire Scroll',p:80,w:1,cat:'magic',use:'fireball'},{id:'scroll_ice',n:'Ice Scroll',p:80,w:1,cat:'magic',use:'icestorm'},{id:'ring_power',n:'Ring of Power',p:300,w:1,cat:'magic',eq:'accessory',atk:5},{id:'amulet_protection',n:'Amulet of Protection',p:350,w:1,cat:'magic',eq:'accessory',def:5},{id:'enchanted_gem',n:'Enchanted Gem',p:250,w:1,cat:'magic'},{id:'phoenix_feather',n:'Phoenix Feather',p:500,w:1,cat:'magic',use:'revive'},{id:'void_crystal',n:'Void Crystal',p:800,w:1,cat:'magic',eq:'accessory',atk:15,hp:-10},{id:'star_dust',n:'Star Dust',p:600,w:1,cat:'magic'},{id:'soul_essence',n:'Soul Essence',p:1000,w:1,cat:'magic',use:'perm_hp',val:3},{id:'dragon_heart',n:'Dragon Heart',p:2500,w:2,cat:'magic',use:'max_hp',val:20},
+  // ALCHEMY (10)
+  {id:'herb',n:'Medicinal Herb',p:10,w:1,cat:'alchemy'},{id:'mushroom',n:'Glowing Mushroom',p:18,w:1,cat:'alchemy'},{id:'mandrake',n:'Mandrake Root',p:30,w:1,cat:'alchemy'},{id:'wolfsbane',n:'Wolfsbane',p:25,w:1,cat:'alchemy'},{id:'nightshade',n:'Nightshade',p:40,w:1,cat:'alchemy'},{id:'quicksilver',n:'Quicksilver',p:55,w:1,cat:'alchemy'},{id:'sulfur',n:'Sulfur',p:12,w:2,cat:'alchemy'},{id:'phosphorus',n:'Phosphorus',p:20,w:1,cat:'alchemy'},{id:'philosophers_stone',n:"Philosopher's Stone",p:5000,w:1,cat:'alchemy',r:'legendary'},{id:'elixir_life',n:'Elixir of Life',p:3000,w:1,cat:'alchemy',r:'legendary'},
+  // TOOLS (8)
+  {id:'pickaxe',n:'Pickaxe',p:25,w:4,cat:'tool'},{id:'axe_tool',n:'Wood Axe',p:20,w:3,cat:'tool'},{id:'hammer',n:'Hammer',p:15,w:3,cat:'tool'},{id:'saw',n:'Saw',p:18,w:2,cat:'tool'},{id:'rope',n:'Rope',p:8,w:2,cat:'tool'},{id:'lantern',n:'Lantern',p:30,w:1,cat:'tool'},{id:'compass',n:'Compass',p:50,w:1,cat:'tool'},{id:'lockpick',n:'Lockpick Set',p:45,w:1,cat:'tool'},
+  // LUXURY (10)
+  {id:'jewelry',n:'Fine Jewelry',p:150,w:1,cat:'luxury'},{id:'perfume',n:'Perfume',p:80,w:1,cat:'luxury'},{id:'ivory',n:'Ivory',p:200,w:2,cat:'luxury'},{id:'silk_robe',n:'Silk Robe',p:300,w:1,cat:'luxury'},{id:'golden_cup',n:'Golden Cup',p:400,w:1,cat:'luxury'},{id:'diamond',n:'Diamond',p:800,w:1,cat:'luxury'},{id:'ruby',n:'Ruby',p:600,w:1,cat:'luxury'},{id:'emerald',n:'Emerald',p:550,w:1,cat:'luxury'},{id:'sapphire',n:'Sapphire',p:500,w:1,cat:'luxury'},{id:'crown',n:'Royal Crown',p:2000,w:2,cat:'luxury',r:'legendary'},
+  // BOOKS (8)
+  {id:'spellbook_fire',n:'Fire Spellbook',p:200,w:2,cat:'book'},{id:'spellbook_ice',n:'Ice Spellbook',p:200,w:2,cat:'book'},{id:'tome_knowledge',n:'Tome of Knowledge',p:350,w:3,cat:'book',use:'xp',val:500},{id:'map_treasure',n:'Treasure Map',p:500,w:1,cat:'book'},{id:'bestiary',n:'Bestiary',p:150,w:2,cat:'book'},{id:'history_book',n:'History Book',p:100,w:2,cat:'book'},{id:'trade_ledger',n:'Trade Ledger',p:120,w:2,cat:'book'},{id:'forbidden_tome',n:'Forbidden Tome',p:1000,w:3,cat:'book',r:'epic'},
+  // EXOTIC (8)
+  {id:'dragon_egg',n:'Dragon Egg',p:5000,w:5,cat:'exotic',r:'legendary'},{id:'kraken_ink',n:'Kraken Ink',p:800,w:1,cat:'exotic',r:'epic'},{id:'phoenix_ash',n:'Phoenix Ash',p:2000,w:1,cat:'exotic',r:'epic'},{id:'basilisk_scale',n:'Basilisk Scale',p:1200,w:3,cat:'exotic'},{id:'unicorn_horn',n:'Unicorn Horn',p:1500,w:2,cat:'exotic',r:'epic'},{id:'fairy_dust',n:'Fairy Dust',p:400,w:1,cat:'exotic'},{id:'shadow_essence',n:'Shadow Essence',p:900,w:1,cat:'exotic',r:'epic'},{id:'time_sand',n:'Time Sand',p:3000,w:1,cat:'exotic',r:'legendary'},
+  // TRANSPORT (5)
+  {id:'horse',n:'Horse',p:300,w:0,cat:'transport',use:'speed',val:1.5},{id:'camel',n:'Camel',p:250,w:0,cat:'transport',use:'speed',val:1.3},{id:'wagon',n:'Wagon',p:500,w:0,cat:'transport',use:'cargo',val:100},{id:'ship_ticket',n:'Ship Ticket',p:100,w:1,cat:'transport',use:'fast_travel',tt:'ship'},{id:'train_ticket',n:'Train Ticket',p:75,w:1,cat:'transport',use:'fast_travel',tt:'train'}
+];
+// Index goods by id for fast lookup
+const GI={};GD.forEach(g=>GI[g.id]=g);
+// ─── DOMAIN: MOUNTS & TRANSPORT ───
+const MOUNTS=[
+  {id:'horse',n:'Horse',ic:'🐴',cost:800,spd:1.5,desc:'+50% speed on plains/desert',terrain:{1:2.0,4:2.0}},
+  {id:'camel',n:'Camel',ic:'🐪',cost:600,spd:1.3,desc:'+30% speed, desert master',terrain:{4:2.5}},
+  {id:'mule',n:'Mule',ic:'🐴',cost:300,spd:1.2,desc:'+20% speed, cheap',terrain:{}},
+  {id:'warhorse',n:'War Horse',ic:'🐎',cost:2000,spd:1.8,desc:'+80% speed, combat bonus',terrain:{1:2.2},combatBonus:3},
+  {id:'wagon',n:'Trade Wagon',ic:'🛒',cost:1200,spd:0.8,desc:'Slow but +50 cargo cap',cargoBonus:50},
+  {id:'carriage',n:'Royal Carriage',ic:'🚗',cost:5000,spd:1.4,desc:'+40% speed, +30 cargo',cargoBonus:30,terrain:{1:1.8}},
+  {id:'griffin',n:'Griffin',ic:'🦅',cost:15000,spd:3.0,desc:'3x speed! Ignores terrain',terrain:{0:3.0,1:3.0,2:3.0,3:3.0,4:3.0},r:'legendary'},
+  {id:'airship',n:'Airship',ic:'🛸',cost:50000,spd:4.0,desc:'4x speed! Ignores ALL terrain',terrain:{0:4.0,1:4.0,2:4.0,3:4.0,4:4.0},cargoBonus:100,r:'legendary'},
+];
+const MNT={};MOUNTS.forEach(m=>{m.dur=m.dur||(m.spd<1?120:m.spd<2?200:m.spd<3?400:800);MNT[m.id]=m});
+
+// ─── DOMAIN: CITY TYPES ───
+const CT={village:{min:0,max:50000,ring:6,bldgs:4,color:'#8a7a5a',fac:1},
+  town:{min:50000,max:200000,ring:9,bldgs:8,color:'#9a8a6a',fac:2},
+  city:{min:200000,max:1000000,ring:13,bldgs:15,color:'#aa9a7a',fac:4},
+  metro:{min:1000000,max:Infinity,ring:18,bldgs:28,color:'#ffd700',fac:6}};
+function getCityType(pop){if(pop<50000)return'village';if(pop<200000)return'town';if(pop<1000000)return'city';return'metro';}
+
+// ─── DOMAIN: PRODUCTION FACILITIES ───
+const FT=[
+  // AGRICULTURE
+  {id:'farm',sec:'agri',tier:1,n:'Farm',ic:'🌾',cost:5000,in:[],out:[{id:'grain',q:8}],lab:5,upk:200},
+  {id:'mill',sec:'agri',tier:2,n:'Mill',ic:'🏭',cost:15000,in:[{id:'grain',q:5}],out:[{id:'bread',q:3}],lab:8,upk:500},
+  {id:'food_plant',sec:'agri',tier:3,n:'Food Plant',ic:'🏗️',cost:50000,in:[{id:'grain',q:8},{id:'meat',q:3}],out:[{id:'bread',q:5}],lab:15,upk:1500},
+  // MINING
+  {id:'mine',sec:'mine',tier:1,n:'Mine',ic:'⛏️',cost:8000,in:[],out:[{id:'iron_ore',q:6},{id:'coal',q:4}],lab:10,upk:300},
+  {id:'smelter',sec:'mine',tier:2,n:'Smelter',ic:'🔥',cost:25000,in:[{id:'iron_ore',q:4},{id:'coal',q:2}],out:[{id:'iron',q:3}],lab:12,upk:800},
+  {id:'refinery',sec:'mine',tier:3,n:'Refinery',ic:'⚗️',cost:80000,in:[{id:'iron',q:3}],out:[{id:'steel',q:2}],lab:20,upk:2500},
+  // MANUFACTURING
+  {id:'workshop',sec:'manu',tier:1,n:'Workshop',ic:'🔧',cost:6000,in:[{id:'wood',q:3},{id:'iron',q:1}],out:[{id:'hammer',q:2}],lab:5,upk:150},
+  {id:'factory',sec:'manu',tier:2,n:'Factory',ic:'🏭',cost:30000,in:[{id:'steel',q:2}],out:[{id:'sword',q:1},{id:'shield',q:1}],lab:18,upk:1000},
+  // ENERGY
+  {id:'wind_farm',sec:'ener',tier:1,n:'Wind Farm',ic:'🌬️',cost:10000,in:[],out:[{id:'coal',q:0,energy:10}],lab:3,upk:100},
+  {id:'power_plant',sec:'ener',tier:2,n:'Power Plant',ic:'⚡',cost:40000,in:[{id:'coal',q:5}],out:[{id:'coal',q:0,energy:30}],lab:10,upk:1200},
+  // SERVICES
+  {id:'inn',sec:'svc',tier:1,n:'Inn',ic:'🍺',cost:3000,in:[{id:'ale',q:2},{id:'bread',q:2}],out:[{id:'gold_ingot',q:0,svc:'rest'}],lab:3,upk:100},
+  {id:'bar',sec:'svc',tier:2,n:'Bar',ic:'🍻',cost:8000,in:[{id:'ale',q:5},{id:'wine',q:2}],out:[{id:'gold_ingot',q:0,svc:'social'}],lab:5,upk:300},
+  {id:'bank',sec:'svc',tier:3,n:'Bank',ic:'🏦',cost:50000,in:[],out:[{id:'gold_ingot',q:0,svc:'finance'}],lab:8,upk:2000},
+];
+
+// ─── DOMAIN: ENEMIES ───
+const EN={bandit:{n:'Bandit',hp:40,atk:8,def:3,lt:[30,80],xp:20,ab:'poison'},
+  raider:{n:'Raider',hp:70,atk:12,def:6,lt:[100,200],xp:40,ab:'bleed'},
+  wolf:{n:'Wolf Pack',hp:50,atk:10,def:2,lt:[15,40],xp:15,ab:'bleed'},
+  merc:{n:'Rogue Merc',hp:90,atk:14,def:8,lt:[200,400],xp:60,ab:'poison'},
+  soldier:{n:'Army Soldier',hp:100,atk:16,def:10,lt:[200,500],xp:80,ab:'stun'},
+  boss:{n:'Warlord',hp:200,atk:22,def:15,lt:[500,1500],xp:150,ab:'stun'}};
+// Status effects system
+const STATUS={poison:{dmg:6,dur:3,ic:'☠️',color:'#aa55ff'},bleed:{dmg:9,dur:2,ic:'🩸',color:'#ff3355'},stun:{dmg:0,dur:1,ic:'💫',color:'#ffaa00'}};
+
+// ─── HELPERS ───
+// Deterministic PRNG (Mulberry32) - same seed = same world
+let RNG;function seedRNG(s){let st=s|0;RNG={next(){st|=0;st=st+0x6D2B79F5|0;let t=Math.imul(st^st>>>15,1|st);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296},nextInt(a,b){return Math.floor(this.next()*(b-a+1))+a},pick(a){return a[Math.floor(this.next()*a.length)]}}}
+function ri(a,b){return RNG.nextInt(a,b)}function rf(a,b){return RNG.next()*(b-a)+a}function pk(a){return RNG.pick(a)}
+function fmt(n){if(Math.abs(n)>=1e9)return(n/1e9).toFixed(1)+'B';if(Math.abs(n)>=1e6)return(n/1e6).toFixed(1)+'M';if(Math.abs(n)>=1e3)return(n/1e3).toFixed(1)+'K';return Math.floor(n).toLocaleString()}
+function dt(a,b,c,d){return Math.hypot((c||0)-(a||0),(d||0)-(b||0))}
+function cl(v,l,h){return Math.max(l,Math.min(h,v))}
+
+// ─── DOMAIN: TERRAIN ───
+let terrain=[],terEle=[],tCache=null,trees=[],rocks=[],stars=[];
+function genTerrain(seed,mapType){
+  seedRNG(seed||42);
+  const cols=MC(),rows=MR();
+  const gs=5,gc=Math.ceil(cols/gs)+1,gr=Math.ceil(rows/gs)+1,grid=[];
+  // Map type thresholds: [water, desert, plains, forest] — mountain is rest
+  const thr=mapType==='archipelago'?[0.40,0.55,0.68,0.80]:mapType==='pangea'?[0.18,0.40,0.60,0.78]:mapType==='highlands'?[0.22,0.38,0.52,0.65]:[0.28,0.45,0.62,0.78];
+  function r(){return RNG.next()}
+  for(let y=0;y<gr;y++){grid[y]=[];for(let x=0;x<gc;x++)grid[y][x]=r()}
+  function ns(tx,ty){const gx=tx/gs,gy=ty/gs,ix=Math.floor(gx),iy=Math.floor(gy),fx=gx-ix,fy=gy-iy;function ci(a,b,t){const f=(1-Math.cos(t*Math.PI))*0.5;return a*(1-f)+b*f}const n00=grid[cl(iy,0,gr-1)][cl(ix,0,gc-1)],n10=grid[cl(iy,0,gr-1)][cl(ix+1,0,gc-1)],n01=grid[cl(iy+1,0,gr-1)][cl(ix,0,gc-1)],n11=grid[cl(iy+1,0,gr-1)][cl(ix+1,0,gc-1)];return ci(ci(n00,n10,fx),ci(n01,n11,fx),fy)}
+  terrain=[];terEle=[];for(let y=0;y<rows;y++){terrain[y]=[];terEle[y]=[];for(let x=0;x<cols;x++){const lb=Math.abs(y-rows/2)/(rows/2)*0.3,e=ns(x,y)-lb+(x<2||x>cols-3||y<2||y>rows-3?0.3:0);terEle[y][x]=e;if(e<thr[0])terrain[y][x]=T.WATER;else if(e<thr[1])terrain[y][x]=T.DESERT;else if(e<thr[2])terrain[y][x]=T.PLAINS;else if(e<thr[3])terrain[y][x]=T.FOREST;else terrain[y][x]=T.MOUNTAIN}}
+  trees=[];rocks=[];
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    if(terrain[y][x]===T.FOREST&&RNG.next()<0.35)trees.push({x:x*TILE+RNG.next()*TILE,y:y*TILE+RNG.next()*TILE,s:2+RNG.next()*3});
+    if((terrain[y][x]===T.MOUNTAIN||terrain[y][x]===T.DESERT)&&RNG.next()<0.2)rocks.push({x:x*TILE+RNG.next()*TILE,y:y*TILE+RNG.next()*TILE,s:1+RNG.next()*3});
+  }
+  buildTCache();
+  stars=[];for(let i=0;i<200;i++){stars.push({x:RNG.next()*cols*TILE,y:RNG.next()*rows*TILE,s:0.3+RNG.next()*1.5,b:0.3+RNG.next()*0.7});}
+}
+function buildTCache(){const cols=MC(),rows=MR();tCache=document.createElement('canvas');tCache.width=cols*TILE;tCache.height=rows*TILE;const tc=tCache.getContext('2d');
+for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){tc.fillStyle=TC[terrain[y][x]];tc.fillRect(x*TILE,y*TILE,TILE,TILE)}
+for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+  const t=terrain[y][x];
+  // Check neighbors for different biomes → blend edge
+  if(x<COLS-1&&terrain[y][x+1]!==t){tc.fillStyle=TC[terrain[y][x+1]];tc.globalAlpha=0.2;tc.fillRect((x+0.8)*TILE,y*TILE,TILE*0.3,TILE);tc.globalAlpha=1}
+  if(y<ROWS-1&&terrain[y+1][x]!==t){tc.fillStyle=TC[terrain[y+1][x]];tc.globalAlpha=0.2;tc.fillRect(x*TILE,(y+0.8)*TILE,TILE,TILE*0.3);tc.globalAlpha=1}
+  // Beach: water adjacent to land gets sand strip
+  if(t===T.WATER){let hasLand=false;for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const nx=x+dx,ny=y+dy;if(nx>=0&&nx<COLS&&ny>=0&&ny<ROWS&&terrain[ny][nx]!==T.WATER){hasLand=true;break}}if(hasLand){tc.fillStyle='#c4b47a';tc.globalAlpha=0.5;tc.fillRect(x*TILE,y*TILE,TILE,TILE);tc.globalAlpha=1}}
+}}
+function getTile(x,y){const tx=GLOBE.wrapX(Math.floor(x/TILE)),ty=cl(Math.floor(y/TILE),0,ROWS-1);return terrain[ty][tx]}
+
+// ─── DOMAIN: WORLD ───
+let G;
+function genWorld(cfgCountries){
+  const cities=[],countries=[],roads=[];
+  let cid=0;
+  const useCN=cfgCountries?KNAMES.slice(0,cfgCountries).map((k,i)=>({n:k.n,c:k.c,ct:CITY_NAMES[i]||['City'+i+'A','City'+i+'B','City'+i+'C','City'+i+'D']})):CN;
+  useCN.forEach((cd,ci)=>{
+    let cx,cy,att=0;do{cx=ri(4,COLS-5);cy=ri(4,ROWS-5);att++}while((terrain[cy][cx]===T.WATER||terrain[cy][cx]===T.MOUNTAIN)&&att<50);
+    const cc=[];
+    cd.ct.forEach(cn=>{
+      let tx,ty,at=0;do{tx=cx+ri(-5,5);ty=cy+ri(-4,4);at++}while((tx<0||tx>=COLS||ty<0||ty>=ROWS||terrain[ty][tx]===T.WATER||terrain[ty][tx]===T.MOUNTAIN)&&at<50);
+      tx=cl(tx,1,COLS-2);ty=cl(ty,1,ROWS-2);
+      const bldgs=[];const bn=ri(3,8);for(let bi=0;bi<bn;bi++){const a=RNG.next()*Math.PI*2,d=12+RNG.next()*20;bldgs.push({rx:Math.cos(a)*d,ry:Math.sin(a)*d,w:4+RNG.next()*8,h:6+RNG.next()*14,c:pk(['#5a4a3a','#4a4a5a','#6a5a4a','#8a7a6a'])});}
+      const isCap=i===0;const ctype=isCap?'town':i===1?'castle':i===2?'castle':'village';const cpop=isCap?200000+ri(0,800000):ctype==='castle'?8000+ri(0,40000):2000+ri(0,18000);
+      const ct={id:cid++,name:cn,cIdx:ci,tx,ty,x:tx*TILE+TILE/2,y:ty*TILE+TILE/2,pops:{farmers:ri(1000,50000),laborers:ri(500,20000),artisans:ri(100,5000),merchants:ri(50,2000),aristocrats:ri(10,500),clergy:ri(20,1000),soldiers:ri(0,500)},pop:cpop,bldgs:[],gdp:ctype==='town'?20+RNG.next()*80:ctype==='castle'?5+RNG.next()*20:1+RNG.next()*10,stab:30+RNG.next()*70,owner:null,supply:{},demand:{},prices:{},facilities:[],type:ctype};
+      GD.forEach(g=>{ct.supply[g.id]=ri(10,100);ct.demand[g.id]=ri(10,100);ct.prices[g.id]=g.p});
+      // Assign facilities based on city type
+      ct.facilities=[];const cty=getCityType(ct.pop);const maxFac=CT[cty].fac;
+      const avail=FT.filter(f=>f.tier<=2);for(let i=0;i<maxFac;i++){const f=pk(avail);ct.facilities.push({type:f.id,level:1,eff:0.7+RNG.next()*0.3,owner:'auto'})}
+      cc.push(ct);cities.push(ct);
+    });
+    // Territory tiles (cities + surrounding area)
+    const territory=[];
+    cc.forEach(ct=>{
+      const radius=CT[getCityType(ct.pop)].ring+2;
+      for(let dy=-radius;dy<=radius;dy++)for(let dx=-radius;dx<=radius;dx++){
+        const tx=ct.tx+dx,ty=ct.ty+dy;
+        if(tx>=0&&tx<COLS&&ty>=0&&ty<ROWS&&terrain[ty][tx]!==T.WATER){territory.push({x:tx,y:ty})}
+      }
+    });
+    // Roads
+    for(let i=0;i<cc.length;i++)for(let j=i+1;j<cc.length;j++)roads.push({fx:cc[i].tx,fy:cc[i].ty,tx:cc[j].tx,ty:cc[j].ty});
+    // Is this coastal? Check for water-adjacent tiles
+    const coastal=cc.some(ct=>{for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const nx=ct.tx+dx,ny=ct.ty+dy;if(nx>=0&&nx<COLS&&ny>=0&&ny<ROWS&&terrain[ny][nx]===T.WATER)return true}return false});
+    // Store territory on last country pushed
+    const lastCo=countries[countries.length-1];if(lastCo)lastCo.territory=territory;
+    const gtype=pk(Object.keys(GOV_TYPES));const gt=GOV_TYPES[gtype];
+    countries.push({name:cd.n,color:cd.c,cities:cc,cx:cx*TILE+TILE/2,cy:cy*TILE+TILE/2,
+      gov:{type:gtype,name:gt.n,ic:gt.ic,taxRate:gt.tax.corp,tradeTax:gt.tax.trade,licenseFee:gt.tax.license,stab:gt.stab,corpPolicy:gt.corp},
+      mil:20+RNG.next()*80,treasury:1e5+RNG.next()*9e5,tax:gt.tax.corp+ri(-5,5),rel:{},armies:[],atWar:[],pop:0,pers:pk(['aggressive','peaceful','trading','expansionist']),coastal,investments:[],embassies:[],territory:[],factions:(()=>{const ft2=['royalists','merchants','clergy','military','populists','technocrats','nobles'];const f2=[];for(let i=0;i<ri(2,4);i++){const t=pk(ft2);ft2.splice(ft2.indexOf(t),1);f2.push({type:t,power:20+RNG.next()*60,name:t==='royalists'?'Royal Court':t==='merchants'?'Trade Guild':t==='clergy'?'Temple Council':t==='military'?'War Council':t==='populists'?'People Assembly':t==='technocrats'?'Science Academy':'Noble Houses'});}return f2;})()});// Generate provinces from country cities
+    const provinces=[];
+    co.cities.forEach((c,ci)=>{
+      const nearby=co.cities.filter(c2=>c2!==c&&GLOBE.dist(c.x,c.y,c2.x,c2.y)<800);
+      if(ci===0||nearby.length===0||RNG.next()<0.3){
+        const pn=pk(['Heartlands','Coast','Highlands','Valley','March','Fields','Woods','Peak','Falls','Reach']);
+        provinces.push({id:'prov_'+co.name+'_'+ci,name:pn+' of '+co.name,capital:c.id,cities:[c.id,...nearby.map(n=>n.id)],owner:co.name,development:ri(5,25),resources:[]});
+      }
+    });
+    if(provinces.length===0)provinces.push({id:'prov_'+co.name+'_0',name:co.name+' Proper',capital:co.cities[0].id,cities:co.cities.map(c=>c.id),owner:co.name,development:ri(10,40),resources:[]});
+    co.provinces=provinces;
+  });
+  // Init relations
+  countries.forEach(co=>{countries.forEach(c2=>{if(c2!==co)co.rel[c2.name]=ri(-30,50)})});
+  // Train routes: cities in same country with pop > 150K
+  const trains=[];countries.forEach(co=>{const big=co.cities.filter(c=>c.pop>150000);for(let i=0;i<big.length;i++)for(let j=i+1;j<big.length;j++)trains.push({fx:big[i].tx,fy:big[i].ty,tx:big[j].tx,ty:big[j].ty,cityA:big[i].id,cityB:big[j].id,cost:Math.floor(dt(big[i].x,big[i].y,big[j].x,big[j].y)*0.02+50)})});
+  // Ship routes: coastal cities, cross-country
+  const ships=[];const coastalCities=cities.filter(c=>{for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){const nx=c.tx+dx,ny=c.ty+dy;if(nx>=0&&nx<COLS&&ny>=0&&ny<ROWS&&terrain[ny][nx]===T.WATER)return true}return false});
+  for(let i=0;i<coastalCities.length;i++)for(let j=i+1;j<coastalCities.length;j++)if(coastalCities[i].cIdx!==coastalCities[j].cIdx)ships.push({cityA:coastalCities[i].id,cityB:coastalCities[j].id,cost:Math.floor(dt(coastalCities[i].x,coastalCities[i].y,coastalCities[j].x,coastalCities[j].y)*0.015+75)});
+  return{cities,countries,roads,trains,ships};
+}
+
+// ─── DOMAIN: GAME STATE ───
+function foundKingdom(){
+  const name=prompt('Kingdom name:','Myrealm')||'Myrealm';
+  const gtype=prompt('Government ('+Object.keys(GOV_TYPES).join('/')+'):','monarchy')||'monarchy';
+  const cfg=getWorldConfig();cfg.kingdomName=name;cfg.kingdomGov=gtype;
+  cfg.entities=cfg.entities==='low'?0.4:cfg.entities==='high'?2.5:1;
+  cfg.role='king';ORC.init('king',cfg);
+  G.player.skills.leadership=3;G.player.skills.diplomacy=2;
+  G.logs=[{t:1,m:'King '+G.player.name+' founds the kingdom of '+name+'!'}];
+  AE.ok();notify('Long live King '+G.player.name+'!','ok');updateUI();saveGame();
+}
+function newState(){
+  return{
+    player:{name:'Traveler',role:'wanderer',gold:100,x:0,y:0,hp:100,mhp:100,atk:5,def:3,lvl:1,xp:0,sp:0,
+      skills:{trading:1,combat:1,leadership:1,stealth:1,diplomacy:1},
+      inv:[],eq:{weapon:null,armor:null,accessory:null},
+      caravan:null,units:[],rep:{},path:[],moving:false,camping:false,cturns:0,mount:null,
+      edef:0,vis:[],trades:0,bounty:0,joinedArmy:null,abilityCd:0,loans:[],companies:[],portfolio:{},investments:[]},
+    day:1,tick:0,seed:Math.floor(Date.now()%99999)+1,achs:{},news:[],logs:[],bandits:[],aiTraders:[],weather:{type:'clear',intensity:0,startDay:0,dur:0},modal:null,cbt:null,
+    comps:[],missions:[],nextEventDay:8+Math.floor(Date.now()%5)
+  };
+}
+
+// ─── WORLD CONFIG READER ───
+function getWorldConfig(){
+  return{
+    mapType:document.getElementById('cfgMapType')?.value||'default',
+    mapSize:document.getElementById('cfgMapSize')?.value||'medium',
+    countries:(()=>{const v=parseInt(document.getElementById('cfgCountries')?.value);if(v)return v;const s=document.getElementById('cfgMapSize')?.value||'medium';const r={tiny:[2,4],small:[3,6],medium:[4,8],large:[6,12],epic:[8,16]};const rr=r[s]||[4,8];return Math.floor(rr[0]+Math.random()*(rr[1]-rr[0]));})(),
+    entities:document.getElementById('cfgEntities')?.value||'medium',
+    seed:parseInt(document.getElementById('cfgSeed')?.value)||Math.floor(Date.now()%99999)+1
+  };
+}
+// ─── APPLICATION: START GAME ───
+function startGame(role){
+  const cfg=getWorldConfig();
+  cfg.mapSize=cfg.mapSize||'medium';
+  cfg.countries=cfg.countries||6;
+  cfg.entities=cfg.entities||'medium';
+  const eMult=cfg.entities==='low'?0.4:cfg.entities==='high'?2.5:1;
+  cfg.entities=eMult;
+  ORC.init(role,cfg);
+}
+
+// ─── DOMAIN: MISSIONS ───
+function genMissions(){
+  const MT=[{n:'Cargo',ic:'📦',rw:800,rk:1},{n:'Bounty',ic:'🎯',rw:2000,rk:3},{n:'Spy',ic:'🕵️',rw:3000,rk:4},{n:'Escort',ic:'🛡️',rw:1500,rk:2},{n:'Sabotage',ic:'💣',rw:4000,rk:5}];
+  G.missions=G.missions.filter(m=>m.ok);for(let i=0;i<4;i++){const t=pk(MT),gv=pk(G.countries),tc=pk(G.cities);G.missions.push({id:`m${G.tick}_${i}`,t,gv:gv.name,tg:tc.name,rw:t.rw+ri(-200,500),rk:t.rk,dl:G.day+ri(5,15),ok:false})}
+}
+
+// ─── DOMAIN: COMPANY ───
+function foundCompany(sector){
+  const p=G.player;if(p.gold<20000){notify('Need $20,000','er');return}
+  if(!sector){openModal('found_company');return;}
+  p.gold-=20000;const n=pk(['Apex','Nova','Quantum','Atlas'])+' '+pk(['Dynamics','Holdings','Corp','Global']);
+  const sc=pk(G.cities);
+  p.companies.push({name:n,sector:sector,cities:[sc.id],emp:20,rev:0,stock:25,hist:Array(30).fill(25),shares:5000,avail:2000,type:'private',ipo:false});
+  AE.ok();addLog('Founded '+n);updateUI();
+}
+function ipoCompany(idx){
+  const p=G.player;const co=p.companies[idx];if(!co||co.ipo||p.gold<50000){notify('Need $50K or already public','er');return}
+  p.gold-=50000;co.ipo=true;G.comps.push({id:G.comps.length,name:co.name,cash:0,ct:co.shares,emp:co.emp,rev:co.rev,stock:co.stock,hist:co.hist,shares:co.shares,avail:Math.floor(co.shares*0.3),owner:'player'});
+  p.gold+=co.stock*co.shares*0.5;AE.ok();addLog(co.name+' went PUBLIC! IPO raised cash.');updateUI();
+}
+
+// ─── DOMAIN: DIPLOMACY ───
+function declareWar(countryName,cb){
+  const co=G.countries.find(c=>c.name===countryName);if(!co)return;
+  if(!co.atWar.includes('player'))co.atWar.push('player');
+  co.rel['player']=Math.min(-50,co.rel['player']-40);
+  addLog('WAR declared on '+countryName+'! Casus belli: '+cb);addNews(G.player.name+' declares war on '+countryName+' ('+cb+')!',6);
+  AE.al();notify('WAR! '+countryName,'er');updateUI();
+}
+function dipAction(countryName,action){
+  const p=G.player;const co=G.countries.find(c=>c.name===countryName);if(!co)return;
+  const rel=co.rel['player']||0;const inf=co.influence?.['player']||0;
+  switch(action){
+    case'gift':{if(p.gold<2000)return;p.gold-=2000;co.rel['player']=rel+8;addLog('Sent gift to '+co.name);break}
+    case'embassy':{if(p.gold<5000)return;if(rel<10){notify('Need 10+ relations','er');return}p.gold-=5000;co.embassies.push('player');co.rel['player']=rel+15;addLog('Established embassy in '+co.name);break}
+    case'alliance':{if(rel<50){notify('Need 50+ relations','er');return}co.rel['player']=Math.min(100,rel+20);addLog('Alliance with '+co.name+'!');break}
+    case'trade_agree':{if(rel<30){notify('Need 30+ relations','er');return}co.rel['player']=Math.min(100,rel+10);addLog('Trade agreement with '+co.name);break}
+    case'sanction':{if(p.gold<3000)return;if(inf<20){notify('Need 20+ influence','er');return}p.gold-=3000;co.rel['player']=rel-20;addLog('Sanctions imposed on '+co.name);break}
+    case'vassal':{if(p.gold<50000||co.mil>p.gold/1000){notify('Need $50K + military edge','er');return}p.gold-=50000;co.rel['player']=Math.min(100,rel+40);co.tax=Math.floor(co.tax*0.7);addLog(co.name+' is now your vassal!');break}
+    case'marriage':{if(!co.gov||co.gov.type!=='monarchy'||rel<60){notify('Only for monarchies, 60+ rel','er');return}co.rel['player']=Math.min(100,rel+30);addLog('Royal marriage with '+co.name+'!');notify('Royal Wedding!','ok');break}
+    case'marque':{if(p.gold<5000||rel<40){notify('Need $5K + 40+ relations','er');return}p.gold-=5000;p.corsair={active:true,type:'privateer',sponsor:countryName,expiry:G.day+60,bountyShare:0.7,shipsRaided:0};addLog('Letter of Marque from '+countryName+': privateer status!');notify('Privateer!','ok');break}
+    case'declare_war':{const cb=pk(['conquest','honor','trade','religious']);declareWar(countryName,cb);break}
+    case'sue_peace':{if(rel>-50){notify('Not at war or relations too high','er');return}co.rel['player']=Math.max(-40,rel+30);co.atWar=co.atWar.filter(w=>w!=='player');addLog('Peace with '+countryName);break}
+  }
+  AE.al();updateUI();openModal('diplomacy',true);
+}
+function investInCountry(countryName,amount){
+  const p=G.player;const co=G.countries.find(c=>c.name===countryName);if(!co||p.gold<amount)return;
+  p.gold-=amount;co.investments.push({player:true,amount,day:G.day,roi:ri(5,20)});
+  addLog('Invested $'+fmt(amount)+' in '+co.name);AE.cn();updateUI();
+}
+
+// ─── DOMAIN: STOCK ───
+function buyStock(cid,shares){
+  const co=G.comps.find(c=>c.id===cid);const p=G.player;if(!co||shares>co.avail)return;
+  const cost=shares*co.stock;if(p.gold<cost)return;
+  p.gold-=cost;co.avail-=shares;
+  if(!p.portfolio[cid])p.portfolio[cid]={shares:0,avg:0};
+  const pt=p.portfolio[cid];pt.avg=(pt.shares*pt.avg+cost)/(pt.shares+shares);pt.shares+=shares;
+  AE.cn();addLog('Bought '+shares+' '+co.name+' @ $'+co.stock.toFixed(1));
+}
+function sellStock(cid,shares){
+  const co=G.comps.find(c=>c.id===cid);const p=G.player;const pt=p.portfolio[cid];if(!pt||pt.shares<shares)return;
+  p.gold+=shares*co.stock;pt.shares-=shares;co.avail+=shares;
+  if(pt.shares<=0)delete p.portfolio[cid];AE.cn();
+}
+function updateStocks(){
+  // Update company stock values based on player-owned facilities in their cities
+  if(!G||!G.player)return;
+  G.comps.forEach(c=>{
+    if(c.owner==='player'){c.stock=Math.max(5,c.stock*(1+(RNG.next()-0.45)*0.03));}
+  });
+  // Player companies also get a stability bonus
+  if(G.player.companies)G.player.companies.forEach(co=>{
+    if(co.stock)co.stock=Math.max(3,co.stock*(1+(RNG.next()-0.44)*0.02));
+  });
+}
+
+// ─── DOMAIN: COMBAT ───
+function startCombat(enemy){G.cbt={enemy,pt:true,log:[],fled:false,status:[]};AE.er();openModal('combat')}
+// ─── COMBAT ABILITIES ───
+const AB={merchant:{n:'Silver Tongue',ic:'💬',desc:'-30% enemy ATK 2 turns',cd:4,fn(){if(!G.cbt)return;G.cbt.enemy.atkDebuff=2;G.cbt.log.unshift('Silver Tongue! Enemy ATK reduced');G.player.abilityCd=4}},
+  warrior:{n:'Berserker Rage',ic:'💢',desc:'+50% damage next hit',cd:3,fn(){if(!G.cbt)return;G.cbt.dmgBoost=1.5;G.cbt.log.unshift('Berserker Rage!');G.player.abilityCd=3}},
+  mercenary:{n:'Tactical Strike',ic:'🎯',desc:'Ignore 50% enemy DEF',cd:3,fn(){if(!G.cbt)return;G.cbt.ignoreDef=0.5;G.cbt.log.unshift('Tactical Strike!');G.player.abilityCd=3}},
+  ceo:{n:'Hostile Takeover',ic:'💰',desc:'Steal enemy gold',cd:5,fn(){if(!G.cbt)return;const gd=Math.floor(G.cbt.enemy.lt?G.cbt.enemy.lt[0]*0.2:20);G.player.gold+=gd;G.cbt.log.unshift('Takeover! Stole $'+gd);G.player.abilityCd=5}},
+  wanderer:{n:'Adaptive Strike',ic:'🌀',desc:'Bonus from best skill',cd:3,fn(){if(!G.cbt)return;const ms=Math.max(...Object.values(G.player.skills));G.cbt.adaptBonus=(ms-1)*0.15;G.cbt.log.unshift('Adaptive! +'+(G.cbt.adaptBonus*100).toFixed(0)+'%');G.player.abilityCd=3}}};
+function useAbility(){if(!G.cbt||!G.cbt.pt||G.player.abilityCd>0)return;const ab=AB[G.player.role];if(!ab)return;ab.fn();G.cbt.pt=false;
+  const c=G.cbt,p=G.player;const arm=GI[p.eq.armor];const pdef=(p.def+(arm?arm.def||0:0))*(1+p.skills.combat*0.03);
+  const edmg=Math.max(1,Math.floor((c.enemy.atk-(c.enemy.atkDebuff?c.enemy.atk*0.3:0))-pdef+ri(-1,2)));p.hp-=edmg;c.log.unshift(c.enemy.n+' counters for '+edmg);
+  if(c.enemy.atkDebuff){c.enemy.atkDebuff--;if(c.enemy.atkDebuff<=0)delete c.enemy.atkDebuff}
+  c.pt=true;if(p.hp<=0){defeat();return}updateUI();openModal('combat',true)}
+function getAbilityButtons(){const ab=AB[G.player.role];if(!ab)return'';const onCd=G.player.abilityCd>0;return`<button class="btn btn4 bs" onclick="useAbility()" ${onCd?'disabled':''}>${ab.ic} ${ab.n}${onCd?' ('+G.player.abilityCd+')':''}</button><span style="font-size:8px;color:#5a6a80">${ab.desc}</span>`}
+function cbtAtk(){
+  if(!G.cbt||!G.cbt.pt)return;const c=G.cbt,p=G.player;
+  const wep=GI[p.eq.weapon],arm=GI[p.eq.armor],acc=GI[p.eq.accessory];
+  // Mount combat bonus
+  const mtBonus=p.mount&&MNT[p.mount]?MNT[p.mount].combatBonus||0:0;
+  const patk=(p.atk+(wep?wep.atk||0:0)+(acc?acc.atk||0:0)+mtBonus)*(1+p.skills.combat*0.04);
+  const pdef=(p.def+(arm?arm.def||0:0)+(acc?acc.def||0:0))*(1+p.skills.combat*0.03);
+  const crit=RNG.next()<0.08+p.skills.combat*0.02;
+  let dmg=Math.max(1,Math.floor(patk-c.enemy.def*(c.ignoreDef?1-c.ignoreDef:1)+ri(-2,3)));if(c.dmgBoost){dmg=Math.floor(dmg*c.dmgBoost);delete c.dmgBoost}if(c.adaptBonus){dmg=Math.floor(dmg*(1+c.adaptBonus));delete c.adaptBonus}if(crit)dmg=Math.floor(dmg*1.8);c.ignoreDef=null;
+  c.enemy.hp-=dmg;c.log.unshift((crit?'💥CRIT! ':'')+'You hit for '+dmg);
+  if(crit){shakeScreen()};AE.ht();
+  // Apply status from enemy ability
+  if(c.enemy.ab&&RNG.next()<0.3&&!c.status.find(s=>s.type===c.enemy.ab)){const st=STATUS[c.enemy.ab];c.status.push({type:c.enemy.ab,dur:st.dur});c.log.unshift(st.ic+' Enemy inflicted '+c.enemy.ab+'!');}
+  // Durability decay (tracked per-player, not on shared GD objects)
+  if(wep&&wep.dur){p.eq._wDur=(p.eq._wDur||wep.dur)-1;if(p.eq._wDur<=0){p.eq.weapon=null;p.eq._wDur=0;addLog('⚠ Weapon broke!')}}
+  if(c.enemy.hp<=0){victory();return}
+  c.pt=false;
+  // Status tick + enemy turn
+  c.status.forEach(s=>{
+    const st=STATUS[s.type];if(st.dmg>0){p.hp-=st.dmg;c.log.unshift(st.ic+' '+s.type+' deals '+st.dmg)}
+    s.dur--;if(s.dur<=0){c.status=c.status.filter(x=>x!==s);c.log.unshift(s.type+' wore off')}
+  });
+  const edmg=Math.max(1,Math.floor(c.enemy.atk-pdef+ri(-1,2)));p.hp-=edmg;c.log.unshift(c.enemy.n+' hits for '+edmg);
+  // Armor decay
+  if(arm&&arm.dur){p.eq._aDur=(p.eq._aDur||arm.dur)-1;if(p.eq._aDur<=0){p.eq.armor=null;p.eq._aDur=0;addLog('⚠ Armor broke!')}}
+  if(p.hp<=0){defeat();return}
+  c.pt=true;updateUI();openModal('combat',true);
+}
+function cbtDef(){
+  if(!G.cbt||!G.cbt.pt)return;const c=G.cbt,p=G.player;
+  const arm=GI[p.eq.armor];const mtDef=p.mount&&MNT[p.mount]&&MNT[p.mount].id==='warhorse'?3:0;
+  const pdef=((p.def+(arm?arm.def||0:0)+mtDef)*1.6)*(1+p.skills.combat*0.03);
+  c.pt=false;const edmg=Math.max(0,Math.floor(c.enemy.atk-pdef+ri(-1,1)));p.hp-=edmg;c.log.unshift('Blocked! Took '+edmg);
+  c.pt=true;if(p.hp<=0){defeat();return}updateUI();openModal('combat',true);
+}
+function cbtFlee(){
+  if(!G.cbt)return;const st=G.player.skills.stealth||1;
+  const mt=G.player.mount&&MNT[G.player.mount]?MNT[G.player.mount]:null;
+  const fleeBonus=mt?Math.min(0.45,mt.spd*0.15):0;
+  if(RNG.next()<0.25+st*0.06+fleeBonus){G.cbt.fled=true;G.player.gold=Math.floor(G.player.gold*0.9);closeModal();addLog('Fled combat (-10% gold)'+(fleeBonus>0?' | '+mt.n+' helped!':''));G.cbt=null;return}
+  G.cbt.log.unshift('Failed to flee!');G.cbt.pt=false;
+  const p=G.player;const dmg=Math.max(1,G.cbt.enemy.atk-ri(1,3));p.hp-=dmg;G.cbt.log.unshift(G.cbt.enemy.n+' hits for '+dmg);
+  G.cbt.pt=true;if(p.hp<=0){defeat();return}updateUI();openModal('combat',true);
+}
+function victory(){const c=G.cbt,p=G.player;p.xp+=c.enemy.xp;p.gold+=ri(c.enemy.lt[0],c.enemy.lt[1]);p.edef++;addBounty(ri(50,200));if(p.role==='bandit')p.notoriety=Math.min(100,(p.notoriety||0)+2);
+  // Loot: enemies drop goods
+  if(RNG.next()<0.4){const loot=c.enemy.type==='wolf'?'leather':c.enemy.type==='bandit'?'dagger':'iron';
+      // Bandit role: chance to recruit defeated bandits
+      if(G.player.role==='bandit'&&c.enemy.type==='bandit'&&G.player.gang&&G.player.gang.length<(3+Math.floor((G.player.notoriety||0)/15))&&RNG.next()<0.3+(G.player.notoriety||0)/100){const gn=pk(['Scar','Fang','Blade','Shadow','Razor','Vex','Dagger']);G.player.gang.push({name:gn,hp:35+ri(0,20),atk:6+ri(0,5),def:2+ri(0,4),loyalty:60+ri(0,30)});addLog('🦹 Recruited '+gn+' to your gang!');}const inv=p.caravan?p.caravan.goods:p.inv;const ex=inv.find(x=>x.id===loot);if(ex)ex.qty++;else inv.push({id:loot,qty:1});addLog('📦 Loot: '+GI[loot].n)}
+  AE.ok();addLog('Defeated '+c.enemy.n+'! +'+c.enemy.xp+'XP');if(c.enemy.type){const bi=G.bandits.findIndex(b=>b.id===c.enemy.id);if(bi>=0)G.bandits.splice(bi,1)}lvlCheck();G.cbt=null;closeModal();updateUI()}
+function defeat(){const p=G.player;p.hp=p.mhp*0.25;p.gold=Math.floor(p.gold*0.7);const nc=G.cities.reduce((b,c)=>{const d=dt(p.x,p.y,c.x,c.y);return d<b.d?{c,d}:b},{c:G.cities[0],d:Infinity});p.x=nc.c.x;p.y=nc.c.y;p.path=[];p.moving=false;AE.er();addLog('Defeated! Lost 70% gold.');notify('Defeated!','er');G.cbt=null;closeModal();updateUI()}
+function lvlCheck(){const p=G.player;while(p.xp>=p.lvl*100){p.xp-=p.lvl*100;p.lvl++;p.sp++;p.mhp+=8;p.hp=Math.min(p.mhp,p.hp+8);addLog('⭐ LEVEL '+p.lvl+'!');notify('Level '+p.lvl+'!','ok')}}
+
+// ─── DOMAIN: TRADE ───
+function buyGood(gid,qty){
+  const p=G.player;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<50);if(!nc)return;
+  const g=GI[gid];if(!g)return;const price=nc.prices[gid]||g.p;const total=price*qty;
+  if(p.gold<total){notify('Need more gold','er');return}
+  const cap=p.caravan?p.caravan.cap:30;const used=totWt();
+  if(used+qty*(g.w||1)>cap){notify('No capacity!','er');return}
+  p.gold-=total;const inv=p.caravan?p.caravan.goods:p.inv;
+  const ex=inv.find(x=>x.id===gid);if(ex){if(g.per)ex.perDays=Math.min(ex.perDays||g.per,g.per);ex.qty+=qty}else{inv.push({id:gid,qty,perDays:g.per||0})}
+  nc.supply[gid]=Math.max(1,(nc.supply[gid]||50)-qty);AE.cn();updateUI();openModal('market',true);
+}
+function sellGood(gid,qty){
+  const p=G.player;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<50);if(!nc)return;
+  const inv=p.caravan?p.caravan.goods:p.inv;const ex=inv.find(x=>x.id===gid);if(!ex||ex.qty<qty)return;
+  const g=GI[gid];const price=nc.prices[gid]||g.p;
+  p.gold+=Math.floor(price*qty*(1+p.skills.trading*0.03));ex.qty-=qty;
+  if(ex.qty<=0){const i=inv.indexOf(ex);inv.splice(i,1)}p.trades++;
+  nc.demand[gid]=Math.max(1,(nc.demand[gid]||50)-qty);AE.cn();updateUI();openModal('market',true);
+}
+function totWt(){const p=G.player;const inv=p.caravan?p.caravan.goods:p.inv;return inv.reduce((s,x)=>{const g=GI[x.id];return s+(g?g.w||1:1)*x.qty},0)}
+
+// ─── DOMAIN: TRANSPORT ───
+function useTrain(cityIdA,cityIdB){
+  const p=G.player;const t=G.trains.find(t=>(t.cityA===cityIdA&&t.cityB===cityIdB)||(t.cityA===cityIdB&&t.cityB===cityIdA));
+  if(!t||p.gold<t.cost){notify('Need $'+t.cost,'er');return}
+  p.gold-=t.cost;const dest=G.cities.find(c=>c.id===(cityIdA===t.cityA?t.cityB:t.cityA));
+  if(!dest)return;p.x=dest.x;p.y=dest.y;p.path=[];p.moving=false;p.vis.push(dest.id);
+  addLog('Took train to '+dest.name);AE.al();closeModal();updateUI();
+}
+function useShip(cityIdA,cityIdB){
+  const p=G.player;const s=G.ships.find(s=>(s.cityA===cityIdA&&s.cityB===cityIdB)||(s.cityA===cityIdB&&s.cityB===cityIdA));
+  if(!s||p.gold<s.cost){notify('Need $'+s.cost,'er');return}
+  p.gold-=s.cost;const dest=G.cities.find(c=>c.id===(cityIdA===s.cityA?s.cityB:s.cityA));
+  if(!dest)return;p.x=dest.x;p.y=dest.y;p.path=[];p.moving=false;p.vis.push(dest.id);
+  addLog('Sailed to '+dest.name);AE.al();closeModal();updateUI();
+}
+function buyMount(mid){
+  const p=G.player;const mt=MNT[mid];if(!mt||p.gold<mt.cost)return;
+  // Dismount previous mount first (remove its bonuses)
+  if(p.mount)dismount();
+  p.gold-=mt.cost;p.mount=mid;
+  // Apply cargo bonus
+  if(mt.cargoBonus&&p.caravan){p.caravan.cap+=mt.cargoBonus}
+  AE.ok();addLog('Bought '+mt.n+'!');notify(mt.n+' acquired!','ok');updateUI();closeModal();
+}
+function dismount(){const p=G.player;if(!p.mount)return;
+  const mt=MNT[p.mount];
+  if(mt&&mt.cargoBonus&&p.caravan){
+    const used=totWt();const newCap=p.caravan.cap-mt.cargoBonus;
+    if(used>newCap){notify('Cargo too full to dismount! Sell items first.','er');return}
+    p.caravan.cap=newCap;
+  }
+  p.mount=null;addLog('Dismounted');updateUI();
+}
+function repairMount(){
+  const p=G.player;if(!p.mount)return;
+  const mt=MNT[p.mount];if(!mt)return;
+  const cost=Math.floor(mt.cost*0.15);if(p.gold<cost)return;
+  p.gold-=cost;p._mtDur=mt.dur;AE.cn();addLog('Repaired '+mt.n);updateUI();
+}
+function buyCaravan(){const p=G.player;if(p.gold<500||p.caravan)return;p.gold-=500;p.caravan={cap:50,goods:[],guards:0};AE.cn();addLog('Bought caravan!');notify('Caravan!','ok')}
+
+// ─── DOMAIN: DECAY ───
+function buildFacility(cityId,facId){
+  const p=G.player;const ct=G.cities.find(c=>c.id===cityId);if(!ct)return;
+  const ft=FT.find(f=>f.id===facId);if(!ft)return;
+  if(ct.facilities&&ct.facilities.find(x=>x.type===facId)){notify('Already built here','er');return}
+  if(p.gold<ft.cost){notify('Need $'+fmt(ft.cost),'er');return}
+  p.gold-=ft.cost;ct.facilities.push({type:facId,level:1,eff:0.7+RNG.next()*0.3,owner:'player'});
+  AE.cn();addLog('Built '+ft.n+' in '+ct.name);notify(ft.n+' built!','ok');updateUI();
+}
+function upgradeFacility(cityId,idx){
+  const p=G.player;const ct=G.cities.find(c=>c.id===cityId);if(!ct||!ct.facilities||!ct.facilities[idx])return;
+  const f=ct.facilities[idx];if(f.owner!=='player'){notify('Not your facility!','er');return}
+  if(f.level>=5){notify('Max level!','er');return}
+  const ft=FT.find(x=>x.id===f.type);if(!ft)return;
+  const cost=Math.floor(ft.cost*f.level*1.8);if(p.gold<cost){notify('Need $'+fmt(cost),'er');return}
+  p.gold-=cost;f.level++;f.eff=Math.min(1.5,f.eff+0.12);
+  AE.ok();addLog('Upgraded '+ft.n+' to Lvl '+f.level+' in '+ct.name);notify(ft.n+' Lvl '+f.level+'!','ok');updateUI();
+}
+function processFacilities(){
+  G.cities.forEach(ct=>{if(!ct.facilities)return;
+    ct.facilities.forEach(f=>{
+      const ft=FT.find(x=>x.id===f.type);if(!ft)return;
+      // Buy inputs from city market
+      let canProduce=true;
+      ft.in.forEach(inp=>{
+        const price=ct.prices[inp.id]||GI[inp.id].p;
+        if(ct.supply[inp.id]>=inp.q){ct.supply[inp.id]-=inp.q}
+        else{canProduce=false}
+      });
+      if(!canProduce)return;
+      // Produce outputs
+      ft.out.forEach(out=>{
+        if(out.energy)return; // energy handled separately
+        if(out.svc){
+          // Service revenue: generate gold for owner
+          const rev=Math.floor((out.svc==='rest'?8:out.svc==='social'?15:30)*f.level*f.eff);
+          if(f.owner==='player'){G.player.gold+=rev;}
+          else{ct.gdp=(ct.gdp||0)+rev*0.1;}
+          return;
+        }
+        const qty=Math.floor(out.q*f.eff);
+        ct.supply[out.id]=(ct.supply[out.id]||0)+qty;
+      });
+    });
+  });
+}
+function processDecay(){
+  const p=G.player;
+  // Food spoilage
+  const inv=p.caravan?p.caravan.goods:p.inv;
+  for(let i=inv.length-1;i>=0;i--){
+    const x=inv[i];const g=GI[x.id];
+    if(g&&g.per){x.spoilDay=(x.spoilDay||G.day+g.per);if(G.day>=x.spoilDay){addLog('Food rotted: '+g.n+' x'+x.qty);inv.splice(i,1)}}
+  }
+  // Road condition
+  G.roads.forEach(r=>{r.cond=(r.cond||100)-0.5;if(r.cond<0)r.cond=0});
+  // Country building maintenance
+  if(G.day%10===0)G.countries.forEach(co=>{co.cities.forEach(ct=>{if(co.treasury<50000)ct.stab=Math.max(10,ct.stab-2)})});
+  // Unsold goods lose value
+  if(G.day%5===0)G.cities.forEach(c=>{GD.forEach(g=>{c.prices[g.id]=Math.max(1,c.prices[g.id]*0.99)})});
+  // Population growth + city type
+  G.cities.forEach(c=>{c.pop=Math.floor(c.pop*(1+0.003*(c.stab/100)));c.type=getCityType(c.pop)});
+}
+
+// ─── DOMAIN: COUNTRY AI ───
+function countryAI(){
+  G.countries.forEach(co=>{
+    co.pop=co.cities.reduce((s,c)=>s+c.pop,0);
+    // War — based on relations, not pure random
+    if(co.atWar.length===0){
+      const tg=G.countries.filter(c=>c!==co&&!co.atWar.includes(c.name)&&(co.rel[c.name]||0)<-20&&RNG.next()<0.25);
+      if(tg.length>0){const t=pk(tg);co.atWar.push(t.name);t.atWar.push(co.name);addLog('⚔️ WAR: '+co.name+' vs '+t.name+'!');addNews(co.name+' declares war on '+t.name+'!',3)}
+    }
+    // Peace
+    co.atWar=co.atWar.filter(en=>{
+      const ec=G.countries.find(c=>c.name===en);if(!ec||co.treasury<30000||RNG.next()<0.08){if(ec)ec.atWar=ec.atWar.filter(n=>n!==co.name);addLog('🕊️ Peace: '+co.name+' & '+en);return false}return true;
+    });
+    // Armies move + fight + capture
+    co.armies.forEach((a,ai)=>{
+      if(co.atWar.length>0){
+        const en=G.countries.find(c=>c.name===co.atWar[0]);
+        if(en&&en.cities.length>0){
+          // Check for enemy armies nearby
+          let fought=false;
+          for(let ei=en.armies.length-1;ei>=0;ei--){
+            const ea=en.armies[ei];
+            if(dt(a.x,a.y,ea.x,ea.y)<50){
+              const pwr1=a.sz*(0.8+RNG.next()*0.4),pwr2=ea.sz*(0.8+RNG.next()*0.4);
+              if(pwr1>pwr2){a.sz=Math.floor(a.sz*0.6);en.armies.splice(ei,1);if(a.sz<200)co.armies.splice(ai,1)}
+              else{ea.sz=Math.floor(ea.sz*0.6);co.armies.splice(ai,1);if(ea.sz<200)en.armies.splice(ei,1)}
+              fought=true;break;
+            }
+          }
+          if(!fought){
+            const tc=pk(en.cities);a.tx=tc.tx;a.ty=tc.ty;
+            // Check if reached enemy city
+            const ec=en.cities.find(c=>dt(a.x,a.y,c.x,c.y)<60);
+            if(ec&&ec.owner!==co.name&&RNG.next()<0.25){
+              ec.owner=co.name;ec.stab=Math.max(10,ec.stab-30);
+              addLog('⚔️ '+co.name+' captured '+ec.name+'!');
+              const remain=en.cities.filter(c=>c.owner!==co.name);
+              if(remain.length===0){addLog('🏴 '+en.name+' has fallen!');en.atWar=[];co.atWar=co.atWar.filter(n=>n!==en.name)}
+            }
+          }
+        }
+      }else if(RNG.next()<0.15){const tc=pk(co.cities);a.tx=tc.tx;a.ty=tc.ty}
+      const dx=a.tx*TILE+TILE/2-a.x,dy=a.ty*TILE+TILE/2-a.y,d=Math.hypot(dx,dy);if(d>5){a.x+=dx/d*6;a.y+=dy/d*6}
+    });
+    // Passive relations + embassy income
+    co.embassies.forEach(()=>{co.rel['player']=(co.rel['player']||0)+0.2;if(G.day%3===0)G.player.gold+=ri(10,50)});
+    // Alliance defense: if player at war, allied countries send armies
+    // Process investments
+    co.investments.forEach(inv=>{if(G.day-inv.day>=30){const ret=Math.floor(inv.amount*(1+inv.roi/100));if(inv.player)G.player.gold+=ret;co.treasury+=Math.floor(inv.amount*0.3)}});
+    co.investments=co.investments.filter(inv=>G.day-inv.day<30);
+    // Faction power shifts
+    if(co.factions&&co.factions.length>0&&G.day%12===0){
+      co.factions.forEach(f=>{f.power=cl(f.power+(RNG.next()-0.48)*8,5,95)});
+      // Dominant faction affects policy
+      const dom=co.factions.reduce((a,b)=>a.power>b.power?a:b);
+      if(dom.type==='royalists'&&co.gov)co.gov.taxRate=Math.min(40,co.gov.taxRate+1);
+      if(dom.type==='merchants'&&co.gov)co.gov.taxRate=Math.max(3,co.gov.taxRate-1);
+      if(dom.type==='military')co.mil=Math.min(100,co.mil+2);
+      if(dom.type==='populists')co.stab=Math.min(100,co.stab+2);
+    }
+  });
+  // Gang activity (every 15 days)
+  if(G.gangs&&G.day%15===0)G.gangs.forEach(g=>{
+    g.members=Math.max(2,g.members+ri(-2,1));g.gold+=ri(100,1000);
+    if(G.aiTraders.length>0&&RNG.next()<0.3){const t=pk(G.aiTraders);t.gold=Math.max(0,t.gold-ri(50,300));g.gold+=ri(50,300);}
+  });
+  // Revolution check (stability < 15 → government change)
+  G.countries.forEach(co=>{
+    if(co.gov&&co.stab<15&&RNG.next()<0.08){
+      const oldGov=co.gov.name;const newType=pk(Object.keys(GOV_TYPES));
+      const gt=GOV_TYPES[newType];co.gov={type:newType,name:gt.n,ic:gt.ic,taxRate:gt.tax.corp,tradeTax:gt.tax.trade,licenseFee:gt.tax.license,stab:gt.stab,corpPolicy:gt.corp};
+      co.stab=gt.stab;addLog('🔥 REVOLUTION in '+co.name+'! '+oldGov+' → '+gt.n+'!');addNews(co.name+' overthrows '+oldGov+' — now a '+gt.n+'!',4);
+    }
+  });
+}
+
+// ─── APPLICATION: GAME TICK ───
+// ─── WoCC PATTERN: State Snapshot (Sim/Render separation) ───
+let _snapCache=null,_snapTick=-1;
+function getStateSnapshot(){
+  if(!G||!G.player)return null;
+  if(_snapTick===G.tick&&_snapCache)return _snapCache;
+  if(!G||!G.player)return null;
+  const p=G.player;const mt=p.mount?MNT[p.mount]:null;
+  return {
+    player:{x:p.x,y:p.y,hp:p.hp,mhp:p.mhp,gold:p.gold,role:p.role,name:p.name,
+      moving:p.moving,camping:p.camping,path:p.path,vis:p.vis,mount:p.mount,
+      mountSpd:mt?(mt.terrain&&mt.terrain[getTile(p.x,p.y)]?mt.terrain[getTile(p.x,p.y)]:mt.spd):1.0,
+      caravan:!!p.caravan,bounty:p.bounty||0},
+    day:G.day,tick:G.tick,weather:G.weather,
+    cities:G.cities.map(c=>({id:c.id,x:c.x,y:c.y,name:c.name,pop:c.pop,owner:c.owner,atWar:G.countries[c.cIdx].atWar.length>0})),
+    entities:{bandits:G.bandits.map(b=>({x:b.x,y:b.y,id:b.id})),traders:G.aiTraders.map(t=>({x:t.x,y:t.y})),
+      armies:G.countries.flatMap(co=>co.armies.map(a=>({x:a.x,y:a.y,c:co.name,sz:a.sz})))},
+    nearCity:G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<70),
+    news:G.news.slice(0,5),logs:G.logs.slice(0,8)
+  };
+  _snapTick=G.tick;_snapCache=s;
+  return s;
+}
+function gameTick(){
+  if(!G||!G.player)return;
+  G.tick++;
+  if(G.tick%3===0){
+    G.day++;
+    // Player movement
+    if(G.player.path.length>0&&G.player.moving)movePlayer();
+    // AI traders - actually trade + smooth movement
+    G.aiTraders.forEach(t=>{
+      // Check if at a city
+      const nc=G.cities.find(c=>dt(t.x,t.y,c.x,c.y)<50);
+      if(nc&&RNG.next()<0.3){
+        // Buy low
+        const cheap=GD.filter(g=>nc.prices[g.id]<g.p*0.9&&t.gold>=nc.prices[g.id]).slice(0,3);
+        cheap.forEach(g=>{const qty=ri(1,5),cost=nc.prices[g.id]*qty;if(t.gold>=cost){t.gold-=cost;const ex=t.goods.find(x=>x.id===g.id);if(ex)ex.qty+=qty;else t.goods.push({id:g.id,qty});nc.supply[g.id]=Math.max(1,(nc.supply[g.id]||50)-qty)}});
+        // Sell high
+        for(let i=t.goods.length-1;i>=0;i--){const x=t.goods[i];const g=GI[x.id];if(g&&nc.prices[g.id]>g.p*1.1){t.gold+=nc.prices[g.id]*x.qty;nc.demand[g.id]=Math.max(1,(nc.demand[g.id]||50)-x.qty);t.goods.splice(i,1)}}
+      }
+      // Move toward target (lerp smooth)
+      if(!nc||RNG.next()<0.15){if(RNG.next()<0.08){const tc=pk(G.cities);t.tx=tc.tx;t.ty=tc.ty}}
+      const ttx=t.tx*TILE+TILE/2,tty=t.ty*TILE+TILE/2,dx=ttx-t.x,dy=tty-t.y,d=Math.hypot(dx,dy);
+      if(d>3){t.x+=dx*0.08;t.y+=dy*0.08}
+    });
+    // Bandits
+    G.bandits.forEach(b=>{if(RNG.next()<0.15){b.tx=cl(b.tx+ri(-2,2),1,COLS-2);b.ty=cl(b.ty+ri(-2,2),1,ROWS-2)}b.x+=(b.tx*TILE+TILE/2-b.x)*0.08;b.y+=(b.ty*TILE+TILE/2-b.y)*0.08});
+    // Camping
+    if(G.player.camping){G.player.hp=Math.min(G.player.mhp,G.player.hp+2);G.player.cturns--;if(G.player.cturns<=0)G.player.camping=false}
+    // Country AI
+    if(G.day%8===0)countryAI();
+    // Missions
+    if(G.day%6===0&&G.missions.filter(m=>!m.ok).length<3)genMissions();
+    // Stock prices
+    if(G.day%2===0)G.comps.forEach(c=>{c.stock=Math.max(1,c.stock*(1+(RNG.next()-0.48)*0.05));c.hist.push(c.stock);if(c.hist.length>30)c.hist.shift()});
+    // Update facility-owned company stocks (from takeovers)
+    updateStocks();
+    // City prices
+    if(G.day%3===0)G.cities.forEach(c=>{GD.forEach(g=>{c.prices[g.id]=Math.max(1,g.p*(1+(c.demand[g.id]-c.supply[g.id])*0.003+rf(-0.08,0.08)))})});
+    // Decay
+    processDecay();
+    // Process loans
+    if(G.day%3===0)processLoans();
+    // Process facilities — auto production
+    processFacilities();
+    // World events + weather
+    if(G.day>=G.nextEventDay){
+      const et=pk(['boom','recession','scandal','disaster','golden','war','crash','tech']);
+      addLog('🌍 World Event: '+et);G.nextEventDay=G.day+ri(8,15);
+      // Actual effects
+      if(et==='boom')G.cities.forEach(c=>{Object.keys(c.prices).forEach(k=>{c.prices[k]=Math.floor(c.prices[k]*1.25)})});
+      if(et==='recession'||et==='crash')G.cities.forEach(c=>{Object.keys(c.prices).forEach(k=>{c.prices[k]=Math.floor(c.prices[k]*0.75)})});
+      if(et==='disaster'){const c=pk(G.cities);c.stab=Math.max(5,c.stab-30);addLog('💥 '+c.name+' hit by disaster!');addNews('Disaster strikes '+c.name+'!',3)}
+      if(et==='golden'){G.player.gold+=ri(500,2000);notify('Golden Age bonus!','ok');addNews('Golden Age brings prosperity!',2)}
+      if(et==='boom')addNews('Economic boom — prices surge 25%!',2);
+      if(et==='recession')addNews('Recession hits — prices drop 25%',2);
+    }
+    if(G.day>=G.weather.startDay+G.weather.dur){G.weather={type:pk(['clear','clear','rain','rain','fog']),intensity:rf(0.3,1),startDay:G.day,dur:ri(3,8)};if(G.weather.type!=='clear')addLog('🌦️ '+G.weather.type.toUpperCase()+' for '+G.weather.dur+' days')}
+    // Random encounter
+    if(G.player.moving&&RNG.next()<0.06&&!G.cbt){const tile=getTile(G.player.x,G.player.y);if(tile===T.WATER&&G.player.corsair&&G.player.corsair.active){if(RNG.next()<0.3){const ship={n:pk(['Merchant Galley','Trade Cargo','Royal Frigate','Pirate Sloop']),hp:60+ri(0,40),atk:10+ri(0,10),def:4+ri(0,6),lt:[200,800],xp:30,ab:'bleed'};startCombat({...ship,mhp:ship.hp,type:'ship'});}}else{const t=pk(Object.keys(EN));const e=EN[t];startCombat({...e,n:e.n,mhp:e.hp,type:t})}}
+    // Bounty hunter spawns if bounty > 500
+    if(G.player.bounty>500&&RNG.next()<0.04&&!G.cbt){const bh={...EN.merc};bh.n='Bounty Hunter';bh.mhp=bh.hp+Math.floor(G.player.bounty/100);bh.atk+=3;startCombat(bh);addLog('⚖️ A bounty hunter attacks!')}
+    // Company revenue — all player companies generate income
+    if(G.player.companies&&G.player.companies.length>0)G.player.companies.forEach(co=>{const rev=co.cities.length*(1500+RNG.next()*2000);G.player.gold+=rev;co.rev=rev});
+    // Also CEO role gets bonus
+    if(G.player.role==='ceo')G.player.gold+=ri(500,1500);
+    // AI CEO behavior (every 15 days)
+    if(G.day%15===0&&G.aiCEOs){
+      G.aiCEOs.forEach(ai=>{
+        ai.wealth+=ri(100,2000); // passive income
+        if(ai.wealth>30000&&RNG.next()<0.25){
+          // AI tries to expand or found new company
+          const cn2=pk(['Nova','Atlas','Zenith','Apex','Prime'])+' '+pk(['Ventures','Holdings','Labs','Group']);
+          const cid2=G.comps.length;const bp4=3+RNG.next()*30;
+          G.comps.push({id:cid2,name:cn2,cash:10000+RNG.next()*100000,ct:1+RNG.next()*30,emp:ri(5,100),rev:1000+ri(0,5000),stock:bp4,hist:Array(30).fill(bp4),shares:3000+ri(0,15000),avail:0,owner:'ai',ownerType:'ai_private',ceoId:ai.id});
+          G.comps[G.comps.length-1].avail=Math.floor(G.comps[G.comps.length-1].shares*0.3);
+          ai.wealth-=10000;
+        }
+      });
+    }
+    // Player ability cooldown
+    if(G.player&&G.player.abilityCd>0)G.player.abilityCd--;
+    // === MULTI-LAYER TAXATION (every 5 days) ===
+    if(G.day%5===0){
+      // 1. Kingdom corporate tax on player companies
+      if(G.player.companies)G.player.companies.forEach(co=>{
+        if(co.cities&&co.cities.length>0){
+          co.cities.forEach(cid=>{
+            const ct=G.cities.find(c=>c.id===cid);
+            if(ct){const country=G.countries[ct.cIdx];const taxRate=(country.gov&&country.gov.taxRate)||15;
+              const tax=Math.floor(co.rev*taxRate/100);G.player.gold-=tax;country.treasury+=tax;}
+          });
+        }
+      });
+      // 2. Territory license check (warn if operating without license)
+      // (licenses system TBD — currently free pass)
+      // 3. Wealth tax on player gold (>100K: 1% per 5 days)
+      if(G.player.gold>100000){const wealthTax=Math.floor(G.player.gold*0.01);G.player.gold-=wealthTax;}
+    }
+  }
+  // Achievements + bounty
+  if(G.tick%15===0)checkAchievements();
+  updateUI();
+}
+function movePlayer(){
+  const p=G.player;if(p.path.length===0){p.moving=false;return}
+  const tgt=p.path[0],dx=tgt.x-p.x,dy=tgt.y-p.y,d=Math.hypot(dx,dy);
+  // Base speed: terrain modifier
+  let spd=5*(TS[getTile(p.x,p.y)]||1);
+  // Sprint boost (Shift key or auto-sprint when far from target)
+  if(p.sprinting||d>200)spd*=2;
+  // Mount speed bonus
+  if(p.mount){
+    const mt=MNT[p.mount];if(mt){
+      const tile=getTile(p.x,p.y);
+      const terBonus=(mt.terrain&&mt.terrain[tile])?mt.terrain[tile]:mt.spd;
+      spd*=terBonus;
+      if(G.tick%9===0){p._mtDur=(p._mtDur||mt.dur)-1;
+        if(p._mtDur<=0){addLog('⚠️ '+mt.n+' broke down!');notify(mt.n+' broke!','er');dismount();return}
+      }
+    }
+  }
+  if(d<spd){p.x=tgt.x;p.y=tgt.y;p.path.shift();if(p.path.length===0){p.moving=false;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<30);if(nc&&!p.vis.includes(nc.id)){p.vis.push(nc.id)}}}
+  else{p.x=GLOBE.wrapX(p.x+dx/d*spd);p.y+=dy/d*spd}
+}
+function findPath(sx,sy,tx,ty,fly){
+  const stx=Math.floor(sx/TILE),sty=Math.floor(sy/TILE),etx=Math.floor(tx/TILE),ety=Math.floor(ty/TILE);
+  if(stx===etx&&sty===ety)return[{x:tx,y:ty}];
+  if(fly)return[{x:tx,y:ty}];
+  const path=[];let blocked=false;const steps=Math.max(Math.abs(etx-stx),Math.abs(ety-sty))+1;
+  for(let i=0;i<=steps;i++){const t=i/steps,cx=Math.floor(stx+(etx-stx)*t),cy=Math.floor(sty+(ety-sty)*t);if(terrain[cl(cy,0,ROWS-1)][cl(cx,0,COLS-1)]===T.WATER||terrain[cl(cy,0,ROWS-1)][cl(cx,0,COLS-1)]===T.MOUNTAIN){blocked=true;break}}
+  if(!blocked){path.push({x:tx,y:ty});return path}
+  const mx=(stx+etx)/2,my=(sty+ety)/2;path.push({x:mx*TILE+TILE/2,y:my*TILE+TILE/2});path.push({x:tx,y:ty});return path;
+}
+
+// ─── APPLICATION: CITY INTERACTION ───
+function interactCity(){const p=G.player;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<50);if(!nc){notify('No city nearby','inf');return}openModal('city')}
+function healAtCity(){if(!G||!G.player)return;const p=G.player;if(p.gold<50)return;p.gold-=50;p.hp=p.mhp;AE.ok();notify('Healed!','ok')}
+function joinArmy(cn){if(!G||!G.player)return;const p=G.player;if(p.joinedArmy)return;p.joinedArmy=cn;p.gold+=200;addLog('Enlisted in '+cn+' army!');notify('Joined '+cn+' army!','ok');setTimeout(()=>{if(G.cbt)return;const e={...EN.soldier};e.n='Enemy Soldier';e.mhp=e.hp;startCombat(e)},2500)}
+function campAction(){if(!G||!G.player)return;const p=G.player;if(p.camping){p.camping=false;return}if(p.moving)return;p.camping=true;p.cturns=ri(4,10);addLog('Camping...')}
+
+// ─── LOANS ───
+function takeLoan(amount){
+  if(!G||!G.player)return;const p=G.player;
+  const interest=Math.floor(amount*0.15);p.gold+=amount;
+  p.loans.push({id:'ln'+G.tick,principal:amount,remain:amount+interest,daily:Math.ceil((amount+interest)/30)});
+  addLog('💰 Loan: $'+fmt(amount)+' at 15% interest');updateUI();
+}
+function processLoans(){
+  if(!G||!G.player)return;const p=G.player;
+  p.loans.forEach(l=>{const pay=Math.min(l.daily,l.remain);if(p.gold>=pay){p.gold-=pay;l.remain-=pay}else{l.remain-=Math.floor(pay*0.3);p.gold=Math.max(0,p.gold-Math.floor(pay*0.3))}});
+  p.loans=p.loans.filter(l=>l.remain>0);
+}
+function payLoanFull(lid){
+  const l=G.player.loans.find(x=>x.id===lid);if(!l||G.player.gold<l.remain)return;
+  G.player.gold-=l.remain;G.player.loans=G.player.loans.filter(x=>x.id!==lid);
+  addLog('✅ Loan fully paid!');updateUI();
+}
+
+function expandCompany(coIdx,cityId){
+  if(!G||!G.player)return;const p=G.player;const co=p.companies[coIdx];if(!co)return;
+  if(co.cities.includes(cityId)){notify('Already operating here','er');return}
+  const ct=G.cities.find(c=>c.id===cityId);if(!ct)return;
+  const cost=5000+Math.floor(ct.pop*0.01);if(p.gold<cost){notify('Need $'+fmt(cost),'er');return}
+  p.gold-=cost;co.cities.push(cityId);co.emp+=Math.floor(ct.pop*0.0005);
+  addLog(co.name+' expanded to '+ct.name);AE.ok();updateUI();openModal('finance',true);
+}
+function hostileTakeover(cid){
+  if(!G||!G.player)return;const co=G.comps.find(c=>c.id===cid);const pt=G.player.portfolio[cid];
+  if(!co||!pt||pt.shares/co.shares<0.51){notify('Need 51% ownership','er');return}
+  G.player.companies.push({name:co.name,sector:'general',cities:[],emp:co.emp,rev:co.rev,stock:co.stock,hist:co.hist.slice(),shares:co.shares,avail:0,type:'acquired',ipo:false});
+  G.comps=G.comps.filter(c=>c.id!==cid);delete G.player.portfolio[cid];
+  G.player.gold-=co.stock*co.shares*0.1;AE.ok();addLog('🏆 TAKEOVER: '+co.name+' is yours!');notify('Takeover complete!','ok');updateUI();
+}
+const ACH=[{id:'first_1k',n:'First Thousand',d:'Earn $1,000',ck:()=>G.player.gold>=1000},
+  {id:'first_10k',n:'Ten Grand',d:'Earn $10,000',ck:()=>G.player.gold>=10000},
+  {id:'first_100k',n:'Gold Rush',d:'Earn $100,000',ck:()=>G.player.gold>=100000},
+  {id:'explorer_5',n:'Explorer',d:'Visit 5 cities',ck:()=>G.player.vis.length>=5},
+  {id:'explorer_10',n:'Cartographer',d:'Visit 10 cities',ck:()=>G.player.vis.length>=10},
+  {id:'slayer_5',n:'Monster Hunter',d:'Defeat 5 enemies',ck:()=>G.player.edef>=5},
+  {id:'slayer_20',n:'Exterminator',d:'Defeat 20 enemies',ck:()=>G.player.edef>=20},
+  {id:'trader_10',n:'Merchant',d:'Complete 10 trades',ck:()=>G.player.trades>=10},
+  {id:'level_5',n:'Veteran',d:'Reach level 5',ck:()=>G.player.lvl>=5},
+  {id:'level_10',n:'Legend',d:'Reach level 10',ck:()=>G.player.lvl>=10}];
+function checkAchievements(){
+  ACH.forEach(a=>{if(!G.achs[a.id]&&a.ck()){G.achs[a.id]=G.day;notify('🏆 '+a.n+'! '+a.d,'ok');addLog('🏆 Achievement: '+a.n)}});
+}
+// Bounty increase on kills (called from victory)
+function addBounty(amt){G.player.bounty=(G.player.bounty||0)+amt;}
+
+// ─── APPLICATION: SAVE/LOAD ───
+function saveGame(){
+  if(!G||!G.player)return;
+  const d={v:4,player:{mount:G.player.mount||null,name:G.player.name,role:G.player.role,gold:G.player.gold,x:G.player.x,y:G.player.y,hp:G.player.hp,mhp:G.player.mhp,atk:G.player.atk,def:G.player.def,lvl:G.player.lvl,xp:G.player.xp,sp:G.player.sp,skills:G.player.skills,institutions:G.player.institutions||[],advances:G.player.advances||[],inv:G.player.inv,eq:G.player.eq,caravan:G.player.caravan,units:G.player.units,path:[],moving:false,camping:false,cturns:0,edef:G.player.edef,vis:G.player.vis,trades:G.player.trades,bounty:G.player.bounty||0,joinedArmy:G.player.joinedArmy,abilityCd:G.player.abilityCd,loans:G.player.loans,companies:G.player.companies,portfolio:G.player.portfolio,investments:G.player.investments||[],kingdom:G.player.kingdom||null,corsair:G.player.corsair||null},day:G.day,tick:G.tick,seed:G.seed,achs:G.achs,news:G.news.slice(-40),logs:G.logs.slice(-60),
+    cities:G.cities.map(c=>({id:c.id,name:c.name,cIdx:c.cIdx,tx:c.tx,ty:c.ty,x:c.x,y:c.y,pop:c.pop,gdp:c.gdp,stab:c.stab,owner:c.owner,supply:c.supply,demand:c.demand,prices:c.prices,facilities:c.facilities||[]})),
+    countries:G.countries.map(co=>({name:co.name,color:co.color,cIds:co.cities.map(c=>c.id),cx:co.cx,cy:co.cy,gov:co.gov||co.gov,mil:co.mil,treasury:co.treasury,tax:co.tax,rel:co.rel,atWar:co.atWar,personality:co.pers,coastal:co.coastal,investments:co.investments.slice(-5),embassies:co.embassies,armies:co.armies.map(a=>({id:a.id,c:a.c,sz:a.sz,x:a.x,y:a.y,tx:a.tx,ty:a.ty,ord:a.ord}))})),
+    bandits:G.bandits,aiTraders:G.aiTraders,gangs:G.gangs||[],misions:G.missions,roads:G.roads,trains:G.trains,ships:G.ships,comps:G.comps,aiCEOs:G.aiCEOs||[],
+    terrain:terrain.map(r=>[...r]),islands:G.islands||[],ships:G.player.ships||[],nextEventDay:G.nextEventDay,weather:G.weather};
+  try{localStorage.setItem('nd4_save',JSON.stringify(d));AE.ok()}catch(e){}
+}
+function loadGame(){
+  try{const r=localStorage.getItem('nd4_save');if(!r)return false;const d=JSON.parse(r);
+    G=newState();G.player=d.player;G.day=d.day;G.tick=d.tick;G.seed=d.seed;G.achs=d.achs||{};G.news=d.news||[];G.logs=d.logs||[];G.bandits=d.bandits||[];G.aiTraders=d.aiTraders||[];G.gangs=d.gangs||[];G.missions=d.misions||[];G.comps=d.comps||[];G.aiCEOs=d.aiCEOs||[];G.nextEventDay=d.nextEventDay||10;G.weather=d.weather||{type:'clear',intensity:0,startDay:G.day,dur:0};G.islands=d.islands||[];G.player.ships=d.ships||[];
+    genTerrain(G.seed);
+    G.cities=d.cities;G.cities.forEach(c=>{c.facilities=c.facilities||[]});G.roads=d.roads||[];G.trains=d.trains||[];G.ships=d.ships||[];
+    G.countries=d.countries.map((cd,i)=>{const co={name:cd.name,color:cd.color,cities:[],cx:cd.cx,cy:cd.cy,gov:typeof cd.gov==='string'?{type:cd.gov,name:cd.gov,ic:'?',taxRate:20,tradeTax:10,licenseFee:'medium',stab:50,corpPolicy:'standard'}:cd.gov||{type:'monarchy',name:'Monarchy',ic:'👑',taxRate:25,tradeTax:15,licenseFee:'high',stab:70,corpPolicy:'standard'},mil:cd.mil,treasury:cd.treasury,tax:cd.tax,rel:cd.rel||{},armies:cd.armies||[],atWar:cd.atWar||[],pop:0,pers:cd.personality,coastal:cd.coastal,investments:cd.investments||[],embassies:cd.embassies||[],territory:cd.territory||[],factions:[]};co.cities=cd.cIds.map(cid=>G.cities.find(c=>c.id===cid)).filter(Boolean);return co});
+    if(G.player.mount&&MNT[G.player.mount]&&MNT[G.player.mount].cargoBonus&&G.player.caravan){G.player.caravan.cap=50+MNT[G.player.mount].cargoBonus;}
+    document.getElementById('rm').style.display='none';updateUI();addLog('Game loaded');
+    return true;
+  }catch(e){notify('Load failed: '+e.message,'er');return false}
+}
+
+// ─── PRESENTATION: UI ───
+function updateUI(){
+  if(!G||!G.player)return;
+  const p=G.player;
+  document.getElementById('tbN').textContent=p.name||'Traveler';
+  document.getElementById('tbH').textContent=Math.max(0,p.hp).toFixed(0)+'/'+p.mhp;
+  document.getElementById('tbL').textContent=p.lvl;document.getElementById('tbG').textContent='$'+fmt(p.gold);
+  document.getElementById('tbD').textContent='Day '+G.day;document.getElementById('tbR').textContent=p.role.toUpperCase();
+  // Nearby city
+  const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<70);
+  document.getElementById('tbNear').textContent=nc?nc.name+' ('+G.countries[nc.cIdx].name+')':'wilderness';
+  // Mount indicator
+  var spdEl=document.getElementById('tbSpd');
+  if(!spdEl){
+    spdEl=document.createElement('span');spdEl.id='tbSpd';spdEl.className='it';
+    spdEl.innerHTML='<span class="lb">SPD</span><span class="vl grn">1.0x</span>';
+    document.getElementById('tbD').parentElement.after(spdEl);
+  }
+  var spd=1.0;if(p.mount){var mt=MNT[p.mount];if(mt){var tile=getTile(p.x,p.y);spd=mt.terrain&&mt.terrain[tile]?mt.terrain[tile]:mt.spd}}
+  spdEl.children[1].textContent=spd.toFixed(1)+'x'+(p.sprinting?'⚡':p.moving?'▶':'·')+(p.mount&&p._mtDur!=null?' ['+p._mtDur+'/'+MNT[p.mount].dur+']':'');
+  var tbM=document.getElementById('tbMount');if(!tbM){
+    tbM=document.createElement('span');tbM.id='tbMount';tbM.className='it';
+    tbM.innerHTML='<span class="lb">MT</span><span class="vl cyn">—</span>';
+    spdEl.after(tbM);
+  }
+  tbM.children[1].textContent=p.mount?MNT[p.mount].ic||MNT[p.mount].n:'—';
+  // Show/hide game-dependent buttons
+  var gActive=!!(G&&G.player&&G.player.role);
+  document.getElementById('tbDiplo').style.display=gActive?'':'none';
+  document.getElementById('tbFin').style.display=gActive?'':'none';
+  // Update HUD with loans/bounty
+  var hudExtra='';
+  if(G.player.bounty>0)hudExtra+='💰Bounty:$'+fmt(G.player.bounty)+' ';
+  if(G.player.loans&&G.player.loans.length>0)hudExtra+='🏦Debt:$'+fmt(G.player.loans.reduce((s,l)=>s+l.remain,0));
+  document.getElementById('tbNear').parentElement.title=hudExtra;
+  // Log overlay
+  const lo=document.getElementById('logOverlay');
+  lo.innerHTML=G.logs.slice(0,10).map(l=>`<div class="le"><span class="ld">D${l.t}</span>${l.m}</div>`).join('');
+  // Minimap Pro — pre-baked terrain + layer stack
+  const mm=document.getElementById('miniMap'),mmc=mm.getContext('2d');
+  mmc.clearRect(0,0,200,150);
+  // Layer 1: Terrain (scaled from tCache — single drawImage call!)
+  if(tCache){mmc.drawImage(tCache,0,0,COLS*TILE,ROWS*TILE,0,0,200,150)}
+  // Layer 2: Fog — darken unexplored areas
+  mmc.fillStyle='rgba(0,0,0,0.55)';mmc.fillRect(0,0,200,150);
+  // Clear fog around visited cities
+  G.cities.forEach(c=>{if(G.player.vis.includes(c.id)){
+    mmc.clearRect(c.tx/COLS*200-8,c.ty/ROWS*150-8,16,16);
+  }});
+  // Layer 3: Cities — colored dots by type
+  G.cities.forEach(c=>{
+    if(!G.player.vis.includes(c.id))return;
+    const ty=CT[getCityType(c.pop)];const cx=c.tx/COLS*200,cy=c.ty/ROWS*150;
+    mmc.fillStyle=G.countries[c.cIdx].color.replace(/[\d.]+\)$/,'0.9)');
+    mmc.beginPath();mmc.arc(cx,cy,ty.ring/2,0,Math.PI*2);mmc.fill();
+    mmc.strokeStyle='#fff';mmc.lineWidth=0.5;mmc.stroke();
+  });
+  // Layer 4: Entities
+  G.bandits.forEach(b=>{const bx=b.tx/COLS*200,by=b.ty/ROWS*150;mmc.fillStyle='#ff3333';mmc.fillRect(bx-1.5,by-1.5,3,3)});
+  G.aiTraders.forEach(t=>{const tx=t.tx/COLS*200,ty=t.ty/ROWS*150;mmc.fillStyle='#00cc55';mmc.fillRect(tx-1,ty-1,2,2)});
+  // Layer 5: Player — gold triangle + pulse + label
+  const px=p.x/TILE/COLS*200,py=p.y/TILE/ROWS*150;
+  mmc.fillStyle='#ffd700';mmc.beginPath();mmc.moveTo(px,py-5);mmc.lineTo(px-3,py+3);mmc.lineTo(px+3,py+3);mmc.closePath();mmc.fill();
+  mmc.strokeStyle='rgba(255,215,0,'+(0.3+Math.sin(Date.now()/400)*0.3)+')';mmc.lineWidth=2;mmc.beginPath();mmc.arc(px,py,6,0,Math.PI*2);mmc.stroke();
+  mmc.fillStyle='#ff4444';mmc.font='bold 7px sans-serif';mmc.textAlign='center';mmc.fillText('VOCE',px,py+12);
+  // Layer 6: Frustum
+  mmc.strokeStyle='rgba(255,255,255,0.6)';mmc.lineWidth=1;
+  mmc.strokeRect((-camX/zoom/TILE)/COLS*200,(-camY/zoom/TILE)/ROWS*150,(canvas.width/zoom/TILE)/COLS*200,(canvas.height/zoom/TILE)/ROWS*150);
+  // Compass
+  mmc.fillStyle='#8899aa';mmc.font='bold 9px sans-serif';mmc.textAlign='center';mmc.fillText('N',196,10);
+  if(G.modal)openModal(G.modal,true);
+}
+function notify(m,t='inf'){const e=document.createElement('div');e.className='note '+({ok:'ok',er:'er',inf:'inf'}[t]||'inf');e.textContent=m;document.body.appendChild(e);setTimeout(()=>{e.style.opacity='0';e.style.transition='opacity .3s'},2500);setTimeout(()=>e.remove(),2800)}
+function addLog(m){G.logs.unshift({t:G.day,m});if(G.logs.length>150)G.logs.pop()}
+function addNews(m,imp){G.news.unshift({d:G.day,m,imp});if(G.news.length>20)G.news.pop();updateNewsTicker()}
+function updateNewsTicker(){
+  var el=document.getElementById('newsScroll');if(!el)return;
+  el.innerHTML=G.news.slice(0,8).map(n=>`<span style="margin-right:30px;color:${n.imp>=3?'#ff4757':n.imp>=2?'#ffd700':'#8899aa'}">[D${n.d}] ${n.m}</span>`).join('');
+}
+
+function openModal(nm,ref){
+  if(!ref)G.modal=nm;
+  const ov=document.getElementById('modalOverlay'),mc=document.getElementById('modalC');
+  let h='';
+  switch(nm){
+    case'combat':h=mdCombat();break;case'city':h=mdCity();break;case'market':h=mdMarket();break;
+    case'inv':h=mdInv();break;case'skills':h=mdSkills();break;case'transport':h=mdTransport();break;
+    case'diplomacy':h=mdDiplomacy();break;case'finance':h=mdFinance();break;
+    case'settings':h=mdSettings();break;
+    case'achievements':h=mdAchievements();break;
+    case'techtree':h=mdTechTree();break;
+    case'profile':h=mdProfile();break;
+  }
+  mc.innerHTML=h;if(!ref)ov.classList.add('on');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('on');G.modal=null}
+
+function mdCombat(){
+  if(!G.cbt)return'';const c=G.cbt,p=G.player,e=c.enemy;
+  return`<div class="mh"><h2>⚔️ Combat</h2></div><div class="mb">
+    <div class="card"><div class="sr"><span>You Lvl${p.lvl}</span><span class="red">${e.n}</span></div>
+    <div style="font-size:9px;color:#8899aa">⚔️${p.eq.weapon?GI[p.eq.weapon]?GI[p.eq.weapon].n+' ['+(p.eq._wDur||GI[p.eq.weapon].dur)+'/'+GI[p.eq.weapon].dur+']':'?':'Fists'} | 🛡️${p.eq.armor?GI[p.eq.armor]?GI[p.eq.armor].n+' ['+(p.eq._aDur||GI[p.eq.armor].dur)+'/'+GI[p.eq.armor].dur+']':'?':'None'}</div>
+    ${c.status.length>0?`<div style="font-size:9px">${c.status.map(s=>STATUS[s.type].ic+' '+s.type+'('+s.dur+')').join(' ')}</div>`:''}
+    <div class="pb"><div class="pf" style="width:${Math.max(0,p.hp/p.mhp*100)}%;background:${p.hp/p.mhp>0.5?'#2ed573':p.hp/p.mhp>0.25?'#ffd700':'#ff4757'}"></div></div><span style="font-size:9px">HP: ${Math.max(0,p.hp).toFixed(0)}/${p.mhp}</span>
+    <div class="pb mt8"><div class="pf" style="width:${Math.max(0,e.hp/e.mhp*100)}%;background:${e.hp/e.mhp>0.5?'#2ed573':e.hp/e.mhp>0.25?'#ffd700':'#ff4757'}"></div></div><span style="font-size:9px">HP: ${Math.max(0,e.hp).toFixed(0)}/${e.mhp}</span></div>
+    ${c.pt?`<div class="flex-row mt8" style="gap:6px;justify-content:center"><button class="btn btn3" onclick="cbtAtk()">⚔️ Attack</button><button class="btn btn1" onclick="cbtDef()">🛡️ Defend</button><button class="btn bs" onclick="cbtFlee()">🏃 Flee</button></div>
+    ${c.pt?`<div class="flex-row mb8" style="gap:4px;justify-content:center">${getAbilityButtons()}</div>`:''}`:'<div style="text-align:center;color:#5a6a80;margin-top:6px">Enemy turn...</div>'}
+    <div class="mt8" style="max-height:80px;overflow-y:auto;font-size:9px;color:#6a7a90">${c.log.slice(0,6).map(l=>`<div>${l}</div>`).join('')}</div></div>`;
+}
+
+function goToCity(cityId){
+  if(!G||!G.player)return;
+  const c=G.cities.find(x=>x.id===cityId);if(!c||!G.player.vis.includes(cityId))return;
+  G.player.path=findPath(G.player.x,G.player.y,c.x,c.y);
+  G.player.moving=G.player.path.length>0;
+  if(G.player.moving){addLog('Traveling to '+c.name);closeModal();updateUI();}
+}
+// Add destination picker to city modal
+function mdCity(){
+  const p=G.player;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<50);if(!nc)return'<div class="mh"><h2>No city nearby</h2></div>';
+  if(!p.vis.includes(nc.id))p.vis.push(nc.id);
+  const co=G.countries[nc.cIdx];
+  // Visited cities for travel
+  const visited=G.cities.filter(c=>p.vis.includes(c.id)&&c.id!==nc.id);
+  return`<div class="mh"><h2>🏙️ ${nc.name}, ${co.name}</h2><button class="mc" onclick="closeModal()">✕</button></div><div class="mb">
+    <div class="card"><div class="sr"><span class="sl">Pop</span><span class="sv">${fmt(nc.pop)}</span></div><div class="sr"><span class="sl">Stab</span><span class="sv">${nc.stab.toFixed(0)}%</span></div><div class="sr"><span class="sl">Tax</span><span class="sv red">${co.tax}%</span></div>${co.atWar.length>0?`<div class="sr"><span class="sl">At War</span><span class="sv red">${co.atWar.join(', ')}</span></div>`:''}</div>
+    ${visited.length>0?`<div class="card"><h3>🎯 Travel to visited city</h3>${visited.map(c=>`<button class="btn btn1 bs" onclick="goToCity(${c.id})">📍 ${c.name}</button>`).join(' ')}</div>`:''}
+    <div class="flex-row" style="gap:4px;flex-wrap:wrap">
+    <button class="btn btn4" onclick="closeModal();openModal('market')">💰 Market</button>
+    <button class="btn btn4" onclick="closeModal();openModal('transport')">🚂 Travel</button>
+    ${G.player.role==='bandit'?'<button class="btn btn3 bs" onclick="let b='+Math.floor(100+G.player.bounty/10)+';if(G.player.gold>=b){G.player.gold-=b;closeModal();openModal(\'market\')}else{notify(\'Need $\'+b,\'er\')}">💰 Bribe Guards $'+Math.floor(100+G.player.bounty/10)+'</button>':''}
+    ${ct.type==='village'?'<button class="btn btn1 bs" onclick="recruitTroop();closeModal()">⚔️ Recruit $30</button>':''}
+    <button class="btn btn1" onclick="healAtCity();closeModal()">🏥 Heal $50</button>
+    ${G.player.mount&&G.player._mtDur!=null&&G.player._mtDur<MNT[G.player.mount].dur?`<button class="btn btn4 bs" onclick="repairMount()">🔧 Repair ${MNT[G.player.mount].n} $${fmt(Math.floor(MNT[G.player.mount].cost*0.15))}</button>`:''}
+    ${!p.caravan?`<button class="btn btn4" onclick="buyCaravan();closeModal()">🐪 Caravan $500</button>`:''}
+    ${!p.joinedArmy?`<button class="btn btn3" onclick="joinArmy('${co.name}');closeModal()">⚔️ Join Army</button>`:''}
+    ${p.gold>=20000&&p.companies.length<3?`<button class="btn btn4" onclick="foundCompany();">🏢 Found Co $20K</button>`:''}
+    ${p.companies.map((c,i)=>!c.cities.includes(nc.id)?`<button class="btn btn4 bs" onclick="expandCompany(${i},${nc.id})">📈 Expand ${c.name} $${fmt(5000+Math.floor(nc.pop*0.01))}</button>`:'').join('')}
+    <button class="btn btn4 bs" onclick="takeLoan(5000);closeModal()">💰 Loan $5K</button>
+    <button class="btn btn4 bs" onclick="takeLoan(20000);closeModal()">💰 Loan $20K</button>
+    </div>
+    <h3 class="mt8">🏗️ Facilities</h3>
+    <div style="max-height:180px;overflow-y:auto">
+    ${(()=>{
+      let h='';
+      // Existing facilities
+      if(nc.facilities&&nc.facilities.length>0){
+        nc.facilities.forEach((f,i)=>{
+          const ft=FT.find(x=>x.id===f.type);if(!ft)return;
+          const sec={'agri':'🌾','mine':'⛏️','manu':'🔧','ener':'⚡','svc':'🍺'}[ft.sec]||'?';
+          const lvlBar='■'.repeat(f.level)+'□'.repeat(5-f.level);
+          h+='<div class="card" style="padding:4px 6px;margin-bottom:2px"><div style="display:flex;justify-content:space-between;align-items:center;font-size:10px">';
+          h+='<span>'+sec+' '+ft.n+' <span style="color:#ffd700;font-size:8px">Lvl '+f.level+' '+lvlBar+'</span></span>';
+          h+='<span style="font-size:8px;color:#5a6a80">'+(f.owner==='player'?'👤 Yours':'auto')+' | Eff: '+(f.eff*100).toFixed(0)+'%</span>';
+          if(f.level<5)h+='<button class="btn btn4 bs" onclick="upgradeFacility('+nc.id+','+i+');openModal(\'city\',true)">⬆ $'+fmt(Math.floor(ft.cost*f.level*1.8))+'</button>';
+          h+='</div></div>';
+        });
+      }else{h='<div style="color:#5a6a80;font-size:10px">No facilities built yet</div>';}
+      // Build new facility section
+      h+='<h4 style="font-size:10px;margin-top:4px">Build New</h4><div class="flex-row" style="gap:2px">';
+      const sectors=[{id:'agri',n:'🌾Agri'},{id:'mine',n:'⛏️Mine'},{id:'manu',n:'🔧Manu'},{id:'ener',n:'⚡Energy'},{id:'svc',n:'🍺Svc'}];
+      sectors.forEach(sec=>{
+        h+='<span style="font-size:8px;color:#5a6a80">'+sec.n+':</span>';
+        FT.filter(f=>f.sec===sec.id).forEach(f=>{
+          const already=nc.facilities&&nc.facilities.find(x=>x.type===f.id);
+          h+='<button class="btn btn1 bs" onclick="buildFacility('+nc.id+',&quot;'+f.id+'&quot;);openModal(&quot;city&quot;,true)" '+(already?'style="opacity:0.4"':'')+'>'+f.ic+' '+f.n+' $'+fmt(f.cost)+'</button>';
+        });
+        h+='<br>';
+      });
+      h+='</div>';
+      return h;
+    })()}
+    </div></div>`;
+}
+
+function mdMarket(){
+  const p=G.player;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<50);if(!nc)return'<div class="mh"><h2>No market nearby</h2></div>';
+  const cap=p.caravan?p.caravan.cap:30,used=totWt();
+  const inv=p.caravan?p.caravan.goods:p.inv;
+  // Shop categories
+  const cats=[...new Set(GD.map(g=>g.cat))];
+  return`<div class="mh"><h2>💰 Market — ${nc.name}</h2><button class="mc" onclick="closeModal()">✕</button></div><div class="mb">
+    <div class="sr"><span class="sl">Capacity</span><span class="sv">${fmt(used)}/${fmt(cap)}</span></div><div class="pb"><div class="pf" style="width:${Math.min(100,used/cap*100)}%;background:#00d4ff"></div></div>
+    <h3 class="mt8">Buy Goods</h3>
+    <div class="flex-row" style="gap:4px;margin:4px 0">
+    <input id="searchFilter" placeholder="Search goods..." oninput="openModal('market',true)" style="background:#101827;color:#c0c8d4;border:1px solid #1e2d45;padding:3px;font-size:10px;width:140px">
+    <select id="catFilter" onchange="openModal('market',true)" style="background:#101827;color:#c0c8d4;border:1px solid #1e2d45;padding:3px;font-size:10px">
+      <option value="all">All Categories</option>${cats.map(c=>`<option value="${c}">${c.toUpperCase()}</option>`).join('')}
+    </select></div>
+    <div style="max-height:200px;overflow-y:auto"><table><tr><th>Good</th><th>Cat</th><th>Price</th><th>Wt</th><th>Buy</th></tr>
+    ${(()=>{const cf=(document.getElementById('catFilter')||{}).value||'all';const sf=((document.getElementById('searchFilter')||{}).value||'').toLowerCase();return GD.filter(g=>(cf==='all'||g.cat===cf)&&(!sf||g.n.toLowerCase().includes(sf))).map(g=>`<tr><td>${g.n}${g.r?' ⭐':''}</td><td style="font-size:8px">${g.cat}</td><td>$${(nc.prices[g.id]||g.p).toFixed(0)}</td><td>${g.w||1}</td><td><button class="btn btn1 bs" onclick="buyGood('${g.id}',1)">+1</button> <button class="btn btn1 bs" onclick="buyGood('${g.id}',5)">+5</button></td></tr>`).join('')})()}
+    </table></div>
+    <h3 class="mt8">Sell Goods</h3>
+    ${inv.length===0?'<div style="color:#5a6a80;font-size:10px">Nothing to sell</div>':`<table><tr><th>Good</th><th>Qty</th><th>Price</th><th>Sell</th></tr>${inv.map(x=>{const g=GI[x.id];return g?`<tr><td>${g.n}${x.perDays?' 🕐':''}</td><td>${x.qty}</td><td>$${(nc.prices[g.id]||g.p).toFixed(0)}</td><td><button class="btn btn2 bs" onclick="sellGood('${x.id}',1)">-1</button> <button class="btn btn2 bs" onclick="sellGood('${x.id}',${x.qty})">All</button></td></tr>`:''}).join('')}</table>`}
+  </div>`;
+}
+
+function mdInv(){
+  const p=G.player;const inv=p.caravan?p.caravan.goods:p.inv;
+  return`<div class="mh"><h2>🎒 Inventory</h2><button class="mc" onclick="closeModal()">✕</button></div><div class="mb">
+    <div class="sr"><span class="sl">Gold</span><span class="sv gld">$${fmt(p.gold)}</span></div>
+    <div class="sr"><span class="sl">Weapon</span><span class="sv">${p.eq.weapon?(GI[p.eq.weapon]?GI[p.eq.weapon].n+' ['+(p.eq._wDur||GI[p.eq.weapon].dur||0)+'/'+(GI[p.eq.weapon].dur||0)+']':'?'):'None'}</span></div>
+    <div class="sr"><span class="sl">Armor</span><span class="sv">${p.eq.armor?(GI[p.eq.armor]?GI[p.eq.armor].n+' ['+(p.eq._aDur||GI[p.eq.armor].dur||0)+'/'+(GI[p.eq.armor].dur||0)+']':'?'):'None'}</span></div>
+    <div class="sr"><span class="sl">Accessory</span><span class="sv">${p.eq.accessory?GI[p.eq.accessory]?GI[p.eq.accessory].n:'?':'None'}</span></div>
+    ${p.caravan?`<div class="sr"><span class="sl">Caravan</span><span class="sv">Cap:${p.caravan.cap} | Guards:${p.caravan.guards}</span></div>`:''}
+    <h3 class="mt8">Goods</h3>${inv.length===0?'<div style="color:#5a6a80;font-size:10px">Empty</div>':`<table><tr><th>Item</th><th>Qty</th>${p.caravan?'<th>Spoil</th>':''}</tr>${inv.map(x=>{const g=GI[x.id];return g?`<tr><td>${g.n}</td><td>${x.qty}</td>${p.caravan?`<td style="font-size:8px">${x.spoilDay?Math.max(0,x.spoilDay-G.day)+'d':g.per?g.per+'d':'-'}</td>`:''}</tr>`:''}).join('')}</table>`}
+    <h3 class="mt8">Quick Use</h3>${inv.filter(x=>{const g=GI[x.id];return g&&g.use}).map(x=>{const g=GI[x.id];return`<button class="btn btn2 bs mt8" onclick="useItem('${x.id}');openModal('inv',true)">Use ${g.n}</button>`}).join(' ')}</div>`;
+}
+function useItem(gid){
+  const p=G.player;const inv=p.caravan?p.caravan.goods:p.inv;const ex=inv.find(x=>x.id===gid);if(!ex)return;const g=GI[gid];
+  if(g.use==='restore_hp'){p.hp=Math.min(p.mhp,p.hp+g.val);ex.qty--;addLog('Used '+g.n)}
+  else if(g.use==='xp'){p.xp+=g.val;ex.qty--;addLog('Read '+g.n);lvlCheck()}
+  else if(g.use==='max_hp'){p.mhp+=g.val;p.hp+=g.val;ex.qty--;addLog('Used '+g.n+'! Max HP +'+g.val)}
+  else if(g.use==='perm_hp'){p.mhp+=g.val;ex.qty--;addLog('Permanent HP +'+g.val)}
+  if(ex.qty<=0){const i=inv.indexOf(ex);inv.splice(i,1)}
+  AE.ok();updateUI();
+}
+
+function mdSkills(){
+  const p=G.player;
+  return`<div class="mh"><h2>⭐ Skills</h2><button class="mc" onclick="closeModal()">✕</button></div><div class="mb">
+    <div class="card"><div class="sr"><span class="sl">Level</span><span class="sv">${p.lvl}</span></div><div class="sr"><span class="sl">XP</span><span class="sv">${p.xp}/${p.lvl*100}</span></div><div class="sr"><span class="sl">Points</span><span class="sv gld">${p.sp}</span></div></div>
+    ${Object.entries(p.skills).map(([k,v])=>`<div class="card"><div class="sr"><span>${k.toUpperCase()}</span><span>Lvl ${v}</span></div><div class="pb"><div class="pf" style="width:${v*10}%;background:#00d4ff"></div></div>${p.sp>0?`<button class="btn btn4 bs mt8" onclick="upSkill('${k}');openModal('skills',true)">+1</button>`:''}</div>`).join('')}
+    <h3 class="mt8">Stats</h3><div class="sr"><span class="sl">ATK</span><span class="sv">${p.atk+(p.eq.weapon&&GI[p.eq.weapon]?GI[p.eq.weapon].atk||0:0)+(p.eq.accessory&&GI[p.eq.accessory]?GI[p.eq.accessory].atk||0:0)}</span></div><div class="sr"><span class="sl">DEF</span><span class="sv">${p.def+(p.eq.armor&&GI[p.eq.armor]?GI[p.eq.armor].def||0:0)+(p.eq.accessory&&GI[p.eq.accessory]?GI[p.eq.accessory].def||0:0)}</span></div>
+    <div class="sr"><span class="sl">Enemies Defeated</span><span class="sv">${p.edef}</span></div><div class="sr"><span class="sl">Trades</span><span class="sv">${p.trades}</span></div></div>`;
+}
+function upSkill(k){const p=G.player;if(p.sp<=0)return;p.skills[k]=(p.skills[k]||1)+1;p.sp--;AE.ok()}
+
+function mdTransport(){
+  const p=G.player;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<50);
+  return`<div class="mh"><h2>🚂 Transport</h2><button class="mc" onclick="closeModal()">✕</button></div><div class="mb">
+    ${nc?`<h3>From ${nc.name}</h3><h4>Trains</h4>${G.trains.filter(t=>t.cityA===nc.id||t.cityB===nc.id).map(t=>{const d=G.cities.find(c=>c.id===(t.cityA===nc.id?t.cityB:t.cityA));return d?`<button class="btn btn1 bs" onclick="useTrain(${nc.id},${d.id})">🚂 ${d.name} — $${t.cost}</button>`:''}).join(' ')||'<span style="color:#5a6a80;font-size:10px">No trains</span>'}
+    <h4 class="mt8">Ships</h4>${G.ships.filter(s=>s.cityA===nc.id||s.cityB===nc.id).map(s=>{const d=G.cities.find(c=>c.id===(s.cityA===nc.id?s.cityB:s.cityA));return d?`<button class="btn btn1 bs" onclick="useShip(${nc.id},${d.id})">🚢 ${d.name} — $${s.cost}</button>`:''}).join(' ')||'<span style="color:#5a6a80;font-size:10px">No ships here</span>'}`:`<span style="color:#5a6a80;">Move near a city</span>`}
+    <h4 class="mt8">All Ship Routes (any port)</h4>${G.ships.map(s=>{const a=G.cities.find(c=>c.id===s.cityA),b=G.cities.find(c=>c.id===s.cityB);return a&&b?`<span style="font-size:9px;color:#8899aa;margin:2px">🚢 ${a.name}↔${b.name} $${s.cost}</span>`:''}).join(' ')}
+    ${p.caravan?`<h3 class="mt8">Caravan</h3><div class="sr"><span class="sl">Capacity</span><span class="sv">${p.caravan.cap}</span></div><div class="sr"><span class="sl">Guards</span><span class="sv">${p.caravan.guards}</span></div><button class="btn btn4 bs" onclick="upgradeCaravan();openModal('transport',true)">+25 Cap $300</button> <button class="btn btn4 bs" onclick="hireGuard();openModal('transport',true)">Hire Guard $20/d</button>`:`<h4 class="mt8">🐎 Mount Shop</h4>
+    ${MOUNTS.filter(m=>!m.r||m.r!=='legendary'||G.player.gold>=m.cost).map(m=>{
+      const owned=G.player.mount===m.id;
+      return '<button class="btn btn1 bs" onclick="buyMount(\''+m.id+'\')" style="'+(owned?'border:2px solid #ffd700;':'')+'">'+m.ic+' '+m.n+' $'+fmt(m.cost)+' <span style="font-size:7px;color:#8899aa">'+m.desc+'</span> <span style="color:'+spdColor+';font-weight:700">'+effSpd.toFixed(1)+'x here</span></button>';
+    }).join(' ')}
+    ${G.player.mount?'<button class="btn btn3 bs mt8" onclick="dismount();openModal(\'transport\',true)">⬇ Dismount</button>':''}
+    <h4 class="mt8">Legendary Mounts</h4>
+    ${MOUNTS.filter(m=>m.r==='legendary').map(m=>'<button class="btn btn4 bs" onclick="buyMount(\''+m.id+'\')" '+(G.player.gold<m.cost?'disabled':'')+'>'+m.ic+' '+m.n+' $'+fmt(m.cost)+'</button>').join(' ')}
+    ${!G.player.caravan?`<button class="btn btn4" onclick="buyCaravan();openModal('transport',true)">Buy Caravan $500</button>`:''}`}
+  </div>`;
+}
+function upgradeCaravan(){const p=G.player;if(!p.caravan||p.gold<300)return;p.gold-=300;p.caravan.cap+=25;AE.cn()}
+function hireGuard(){const p=G.player;if(!p.caravan||p.gold<200)return;p.gold-=200;p.caravan.guards=(p.caravan.guards||0)+1;AE.cn()}
+
+function mdDiplomacy(){
+  const p=G.player;
+  return`<div class="mh"><h2>🏛️ Diplomacy & Investments</h2><button class="mc" onclick="closeModal()">✕</button></div><div class="mb">
+    ${G.countries.map(co=>{const rel=co.rel['player']||0;const gv=co.gov||{};return`<div class="card"><div class="sr"><span><strong>${co.name}</strong></span><span style="font-size:9px">${gv.ic||'?'} ${gv.name||co.gov||'?'}</span></div>
+    <div class="sr"><span class="sl">Policy</span><span class="sv" style="font-size:9px;color:#8899aa">${gv.corpPolicy||''} | Tax ${co.tax||gv.taxRate||'?'}%</span></div><div class="sr"><span class="sl">Relations</span><span class="sv" style="color:${rel>30?'#2ed573':rel<-10?'#ff4757':'#c0c8d4'}">${rel.toFixed(0)}</span></div><div class="pb"><div class="pf" style="width:${Math.max(0,(rel+100)/2)}%;background:${rel>30?'#2ed573':rel<-10?'#ff4757':'#00d4ff'}"></div></div>
+    <div class="flex-row mt8" style="gap:3px"><button class="btn btn4 bs" onclick="dipAction('${co.name}','gift');openModal('diplomacy',true)">🎁 Gift $2K</button><button class="btn btn1 bs" onclick="dipAction('${co.name}','embassy');openModal('diplomacy',true)">🏛️ Embassy $5K</button>${rel>=20?`<button class="btn btn2 bs" onclick="dipAction('${co.name}','trade_agree');openModal('diplomacy',true)">📜 Trade</button>`:''}${rel>=40?`<button class="btn btn1 bs" onclick="dipAction('${co.name}','alliance');openModal('diplomacy',true)">🤝 Alliance</button>`:''}<button class="btn btn3 bs" onclick="dipAction('${co.name}','sanction');openModal('diplomacy',true)">🚫 Sanction $3K</button>
+    ${co.gov&&co.gov.type==='monarchy'&&rel>=60?'<button class="btn btn4 bs" onclick="dipAction(\''+co.name+'\',\'marriage\');openModal(\'diplomacy\',true)">💒 Marriage</button>':''}
+    <button class="btn btn1 bs" onclick="dipAction('${co.name}','vassal');openModal('diplomacy',true)">🏳️ Vassal $50K</button>
+    <button class="btn btn4 bs" onclick="dipAction('${co.name}','marque');openModal('diplomacy',true)">📜 Letter of Marque $5K</button>
+    <button class="btn btn3 bs" onclick="dipAction('${co.name}','declare_war');openModal('diplomacy',true)">⚔️ Declare War</button>
+    ${co.rel['player']<-30?'<button class="btn btn1 bs" onclick="dipAction(\''+co.name+'\',\'sue_peace\');openModal(\'diplomacy\',true)">🕊️ Sue for Peace</button>':''}</div>
+    ${co.factions&&co.factions.length>0?'<div class="mt8" style="font-size:8px"><span style="color:var(--muted)">Factions: </span>'+co.factions.sort((a,b)=>b.power-a.power).map(f=>'<span style="margin:2px;padding:1px 4px;border-radius:3px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08)">'+f.name+' <span style="color:'+(f.power>60?'#2ed573':f.power>30?'#ffd700':'#ff4757')+'">'+f.power.toFixed(0)+'%</span></span>').join('')+'</div>':''}
+    <div class="mt8"><span style="font-size:9px">Invest: </span>${[5000,20000,50000].map(a=>`<button class="btn btn4 bs" onclick="investInCountry('${co.name}',${a});openModal('diplomacy',true)">$${fmt(a)}</button>`).join(' ')}</div>
+    </div>`}).join('')}
+  </div>`;
+}
+
+function mdFoundCompany(){
+  const sectors=[{id:'agri',n:'🌾 Agriculture',d:'Farms, mills, food processing'},{id:'mine',n:'⛏️ Mining',d:'Mines, smelters, refineries'},{id:'manu',n:'🔧 Manufacturing',d:'Workshops, factories, production'},{id:'ener',n:'⚡ Energy',d:'Wind farms, power plants'},{id:'svc',n:'🍺 Services',d:'Inns, bars, banks, commerce'},{id:'finance',n:'💰 Finance',d:'Stocks, investments, banking'},{id:'tech',n:'💻 Tech',d:'Software, automation, R&D'},{id:'military',n:'⚔️ Military',d:'Weapons, armor, defense'},{id:'logistics',n:'🚚 Logistics',d:'Transport, shipping, supply chains'},{id:'general',n:'🏢 General',d:'Diversified operations'}];
+  return '<div class="mh"><h2>🏢 Found Company — Choose Sector</h2><button class="mc" onclick="closeModal()">✕</button></div><div class="mb">'
+    +'<div style="font-size:10px;color:#5a6a80;margin-bottom:6px">Cost: $20,000 | Pick a sector for your company</div>'
+    +sectors.map(s=>'<div class="card" onclick="closeModal();foundCompany(\''+s.id+'\')" style="cursor:pointer;border-color:#1e2d45" onmouseover="this.style.borderColor=\'#00d4ff\'" onmouseout="this.style.borderColor=\'#1e2d45\'"><h3>'+s.n+'</h3><div style="font-size:9px;color:#8899aa">'+s.d+'</div></div>').join('')
+    +'</div>';
+}
+function mdFinance(){
+  const p=G.player;const pv=Object.entries(p.portfolio).reduce((s,[cid,pt])=>{const co=G.comps.find(c=>c.id===parseInt(cid));return s+(co?pt.shares*co.stock:0)},0);
+  return`<div class="mh"><h2>📈 Finance</h2><button class="mc" onclick="closeModal()">✕</button></div><div class="mb">
+    <div class="card"><div class="sr"><span class="sl">Portfolio</span><span class="sv grn">$${fmt(pv)}</span></div></div>
+    <h3>🏢 Company Directory</h3><div style="font-size:9px;color:var(--muted);margin-bottom:4px">Player · AI · Kingdom</div>
+    <h4 style="font-size:10px;color:var(--accent)">Stock Market</h4><table><tr><th>Company</th><th>Price</th><th>Avail</th><th>Buy</th><th>Own</th></tr>
+    ${G.comps.map(c=>{const pt=p.portfolio[c.id];const own=pt?pt.shares/c.shares*100:0;return`<tr><td>${c.name}</td><td>$${c.stock.toFixed(1)}</td><td>${fmt(c.avail)}</td><td><button class="btn btn1 bs" onclick="buyStock(${c.id},50)">50</button> <button class="btn btn1 bs" onclick="buyStock(${c.id},200)">200</button></td><td>${pt?pt.shares:'0'} (${own.toFixed(1)}%)</td>${own>=51?`<td><button class="btn btn4 bs" onclick="hostileTakeover(${c.id});openModal('finance',true)">🏆 Takeover</button></td>`:'<td></td>'}</tr>`}).join('')}
+    </table>
+    ${Object.keys(p.portfolio).length>0?`<h3 class="mt8">Your Holdings</h3><table><tr><th>Company</th><th>Shares</th><th>Value</th><th>Sell</th></tr>${Object.entries(p.portfolio).map(([cid,pt])=>{const co=G.comps.find(c=>c.id===parseInt(cid));if(!co)return'';return`<tr><td>${co.name}</td><td>${pt.shares}</td><td>$${fmt(pt.shares*co.stock)}</td><td><button class="btn btn3 bs" onclick="sellStock(${co.id},${Math.floor(pt.shares/2)});openModal('finance',true)">50%</button> <button class="btn btn3 bs" onclick="sellStock(${co.id},${pt.shares});openModal('finance',true)">All</button></td></tr>`}).join('')}</table>`:''}
+    <h3 class="mt8">🏗️ Your Facilities</h3>
+    ${(()=>{
+      let h='';let hasAny=false;
+      G.cities.forEach(ct=>{if(!ct.facilities)return;
+        ct.facilities.forEach((f,i)=>{
+          if(f.owner!=='player')return;hasAny=true;
+          const ft=FT.find(x=>x.id===f.type);if(!ft)return;
+          const sec={'agri':'🌾','mine':'⛏️','manu':'🔧','ener':'⚡','svc':'🍺'}[ft.sec]||'?';
+          const svcRev=ft.out.find(o=>o.svc);
+          h+='<div class="card" style="padding:4px"><div class="sr"><span>'+sec+' '+ft.n+'</span><span style="color:#ffd700">Lvl '+f.level+'</span></div>';
+          h+='<div class="sr" style="font-size:9px"><span class="sl">City</span><span class="sv">'+ct.name+'</span></div>';
+          if(svcRev)h+='<div class="sr" style="font-size:9px"><span class="sl">Revenue/day</span><span class="sv grn">$'+fmt(Math.floor((svcRev.svc==='rest'?8:svcRev.svc==='social'?15:30)*f.level*f.eff))+'</span></div>';
+          h+='</div>';
+        });
+      });
+      return hasAny?h:'<div style="color:#5a6a80;font-size:10px">No player-owned facilities. Build them at cities.</div>';
+    })()}
+    ${G.player.loans&&G.player.loans.length>0?`<h3 class="mt8">🏦 Loans</h3>${G.player.loans.map(l=>'<div class="card"><div class="sr"><span class="sl">Loan #'+l.id.slice(-4)+'</span><span class="sv red">$'+fmt(l.remain)+'</span></div><div class="pb"><div class="pf" style="width:'+Math.max(5,(1-l.remain/(l.principal*1.15))*100)+'%;background:#ff4757"></div></div><button class="btn btn3 bs" onclick="payLoanFull(\''+l.id+'\');openModal(\'finance\',true)">Pay All $'+fmt(l.remain)+'</button></div>').join('')}</table>`:''}
+    <h3 class="mt8">🤖 AI CEOs</h3>
+    ${G.aiCEOs&&G.aiCEOs.length>0?G.aiCEOs.map(ai=>'<div class="card" style="padding:4px"><div class="sr"><span>'+ai.name+'</span><span style="font-size:8px;color:#8899aa">'+ai.personality+' | '+ai.territory+' | $'+fmt(ai.wealth)+'</span></div></div>').join(''):'<div style="color:var(--muted);font-size:10px">No AI competitors yet</div>'}
+    <h3 class="mt8">Your Companies</h3>
+    ${p.companies.length===0?'<div style="color:#5a6a80;font-size:10px">None. Found one for $20K at a city.</div>':p.companies.map((co,i)=>`<div class="card"><div class="sr"><span>${co.name}</span><span>${co.sector}</span></div><div class="sr"><span class="sl">Revenue/day</span><span class="sv">$${fmt(co.rev||0)}</span></div><div class="sr"><span class="sl">Cities</span><span class="sv">${co.cities.length}</span></div><div class="sr"><span class="sl">Stock</span><span class="sv">$${(co.stock||0).toFixed(1)}</span></div>${!co.ipo?`<button class="btn btn4 bs mt8" onclick="ipoCompany(${i});openModal('finance',true)">📈 IPO $50K</button>`:'<span style="color:#2ed573;font-size:10px">Public ✓</span>'}</div>`).join('')}
+  </div>`;
+}
+
+function mdSettings(){
+  const set=JSON.parse(localStorage.getItem('nd_settings')||'{"vol":0.5,"coords":true}');
+  return`<div class="mh"><h2>⚙️ Settings</h2><button class="mc" onclick="closeModal()">✕</button></div><div class="mb">
+    <div class="card"><h3>🔊 Volume</h3><input type="range" min="0" max="100" value="${set.vol*100}" oninput="let v=this.value/100;localStorage.setItem('nd_settings',JSON.stringify({vol:v,coords:${set.coords}}));if(AE.gain)AE.gain.gain.value=v" style="width:100%"></div>
+    <div class="card"><h3>📍 Show Coordinates</h3><button class="btn ${set.coords?'btn2':'btn3'}" onclick="let s=JSON.parse(localStorage.getItem('nd_settings')||'{}');s.coords=!s.coords;localStorage.setItem('nd_settings',JSON.stringify(s));openModal('settings',true)">${set.coords?'ON ✅':'OFF ❌'}</button></div>
+    <div class="card"><h3>🔧 DevTools</h3><button class="btn btn1" onclick="ndDev()">Toggle Eruda</button></div>
+    <div class="card"><h3>🔄 New Game</h3><button class="btn btn3" onclick="if(confirm('Start new game? All progress lost.')){localStorage.removeItem('nd4_save');location.reload()}">Reset Everything</button></div>
+  </div>`;
+}
+
+// Screen shake on crit
+function zoomMap(delta){
+  zoom=Math.max(0.12,Math.min(2.0,zoom+delta));
+  // Re-center on player
+  if(G&&G.player){camX=-G.player.x*zoom+canvas.width/2;camY=-G.player.y*zoom+canvas.height/2}
+}
+function shakeScreen(){var ox=camX,oy=camY;camX+=ri(-6,6);camY+=ri(-4,4);setTimeout(()=>{camX=ox;camY=oy},150);}
+
+function mdAchievements(){
+  const total=ACH.length;const unlocked=Object.keys(G.achs).length;
+  return`<div class="mh"><h2>🏆 Achievements (${unlocked}/${total})</h2><button class="mc" onclick="closeModal()">✕</button></div><div class="mb">
+    ${ACH.map(a=>{const u=!!G.achs[a.id];return`<div class="card" style="opacity:${u?1:0.4};border-color:${u?'#ffd700':'#1e2d45'}"><span>${u?'✅':'🔒'} <strong>${a.n}</strong></span><span style="font-size:9px;color:#8899aa;float:right">${a.d}</span>${u?`<span style="font-size:8px;color:#2ed573;float:right;margin-right:8px">Day ${G.achs[a.id]}</span>`:''}</div>`}).join('')}
+  </div>`;
+}
+
+function mdTechTree(){
+  G.player.institutions=G.player.institutions||[];G.player.advances=G.player.advances||[];
+  let h='<h3>📚 Institutions (EU5)</h3><div class="gr2">';
+  INSTITUTIONS.forEach(i=>{const ov=G.player.institutions.includes(i.id);
+    h+='<div class="card" style="padding:4px;'+(ov?'border-color:#2ed573':'')+'"><span>'+(ov?'✅':'')+i.n+'</span><span style="font-size:7px">Era '+i.era+' | '+i.effects+'</span><button class="btn btn3" style="font-size:7px;padding:1px 3px" onclick="advanceInstitution(\''+i.id+'\');openModal(\'techtree\',true)">$'+i.cost+'</button></div>';
+  });h+='</div>';
+  h+='<h3>🔬 Advances (Victoria 5)</h3><div class="gr2">';
+  const branches=['production','military','society'];const bIcons={production:'🏭',military:'⚔️',society:'🏛️'};
+  branches.forEach(br=>{h+='<h4>'+bIcons[br]+' '+br.toUpperCase()+'</h4>';
+    ADVANCES.filter(a=>a.branch===br).forEach(a=>{const ov2=G.player.advances.includes(a.id);const canAdv=a.prereq.length===0||a.prereq.every(p=>G.player.advances.includes(p));
+      h+='<div class="card" style="padding:3px;'+(ov2?'border-color:#2ed573':!canAdv?'opacity:0.4':'')+'"><span>'+(ov2?'✅':canAdv?'🔓':'🔒')+a.n+'</span><span style="font-size:7px">Era '+a.era+'</span>'+(canAdv&&!ov2?'<button class="btn btn1" style="font-size:7px;padding:1px 3px" onclick="researchAdvance(\''+a.id+'\');openModal(\'techtree\',true)">$'+a.cost+'</button>':'')+'</div>';
+    });
+  });h+='</div>';
+  return h;
+}
+function mdProfile(){
+  if(!G||!G.player)return'<div class="mh"><h2>👤 Profile</h2></div><div class="mb"><div class="card">Start a game first</div></div>';
+  const p=G.player;const wep=p.eq.weapon&&GI[p.eq.weapon]?GI[p.eq.weapon].n:'None';
+  const arm=p.eq.armor&&GI[p.eq.armor]?GI[p.eq.armor].n:'None';
+  const acc=p.eq.accessory&&GI[p.eq.accessory]?GI[p.eq.accessory].n:'None';
+  return`<div class="mh"><h2>👤 ${p.name||'Traveler'} — ${p.role.toUpperCase()} (${p.race||'human'})</h2><button class="mc" onclick="closeModal()">✕</button></div><div class="mb">
+    <div class="card"><h3>⚔️ Combat</h3>
+    <div class="sr"><span class="sl">HP</span><span class="sv" style="color:${p.hp/p.mhp>0.5?'#2ed573':'#ff4757'}">${Math.floor(p.hp)}/${p.mhp}</span></div>
+    <div class="pb"><div class="pf" style="width:${p.hp/p.mhp*100}%;background:${p.hp/p.mhp>0.5?'#2ed573':'#ff4757'}"></div></div>
+    <div class="sr"><span class="sl">ATK</span><span class="sv">${p.atk+(p.eq.weapon&&GI[p.eq.weapon]?GI[p.eq.weapon].atk||0:0)+(p.eq.accessory&&GI[p.eq.accessory]?GI[p.eq.accessory].atk||0:0)}</span></div>
+    <div class="sr"><span class="sl">DEF</span><span class="sv">${p.def+(p.eq.armor&&GI[p.eq.armor]?GI[p.eq.armor].def||0:0)+(p.eq.accessory&&GI[p.eq.accessory]?GI[p.eq.accessory].def||0:0)}</span></div></div>
+    <div class="card"><h3>⭐ Level ${p.lvl} (${p.xp}/${p.lvl*100} XP)</h3>
+    <div class="pb"><div class="pf" style="width:${p.xp/(p.lvl*100)*100}%;background:#ffd700"></div></div>
+    <div class="sr"><span class="sl">Skill Points</span><span class="sv gld">${p.sp}</span></div></div>
+    <div class="card"><h3>🎯 Skills</h3>
+    ${Object.entries(p.skills).map(([k,v])=>`<div class="sr"><span class="sl">${k.toUpperCase()}</span><span class="sv">Lvl ${v}</span></div>`).join('')}</div>
+    <div class="card"><h3>🎒 Equipment</h3>
+    <div class="sr"><span class="sl">Weapon</span><span class="sv">${wep} ${p.eq._wDur!=null?'['+p.eq._wDur+'/'+GI[p.eq.weapon].dur+']':''}</span></div>
+    <div class="sr"><span class="sl">Armor</span><span class="sv">${arm} ${p.eq._aDur!=null?'['+p.eq._aDur+'/'+GI[p.eq.armor].dur+']':''}</span></div>
+    <div class="sr"><span class="sl">Accessory</span><span class="sv">${acc}</span></div></div>
+    ${G.player.role==='bandit'&&G.player.gang?'<div class="card"><h3>🦹 Gang ('+G.player.gang.length+') | Notoriety: '+(G.player.notoriety||0)+'</h3>'+G.player.gang.map(g=>'<div class="sr"><span>'+g.name+'</span><span style="font-size:8px">❤️'+g.hp+' ⚔️'+g.atk+' 🛡️'+g.def+' 💚'+g.loyalty+'%</span></div>').join('')+'</div>':''}
+    <div class="card"><h3>💰 Economy</h3>
+    <div class="sr"><span class="sl">Gold</span><span class="sv gld">$${fmt(p.gold)}</span></div>
+    <div class="sr"><span class="sl">Bounty</span><span class="sv red">$${fmt(p.bounty||0)}</span></div>
+    <div class="sr"><span class="sl">Trades</span><span class="sv">${p.trades||0}</span></div>
+    <div class="sr"><span class="sl">Enemies</span><span class="sv">${p.edef||0}</span></div>
+    <div class="sr"><span class="sl">Loans</span><span class="sv red">$${fmt(p.loans?p.loans.reduce((s,l)=>s+l.remain,0):0)}</span></div></div>
+  </div>`;
+}
+
+// ─── PRESENTATION: CANVAS ───
+const canvas=document.getElementById('mapCanvas'),ctx=canvas.getContext('2d');
+let camX=600,camY=450,zoom=0.5,drag=false,dsx,dsy,dscx,dscy,particles=[],clickMarker=null;
+function rz(){canvas.width=window.innerWidth;canvas.height=window.innerHeight-68}
+window.addEventListener('resize',rz);
+function handleClick(e){
+  if(!G||!G.player)return;
+  const cx=e.clientX||(e.touches&&e.touches[0]?e.touches[0].clientX:0);
+  const cy=e.clientY||(e.touches&&e.touches[0]?e.touches[0].clientY:0);
+  const mx=(cx-camX)/zoom,my=(cy-camY)/zoom;
+  drag=true;dsx=cx;dsy=cy;dscx=camX;dscy=camY;
+  if(G.player.role==='bandit'&&G.player.hideouts&&G.player.hideouts.length<3){const tt=getTile(mx,my);if(tt===T.FOREST||tt===T.MOUNTAIN){const dist=G.player.hideouts.reduce((m,h)=>Math.min(m,dt(mx,my,h.x,h.y)),9999);if(dist>200){G.player.hideouts.push({x:mx,y:my,name:'Hideout '+(G.player.hideouts.length+1)});addLog('🏚️ Established hideout!');notify('Hideout created!','ok');updateUI();return}}}
+  G.player.path=findPath(G.player.x,G.player.y,mx,my,canFly);
+  G.player.moving=G.player.path.length>0;
+  clickMarker={x:mx,y:my,life:1.0};
+}
+function handleMove(e){
+  if(!drag)return;
+  const cx=e.clientX||(e.touches&&e.touches[0]?e.touches[0].clientX:0);
+  const cy=e.clientY||(e.touches&&e.touches[0]?e.touches[0].clientY:0);
+  camX=dscx+(cx-dsx);camY=dscy+(cy-dsy);
+  e.preventDefault();
+}
+canvas.addEventListener('mousedown',handleClick);
+canvas.addEventListener('touchstart',e=>{handleClick(e);e.preventDefault();});
+canvas.addEventListener('mousemove',handleMove);
+canvas.addEventListener('touchmove',e=>{handleMove(e);e.preventDefault();});
+canvas.addEventListener('mouseup',()=>{drag=false});
+canvas.addEventListener('touchend',()=>{drag=false});
+canvas.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(0.12,Math.min(2.0,zoom*(e.deltaY>0?0.92:1.08)))});
+// Minimap click to move camera
+const mmEl=document.getElementById('miniMap');mmEl.addEventListener('click',e=>{const rect=mmEl.getBoundingClientRect();const mx=(e.clientX-rect.left-2)/200*COLS*TILE,my=(e.clientY-rect.top-2)/150*ROWS*TILE;camX=-mx*zoom+canvas.width/2;camY=-my*zoom+canvas.height/2});
+window.addEventListener('keydown',e=>{if(e.key==='c')interactCity();if(e.key==='i')openModal('inv');if(e.key==='m')openModal('market');if(e.key==='Shift'&&G&&G.player)G.player.sprinting=true;});
+window.addEventListener('keyup',e=>{if(e.key==='Shift'&&G&&G.player)G.player.sprinting=false;});
+
+let waterPhase=0;
+
+// ─── RENDER LAYER SYSTEM ───
+// Each layer: {name, space:'screen'|'world', enabled:true, order, fn(ctx)}
+// Layers are sorted by order, rendered in sequence
+const LAYERS=[
+  // ═══ SCREEN SPACE (before camera) ═══
+  {name:'bgFill',space:'screen',order:0,enabled:true,fn(){ctx.fillStyle='#020510';ctx.fillRect(0,0,canvas.width,canvas.height)}},
+  {name:'starfield',space:'screen',order:1,enabled:true,fn(){
+    ctx.save();ctx.translate(camX*0.2,camY*0.2);
+    stars.forEach(s=>{const flicker=0.5+Math.sin(G.tick*0.05+s.x)*0.5;ctx.fillStyle=`rgba(200,220,255,${s.b*flicker})`;ctx.beginPath();ctx.arc(s.x,s.y,s.s,0,Math.PI*2);ctx.fill()});
+    ctx.restore();
+  }},
+  {name:'borderGlow',space:'screen',order:2,enabled:true,fn(){
+    const grd=ctx.createRadialGradient(canvas.width/2,canvas.height/2,Math.min(canvas.width,canvas.height)*0.3,canvas.width/2,canvas.height/2,Math.max(canvas.width,canvas.height)*0.8);
+    grd.addColorStop(0,'rgba(0,0,0,0)');grd.addColorStop(1,'rgba(0,0,0,0.7)');ctx.fillStyle=grd;ctx.fillRect(0,0,canvas.width,canvas.height);
+  }},
+  // ═══ WORLD SPACE (camera transform applied) ═══
+  {name:'waterAnim',space:'world',order:10,enabled:true,fn(){
+    for(let y=0;y<ROWS;y++)for(let x=0;x<COLS;x++)if(terrain[y][x]===T.WATER){
+      ctx.fillStyle='#1a3a5c';const wo=Math.sin(x*0.5+waterPhase)*Math.cos(y*0.4+waterPhase*0.7)*2;
+      ctx.fillRect(x*TILE,y*TILE+wo,TILE,TILE);
+      ctx.fillStyle='rgba(30,80,140,0.15)';ctx.fillRect(x*TILE+2,y*TILE+2+wo,TILE-4,TILE-4);
+    }
+  }},
+  {name:'terrain',space:'world',order:11,enabled:true,fn(){if(tCache)ctx.drawImage(tCache,0,0)}},
+  {name:'decorations',space:'world',order:12,enabled:true,fn(){
+    trees.forEach(t=>{ctx.fillStyle='#1a4a1a';ctx.beginPath();ctx.moveTo(t.x,t.y-6*t.s);ctx.lineTo(t.x-3*t.s,t.y);ctx.lineTo(t.x+3*t.s,t.y);ctx.closePath();ctx.fill()});
+    rocks.forEach(r=>{ctx.fillStyle='#3a3a3a';ctx.beginPath();ctx.arc(r.x,r.y,r.s*1.2,0,Math.PI*2);ctx.fill()});
+  }},
+  {name:'roads',space:'world',order:20,enabled:true,fn(){
+    G.roads.forEach(r=>{const cond=(r.cond||100)/100;ctx.strokeStyle=`rgba(139,119,80,${0.3*cond})`;ctx.lineWidth=2*cond+1;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(r.fx*TILE+TILE/2,r.fy*TILE+TILE/2);ctx.lineTo(r.tx*TILE+TILE/2,r.ty*TILE+TILE/2);ctx.stroke();ctx.setLineDash([])});
+  }},
+  {name:'trainRoutes',space:'world',order:21,enabled:true,fn(){
+    G.trains.forEach(t=>{ctx.strokeStyle='rgba(200,200,200,0.15)';ctx.lineWidth=1;ctx.setLineDash([2,6]);ctx.beginPath();const ca=G.cities.find(c=>c.id===t.cityA),cb=G.cities.find(c=>c.id===t.cityB);if(ca&&cb){ctx.moveTo(ca.x,ca.y);ctx.lineTo(cb.x,cb.y)}ctx.stroke();ctx.setLineDash([])});
+  }},
+  {name:'shipRoutes',space:'world',order:22,enabled:true,fn(){
+    G.ships.forEach(s=>{ctx.strokeStyle='rgba(0,150,200,0.12)';ctx.lineWidth=1;ctx.setLineDash([2,8]);ctx.beginPath();const ca=G.cities.find(c=>c.id===s.cityA),cb=G.cities.find(c=>c.id===s.cityB);if(ca&&cb){ctx.moveTo(ca.x,ca.y);ctx.lineTo(cb.x,cb.y)}ctx.stroke();ctx.setLineDash([])});
+  }},
+  {name:'gangTerritory',space:'world',order:28,enabled:true,fn(){
+    if(G.gangs)G.gangs.forEach(g=>{ctx.fillStyle=g.color.replace(/[\d.]+\)$/,'0.12)');g.territory.forEach(t=>{ctx.fillRect(t.x*TILE,t.y*TILE,TILE,TILE)});});
+  }},
+  {name:'territoryBorders',space:'world',order:29,enabled:true,fn(){
+    G.countries.forEach(co=>{
+      if(!co.territory||co.territory.length===0)return;
+      ctx.strokeStyle=co.color.replace(/[\d.]+\)$/,'0.25)');ctx.lineWidth=1;ctx.setLineDash([8,4]);
+      co.territory.forEach(t=>{ctx.strokeRect(t.x*TILE,t.y*TILE,TILE,TILE)});
+      ctx.setLineDash([]);
+    });
+  }},
+  {name:'provinces',space:'world',order:31,enabled:true,fn(){
+    G.countries.forEach(co=>{if(co.provinces)co.provinces.forEach(pv=>{
+      ctx.strokeStyle=co.color.replace(/[\d.]+\)$/,'0.3)');ctx.lineWidth=0.7;ctx.setLineDash([2,6]);
+      pv.cities.forEach(cid=>{const c=G.cities.find(cc=>cc.id===cid);if(c){ctx.beginPath();ctx.arc(c.x,c.y,12,0,Math.PI*2);ctx.stroke()}});
+      ctx.setLineDash([]);
+      const cap=G.cities.find(cc=>cc.id===pv.capital);if(cap){ctx.fillStyle='rgba(255,255,255,0.6)';ctx.font='7px sans-serif';ctx.fillText(pv.name,cap.x-20,cap.y-15)}
+    })});
+  }},
+  {name:'countries',space:'world',order:30,enabled:true,fn(){
+    G.countries.forEach(co=>{if(co.cities.length>1){ctx.fillStyle=co.color.replace(/[\d.]+\)$/,'0.04)');ctx.beginPath();const pts=co.cities;for(let i=0;i<pts.length;i++){const a=(i/pts.length)*Math.PI*2;i===0?ctx.moveTo(co.cx+Math.cos(a)*110,co.cy+Math.sin(a)*110):ctx.lineTo(co.cx+Math.cos(a)*110,co.cy+Math.sin(a)*110)}ctx.closePath();ctx.fill();ctx.fillStyle=co.color.replace(/[\d.]+\)$/,'0.35)');ctx.font='18px sans-serif';ctx.textAlign='center';ctx.strokeStyle='rgba(0,0,0,0.85)';ctx.lineWidth=6;ctx.strokeText(co.name,co.cx,co.cy-90);ctx.fillStyle='#ffffff';ctx.fillText(co.name,co.cx,co.cy-90);ctx.strokeStyle='rgba(0,0,0,0.5)';ctx.lineWidth=2;ctx.strokeText(co.name,co.cx,co.cy-90);ctx.fillText(co.name,co.cx,co.cy-90)}});
+  }},
+  {name:'cities',space:'world',order:40,enabled:true,fn(){
+    G.cities.forEach(ct=>{const ty=CT[ct.type||'village'];const r=ty.ring,co=G.countries[ct.cIdx];
+      if(G.player.vis.includes(ct.id)){const gl=ctx.createRadialGradient(ct.x,ct.y,2,ct.x,ct.y,r+4);gl.addColorStop(0,'rgba(0,212,255,0.15)');gl.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(ct.x,ct.y,r+4,0,Math.PI*2);ctx.fill()}
+      ctx.beginPath();ctx.arc(ct.x,ct.y,r,0,Math.PI*2);ctx.fillStyle=co.color;ctx.fill();ctx.strokeStyle=ty.color;ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#ffffff';ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+      ctx.strokeStyle='rgba(0,0,0,0.95)';ctx.lineWidth=5;
+      if(ct.bldgs)ct.bldgs.forEach(b=>{ctx.fillStyle=b.c;ctx.fillRect(ct.x+b.rx-b.w/2,ct.y+b.ry-b.h,b.w,b.h)});
+      ctx.strokeText(ct.name,ct.x,ct.y-r-4);ctx.fillText(ct.name,ct.x,ct.y-r-4);ctx.strokeStyle='rgba(0,0,0,0.5)';ctx.lineWidth=2;ctx.strokeText(ct.name,ct.x,ct.y-r-4);ctx.fillText(ct.name,ct.x,ct.y-r-4);if(co.atWar.length>0){ctx.fillStyle='#ff4757';ctx.font='11px sans-serif';ctx.fillText('⚔️',ct.x+r+4,ct.y+2)}});
+  }},
+  {name:'armies',space:'world',order:50,enabled:true,fn(){
+    G.countries.forEach(co=>co.armies.forEach(a=>{
+      ctx.fillStyle=co.color.replace(/[\d.]+\)$/,'0.7)');ctx.beginPath();ctx.arc(a.x,a.y-2,5,Math.PI,0);ctx.fill();
+      ctx.fillStyle=co.color.replace(/[\d.]+\)$/,'0.9)');ctx.fillRect(a.x-4,a.y-2,8,7);ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=1;ctx.strokeRect(a.x-4,a.y-2,8,7);
+    }));
+  }},
+  {name:'banditHideouts',space:'world',order:58,enabled:true,fn(){
+    G.bandits.forEach(b=>{if(b.type==='hideout'){ctx.fillStyle='rgba(139,69,19,0.6)';ctx.fillRect(b.tx*TILE-6,b.ty*TILE-6,12,12);
+      ctx.strokeStyle='#8b4513';ctx.lineWidth=1;ctx.strokeRect(b.tx*TILE-6,b.ty*TILE-6,12,12);
+      ctx.fillStyle='#fff';ctx.font='7px sans-serif';ctx.fillText('🏚️',b.tx*TILE-5,b.ty*TILE+1);}});
+  }},
+  {name:'bandits',space:'world',order:60,enabled:true,fn(){
+    const w=COLS*TILE;
+    G.bandits.forEach(b=>{
+      const drawAt=[b.x];if(b.x<200)drawAt.push(b.x+w);if(b.x>w-200)drawAt.push(b.x-w);
+      drawAt.forEach(bx=>{ctx.fillStyle='rgba(200,25,25,0.85)';ctx.beginPath();ctx.arc(bx,b.y,9,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(bx-3,b.y-3);ctx.lineTo(bx+3,b.y+3);ctx.moveTo(bx+3,b.y-3);ctx.lineTo(bx-3,b.y+3);ctx.stroke();});
+    });
+  }},
+  {name:'traders',space:'world',order:61,enabled:true,fn(){
+    G.aiTraders.forEach(t=>{ctx.fillStyle='rgba(0,160,70,0.8)';ctx.beginPath();ctx.arc(t.x,t.y,7,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#ffd700';ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillText('$',t.x,t.y+3);
+    });
+  }},
+  {name:'player',space:'world',order:70,enabled:true,fn(){
+    const p=G.player;const gl=ctx.createRadialGradient(p.x,p.y,4,p.x,p.y,22);gl.addColorStop(0,'rgba(255,215,0,0.5)');gl.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gl;ctx.beginPath();ctx.arc(p.x,p.y,22,0,Math.PI*2);ctx.fill();
+    // Mount visual
+    if(p.mount){const mid=p.mount;ctx.save();ctx.translate(p.x,p.y+12);
+      if(mid==='griffin'||mid==='airship'){ctx.fillStyle='#daa520';ctx.beginPath();ctx.moveTo(-4,-6);ctx.lineTo(-18,-20);ctx.lineTo(-8,-8);ctx.fill();ctx.beginPath();ctx.moveTo(4,-6);ctx.lineTo(18,-20);ctx.lineTo(8,-8);ctx.fill();
+        if(mid==='airship'){ctx.fillStyle='#c0c0d0';ctx.beginPath();ctx.ellipse(0,-4,14,5,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1;ctx.stroke();}
+      }else if(mid==='wagon'||mid==='carriage'){ctx.fillStyle=mid==='carriage'?'#8B6914':'#6B4226';ctx.fillRect(-10,-8,20,10);ctx.fillStyle='#daa520';ctx.fillRect(-11,-9,22,3);ctx.fillStyle='#333';ctx.beginPath();ctx.arc(-7,4,3,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(7,4,3,0,Math.PI*2);ctx.fill();
+      }else{ctx.fillStyle='#8B4513';ctx.beginPath();ctx.ellipse(0,0,10,5,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=mid==='warhorse'?'#2a2a2a':'#6B4226';ctx.fillRect(6,0,8,2);ctx.fillRect(-8,-3,2,6);ctx.fillRect(-4,-3,2,6);ctx.fillRect(2,-3,2,6);ctx.fillStyle='#333';ctx.beginPath();ctx.arc(8,6,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-6,6,2,0,Math.PI*2);ctx.fill();if(mid==='warhorse'){ctx.fillStyle='#888';ctx.fillRect(-9,-6,8,2);}if(mid==='camel'){ctx.fillStyle='#c4a64a';ctx.beginPath();ctx.arc(1,-10,4,0,Math.PI*2);ctx.fill();}}
+      ctx.restore();}
+    // Rotate toward movement direction
+    let angle=-Math.PI/2;if(p.path.length>0){angle=Math.atan2(p.path[0].y-p.y,p.path[0].x-p.x)}
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(angle);
+    ctx.fillStyle='#ffd700';ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(-10,10);ctx.lineTo(10,10);ctx.closePath();ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
+    // Trail dots behind player (opposite direction)
+    ctx.fillStyle='rgba(255,215,0,0.3)';ctx.beginPath();ctx.arc(0,14,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(0,19,1.5,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+    if(p.path.length>0){ctx.strokeStyle='rgba(255,215,0,0.2)';ctx.lineWidth=0.8;ctx.setLineDash([3,5]);ctx.beginPath();ctx.moveTo(p.x,p.y);p.path.forEach(pt=>ctx.lineTo(pt.x,pt.y));ctx.stroke();ctx.setLineDash([])}
+    if(p.camping){ctx.fillStyle='rgba(255,200,50,0.3)';ctx.beginPath();ctx.arc(p.x,p.y,20,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillText('🏕️',p.x,p.y-16)}
+  }},
+  {name:'clickMarker',space:'world',order:80,enabled:true,fn(){
+    if(clickMarker){clickMarker.life-=0.015;if(clickMarker.life<=0)clickMarker=null;else{
+      const cm=clickMarker;const alpha=cm.life;const r=18+(1-cm.life)*8;
+      ctx.strokeStyle=`rgba(0,212,255,${alpha*0.7})`;ctx.lineWidth=3*alpha;ctx.beginPath();ctx.arc(cm.x,cm.y,r,0,Math.PI*2);ctx.stroke();
+      ctx.strokeStyle=`rgba(255,255,255,${alpha*0.8})`;ctx.lineWidth=1.5*alpha;ctx.beginPath();ctx.arc(cm.x,cm.y,r-2,0,Math.PI*2);ctx.stroke();
+      const cs=6*alpha;ctx.strokeStyle=`rgba(0,212,255,${alpha})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(cm.x-cs,cm.y);ctx.lineTo(cm.x+cs,cm.y);ctx.moveTo(cm.x,cm.y-cs);ctx.lineTo(cm.x,cm.y+cs);ctx.stroke();
+    }}
+  }},
+  {name:'particles',space:'world',order:90,enabled:true,fn(){
+    const p=G.player;
+    particles=particles.filter(pt=>pt.l>0);particles.forEach(pt=>{pt.x+=pt.vx;pt.y+=pt.vy;pt.l-=0.012;ctx.fillStyle=`rgba(0,212,255,${pt.l})`;ctx.beginPath();ctx.arc(pt.x,pt.y,pt.s,0,Math.PI*2);ctx.fill()});
+    if(RNG.next()<0.15)particles.push({x:p.x+rf(-12,12),y:p.y+rf(-12,12),vx:rf(-0.4,0.4),vy:rf(-0.4,0.4)-0.8,l:rf(0.2,0.6),s:rf(1,2)});
+  }},
+  // ═══ SCREEN SPACE (after camera restore) ═══
+  {name:'vignette',space:'screen',order:100,enabled:true,fn(){
+    const vig=ctx.createRadialGradient(canvas.width/2,canvas.height/2,canvas.width*0.35,canvas.width/2,canvas.height/2,canvas.width*0.75);vig.addColorStop(0,'rgba(0,0,0,0)');vig.addColorStop(1,'rgba(0,0,8,0.55)');ctx.fillStyle=vig;ctx.fillRect(0,0,canvas.width,canvas.height);
+  }},
+  {name:'dayNight',space:'screen',order:110,enabled:true,fn(){
+    const hour=(G.day*4+G.tick)%24;const night=hour<6||hour>20?Math.max(0,1-(Math.min(Math.abs(hour-3),Math.abs(hour-23))/3)):0;
+    if(night>0){ctx.fillStyle=`rgba(5,5,30,${night*0.45})`;ctx.fillRect(0,0,canvas.width,canvas.height)}
+  }},
+  {name:'weather',space:'screen',order:120,enabled:true,fn(){
+    if(G.weather&&G.weather.type==='rain'){const ri2=G.weather.intensity;ctx.fillStyle=`rgba(100,150,200,${ri2*0.12})`;ctx.fillRect(0,0,canvas.width,canvas.height);ctx.strokeStyle=`rgba(150,190,230,${ri2*0.3})`;ctx.lineWidth=1;for(let i=0;i<80*ri2;i++){const rx=RNG.next()*canvas.width,ry=RNG.next()*canvas.height;ctx.beginPath();ctx.moveTo(rx,ry);ctx.lineTo(rx-1,ry+8*ri2);ctx.stroke()}}
+    if(G.weather&&G.weather.type==='fog'){const fi2=G.weather.intensity;ctx.fillStyle=`rgba(180,190,200,${fi2*0.18})`;ctx.fillRect(0,0,canvas.width,canvas.height)}
+  }},
+];
+// Sort layers by order
+LAYERS.sort((a,b)=>a.order-b.order);
+
+// Layer API
+function enableLayer(name){const l=LAYERS.find(x=>x.name===name);if(l)l.enabled=true}
+function disableLayer(name){const l=LAYERS.find(x=>x.name===name);if(l)l.enabled=false}
+function toggleLayer(name){const l=LAYERS.find(x=>x.name===name);if(l)l.enabled=!l.enabled;return l?l.enabled:false}
+function listLayers(){return LAYERS.map(l=>({name:l.name,space:l.space,order:l.order,enabled:l.enabled}))}
+
+function render(){
+  if(!G)return;
+  waterPhase+=0.008;
+  // Screen-space layers (before camera)
+  LAYERS.filter(l=>l.enabled&&l.space==='screen'&&l.order<5).forEach(l=>l.fn());
+  // Camera transform
+  ctx.save();ctx.translate(camX,camY);ctx.scale(zoom,zoom);
+  // World-space layers
+  LAYERS.filter(l=>l.enabled&&l.space==='world').forEach(l=>{
+    l.fn();
+  });
+  // Camera restore
+  ctx.restore();
+  // Post-camera screen-space layers
+  LAYERS.filter(l=>l.enabled&&l.space==='screen'&&l.order>=5).forEach(l=>l.fn());
+}
+
+// ─── LOOP ───
+function loop(){render();requestAnimationFrame(loop)}
+function start(){
+  rz();AE.i();AE.am();
+  var rm=document.getElementById('rm');
+  rm.style.display='flex';
+  var hasSave=!!localStorage.getItem('nd4_save');
+  if(hasSave){
+    var cb=document.createElement('div');
+    cb.style.cssText='margin-top:12px;display:flex;gap:8px;justify-content:center';
+    var b1=document.createElement('div');b1.className='rc';b1.style.borderColor='#ffd700';
+    b1.innerHTML='<div class="ri">💾</div><div class="rn">Continue</div><div class="rb">Load saved game</div>';
+    b1.onclick=function(){if(loadGame()){rm.style.display='none'}else{alert('Load failed')}};
+    var b2=document.createElement('div');b2.className='rc';b2.style.borderColor='#ff4757';
+    b2.innerHTML='<div class="ri">🔄</div><div class="rn">New Game</div><div class="rb">Delete save & restart</div>';
+    b2.onclick=function(){localStorage.removeItem('nd4_save');location.reload()};
+    cb.appendChild(b1);cb.appendChild(b2);rm.appendChild(cb);
+  }
+  setInterval(gameTick,1000);setInterval(saveGame,35000);
+  requestAnimationFrame(loop);
+  document.addEventListener('click',()=>{if(AE.c&&AE.c.state==='suspended')AE.c.resume()},{once:true});
+}
+window.onload=start;
+</script>
+<script src="../3.0_devtools/loader.js"></script>
+</body>
+</html>
