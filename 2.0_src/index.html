@@ -1123,13 +1123,14 @@ function movePlayer(){
   else{p.x=GLOBE.wrapX(p.x+dx/d*spd);p.y+=dy/d*spd}
 }
 function findPath(sx,sy,tx,ty,fly){
-  const stx=Math.floor(sx/TILE),sty=Math.floor(sy/TILE),etx=Math.floor(tx/TILE),ety=Math.floor(ty/TILE);
+  const stx=GLOBE.wrapX(Math.floor(sx/TILE)),sty=Math.floor(sy/TILE),etx=GLOBE.wrapX(Math.floor(tx/TILE)),ety=Math.floor(ty/TILE);
   if(stx===etx&&sty===ety)return[{x:tx,y:ty}];
   if(fly)return[{x:tx,y:ty}];
-  const path=[];let blocked=false;const steps=Math.max(Math.abs(etx-stx),Math.abs(ety-sty))+1;
-  for(let i=0;i<=steps;i++){const t=i/steps,cx=Math.floor(stx+(etx-stx)*t),cy=Math.floor(sty+(ety-sty)*t);if(terrain[cl(cy,0,ROWS-1)][cl(cx,0,COLS-1)]===T.WATER||terrain[cl(cy,0,ROWS-1)][cl(cx,0,COLS-1)]===T.MOUNTAIN){blocked=true;break}}
+  const sdx=GLOBE.shortestDX(stx,etx),sdy=ety-sty,steps=Math.max(Math.abs(sdx),Math.abs(sdy))+1;
+  const path=[];let blocked=false;
+  for(let i=0;i<=steps;i++){const t=i/steps,cx=GLOBE.wrapX(Math.floor(stx+sdx*t)),cy=cl(Math.floor(sty+sdy*t),0,ROWS-1);if(terrain[cy][cx]===T.WATER||terrain[cy][cx]===T.MOUNTAIN){blocked=true;break}}
   if(!blocked){path.push({x:tx,y:ty});return path}
-  const mx=(stx+etx)/2,my=(sty+ety)/2;path.push({x:mx*TILE+TILE/2,y:my*TILE+TILE/2});path.push({x:tx,y:ty});return path;
+  const mx=GLOBE.wrapX(stx+sdx/2),my=sty+sdy/2;path.push({x:mx*TILE+TILE/2,y:my*TILE+TILE/2});path.push({x:tx,y:ty});return path;
 }
 
 // ─── APPLICATION: CITY INTERACTION ───
