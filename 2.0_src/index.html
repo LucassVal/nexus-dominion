@@ -278,9 +278,9 @@ const ORC={
     G.gangs=[];const gangNames=['Red Serpents','Black Crows','Iron Wolves','Shadow Blades','Crimson Vipers'];const gangColors=['rgba(200,30,30,0.7)','rgba(30,30,30,0.7)','rgba(100,100,120,0.7)','rgba(60,20,60,0.7)','rgba(180,60,20,0.7)'];
   for(let gi=0;gi<Math.floor(3*eMult);gi++){const gn=pk(gangNames);gangNames.splice(gangNames.indexOf(gn),1);const gtiles=[];let gx=ri(5,COLS-5),gy=ri(5,ROWS-5);for(let t=0;t<ri(8,20);t++){gtiles.push({x:cl(gx+ri(-5,5),0,COLS-1),y:cl(gy+ri(-4,4),0,ROWS-1)});}
     G.gangs.push({id:'gang_'+gi,name:gn,color:gangColors[gi]||'rgba(200,30,30,0.7)',leader:pk(['Scarface','Blackbeard','Ironfist','Shadow','Viper']),territory:gtiles,members:ri(5,15),hideouts:[{x:gx*TILE+TILE/2,y:gy*TILE+TILE/2}],notoriety:ri(20,80),enemies:[],allies:[],bounty:ri(500,5000),gold:ri(1000,10000)});}
-  for(let i=0;i<Math.floor(10*eMult);i++){let bx,by;do{bx=ri(2,COLS-3);by=ri(2,ROWS-3)}while(terrain[cl(by,0,ROWS-1)][GLOBE.wrapX(bx)]===T.WATER);G.bandits.push({id:i,n:pk(['Mug','Scar','Blade','Fang','Rust','Crow','Ash','Dirk','Thorn','Vex']),hp:40,atk:8,def:3,x:bx*TILE+TILE/2,y:by*TILE+TILE/2,tx:bx,ty:by,type:'bandit'});
+  for(let i=0;i<Math.floor(10*eMult);i++){const mc=MC(),mr=MR();let bx,by;do{bx=ri(2,mc-3);by=ri(2,mr-3)}while(terrain[cl(by,0,mr-1)][GLOBE.wrapX(bx)]===T.WATER);G.bandits.push({id:i,n:pk(['Mug','Scar','Blade','Fang','Rust','Crow','Ash','Dirk','Thorn','Vex']),hp:40,atk:8,def:3,x:bx*TILE+TILE/2,y:by*TILE+TILE/2,tx:bx,ty:by,type:'bandit'});
     // Hideout bandits (static camps)
-    if(i%3===0){let hx,hy,at3=0;do{hx=ri(3,COLS-4);hy=ri(3,ROWS-4);at3++}while(terrain[cl(hy,0,ROWS-1)][GLOBE.wrapX(hx)]===T.WATER&&at3<30);G.bandits.push({id:100+i,n:pk(['Bandit Camp','Raider Den','Outlaw Nest']),hp:80,atk:12,def:6,x:hx*TILE+TILE/2,y:hy*TILE+TILE/2,tx:hx,ty:hy,type:'hideout',loot:ri(200,800)})}}
+    if(i%3===0){const mc=MC(),mr=MR();let hx,hy,at3=0;do{hx=ri(3,mc-4);hy=ri(3,mr-4);at3++}while(terrain[cl(hy,0,mr-1)][GLOBE.wrapX(hx)]===T.WATER&&at3<30);G.bandits.push({id:100+i,n:pk(['Bandit Camp','Raider Den','Outlaw Nest']),hp:80,atk:12,def:6,x:hx*TILE+TILE/2,y:hy*TILE+TILE/2,tx:hx,ty:hy,type:'hideout',loot:ri(200,800)})}}
     G.countries.forEach(co=>{for(let i=0;i<ri(1,Math.floor(3*eMult));i++){const ct=pk(co.cities);co.armies.push({id:'a_'+co.name+'_'+i,c:co.name,sz:ri(500,3000),x:ct.x,y:ct.y,tx:ct.tx,ty:ct.ty,ord:'patrol'})}});
     genIslands();
   },
@@ -394,10 +394,12 @@ function genIslands(){
 }
 
 const GLOBE={
-  wrapX(x){return((x%COLS)+COLS)%COLS;},
-  shortestDX(x1,x2){const dx=x2-x1;return Math.abs(dx)>COLS/2?(dx>0?dx-COLS:dx+COLS):dx;},
+  cols(){return G&&G.mapCols?G.mapCols:COLS},
+  rows(){return G&&G.mapRows?G.mapRows:ROWS},
+  wrapX(x){const c=this.cols();return((x%c)+c)%c;},
+  shortestDX(x1,x2){const c=this.cols();const dx=x2-x1;return Math.abs(dx)>c/2?(dx>0?dx-c:dx+c):dx;},
   dist(ax,ay,bx,by){return Math.hypot(this.shortestDX(ax,bx),by-ay);},
-  isOcean(x,y){return terrain[cl(y,0,ROWS-1)][this.wrapX(x)]===T.WATER;}
+  isOcean(x,y){return terrain[cl(y,0,this.rows()-1)][this.wrapX(x)]===T.WATER;}
 };
 const KNAMES=[{n:'Aurelia',c:'rgba(42,138,90,1)'},{n:'Valdoria',c:'rgba(90,58,138,1)'},{n:'Meridian',c:'rgba(58,106,138,1)'},{n:'Korvath',c:'rgba(138,58,58,1)'},{n:'Sylvaris',c:'rgba(58,138,58,1)'},{n:'Zenobia',c:'rgba(138,138,58,1)'},{n:'Eldoria',c:'rgba(100,60,140,1)'},{n:'Nyxhaven',c:'rgba(30,30,60,1)'},{n:'Thalassia',c:'rgba(30,100,140,1)'},{n:'Drakemoor',c:'rgba(120,30,30,1)'},{n:'Solara',c:'rgba(200,150,30,1)'},{n:'Frostgard',c:'rgba(100,140,180,1)'},{n:'Ironveil',c:'rgba(80,80,90,1)'},{n:'Shadowmere',c:'rgba(40,20,50,1)'},{n:'Emberfall',c:'rgba(180,80,20,1)'},{n:'Stormwatch',c:'rgba(60,70,100,1)'}];
 const CITY_NAMES=[['Goldcrest','Silverport','Ironforge','Copperfield'],['Darkwater','Starhaven','Mistvale','Thornwall'],['Sunreach','Moontide','Skybreak','Oceanview'],['Ironpeak','Ashford','Blackmoor','Redcliff'],['Greenhaven','Riverbend','Forestedge','Dewspring'],['Dunemarket','Brightstone','Sandport','Crystalpeak'],['Dawnhaven','Nightport','Stonewall','Copperdale'],['Ravenrock','Frostpeak','Silverbrook','Thornfield'],['Deepwater','Shellport','Coralbay','Pearlcoast'],['Dragonmaw','Ashmoor','Scorchfield','Emberforge'],['Suncrest','Goldfield','Radiant','Lighthold'],['Icepeak','Wintervale','Snowport','Glaciergate'],['Forgeburg','Anvilrest','Steelwater','Ironton'],['Darkmoor','Shadewick','Gloomhaven','Veilgate'],['Cinderhollow','Ambervale','Flintmark','Coalridge'],['Thunderpeak','Windmere','Rainhold','Galeport']];
@@ -1032,7 +1034,7 @@ function gameTick(){
       // Move toward target (lerp smooth)
       if(!nc||RNG.next()<0.15){if(RNG.next()<0.08){const tc=pk(G.cities);t.tx=tc.tx;t.ty=tc.ty}}
       const ttx=t.tx*TILE+TILE/2,tty=t.ty*TILE+TILE/2,dx=ttx-t.x,dy=tty-t.y,d=Math.hypot(dx,dy);
-      if(d>3){t.x=GLOBE.wrapX(t.x+dx*0.08);t.y+=dy*0.08;warpEntity(t,false)}
+      if(d>3){t.x=GLOBE.wrapX(t.x+dx*0.08);t.y=cl(t.y+dy*0.08,0,MR()*TILE);warpEntity(t,false)}
     });
     // Bandits
     G.bandits.forEach(b=>{if(RNG.next()<0.15){b.tx=cl(b.tx+ri(-2,2),1,COLS-2);b.ty=cl(b.ty+ri(-2,2),1,ROWS-2)}b.x+=(b.tx*TILE+TILE/2-b.x)*0.08;b.y+=(b.ty*TILE+TILE/2-b.y)*0.08;warpEntity(b,false)});
@@ -1128,7 +1130,7 @@ function movePlayer(){
 
 // Warp any entity at edges
 function warpEntity(e,isPlayer){
-  const mw=COLS*TILE,mh=ROWS*TILE,T=TILE;
+  const mw=MC()*TILE,mh=MR()*TILE,T=TILE;
   let warped=false;
   // Left edge → right side
   if(e.x<T){e.x=mw-T-2;warped=true;}
