@@ -142,6 +142,12 @@ body{background:radial-gradient(ellipse at 50% 0%,#0a1628 0%,#050a14 60%,#020510
 <option value="medium" selected>⚖️ Medium</option>
 <option value="high">🔥 High (crowded)</option>
 </select></div>
+<div><span style="color:var(--muted)">⚖️ Difficulty</span><br>
+<select id="cfgDiff" style="background:rgba(16,24,39,0.6);color:#c0c8d4;border:1px solid rgba(255,255,255,0.1);padding:3px 6px;border-radius:4px;font-size:9px;width:100%">
+<option value="easy">🟢 Easy (2x gold)</option>
+<option value="medium" selected>🟡 Medium</option>
+<option value="hard">🔴 Hard (0.5x gold)</option>
+</select></div>
 <div style="grid-column:1/-1"><span style="color:var(--muted)">🎲 Seed</span><br>
 <input id="cfgSeed" placeholder="Random" style="background:rgba(16,24,39,0.6);color:#c0c8d4;border:1px solid rgba(255,255,255,0.1);padding:4px 8px;border-radius:4px;font-size:10px;width:100%;text-align:center">
 <button onclick="document.getElementById('cfgSeed').value=Math.floor(Math.random()*99999)+1" style="background:rgba(255,255,255,0.05);color:var(--accent);border:1px solid rgba(0,212,255,0.2);padding:2px 8px;border-radius:4px;font-size:8px;cursor:pointer;margin-top:3px">🎲 Random Seed</button></div>
