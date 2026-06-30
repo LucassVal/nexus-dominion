@@ -1369,7 +1369,7 @@ function mdCity(){
     <button class="btn btn4" onclick="closeModal();openModal('market')">💰 Market</button>
     <button class="btn btn4" onclick="closeModal();openModal('transport')">🚂 Travel</button>
     ${G.player.role==='bandit'?'<button class="btn btn3 bs" onclick="let b='+Math.floor(100+G.player.bounty/10)+';if(G.player.gold>=b){G.player.gold-=b;closeModal();openModal(\'market\')}else{notify(\'Need $\'+b,\'er\')}">💰 Bribe Guards $'+Math.floor(100+G.player.bounty/10)+'</button>':''}
-    ${ct.type==='village'?'<button class="btn btn1 bs" onclick="recruitTroop();closeModal()">⚔️ Recruit $30</button>':''}
+    ${getCityType(nc.pop)==='village'?'<button class="btn btn1 bs" onclick="recruitTroop();closeModal()">⚔️ Recruit $30</button>':''}
     <button class="btn btn1" onclick="healAtCity();closeModal()">🏥 Heal $50</button>
     ${G.player.mount&&G.player._mtDur!=null&&G.player._mtDur<MNT[G.player.mount].dur?`<button class="btn btn4 bs" onclick="repairMount()">🔧 Repair ${MNT[G.player.mount].n} $${fmt(Math.floor(MNT[G.player.mount].cost*0.15))}</button>`:''}
     ${!p.caravan?`<button class="btn btn4" onclick="buyCaravan();closeModal()">🐪 Caravan $500</button>`:''}
