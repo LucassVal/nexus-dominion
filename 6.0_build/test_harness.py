@@ -14,9 +14,11 @@ import json
 import re
 from pathlib import Path
 
-HTML_FILE = Path(os.path.expanduser("~/nexus-dominion/2.0_src/index.html"))
-LOG_FILE = Path(os.path.expanduser("~/nexus-dominion/5.0_logs/nd-runtime.log"))
-SERVER_DIR = Path(os.path.expanduser("~/nexus-dominion"))
+import os as _os
+_PROJECT = Path(_os.path.dirname(_os.path.abspath(__file__))).parent
+HTML_FILE = _PROJECT / "2.0_src/index.html"
+LOG_FILE = _PROJECT / "5.0_logs/nd-runtime.log"
+SERVER_DIR = _PROJECT
 PORT = 8100
 
 
