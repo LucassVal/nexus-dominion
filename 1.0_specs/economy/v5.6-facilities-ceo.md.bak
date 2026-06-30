@@ -1,0 +1,110 @@
+# SPEC: Facilities & CEO System v5.6
+
+## Status: ✅ IMPLEMENTED
+
+## Overview
+Economic production system with 13 facilities across 5 sectors, facility construction/upgrade, service revenue, tech tree viewer, and CEO company creation with sector selection.
+
+## Facilities (FT array)
+
+### Agriculture (🌾)
+| ID | Tier | Name | Cost | Inputs | Outputs |
+|----|------|------|------|--------|---------|
+| farm | 1 | Farm | $5K | — | Grain x8 |
+| mill | 2 | Mill | $15K | Grain x5 | Bread x3 |
+| food_plant | 3 | Food Plant | $50K | Grain x8, Meat x3 | Bread x5 |
+
+### Mining (⛏️)
+| ID | Tier | Name | Cost | Inputs | Outputs |
+|----|------|------|------|--------|---------|
+| mine | 1 | Mine | $8K | — | Iron Ore x6, Coal x4 |
+| smelter | 2 | Smelter | $25K | Iron Ore x4, Coal x2 | Iron x3 |
+| refinery | 3 | Refinery | $80K | Iron x3 | Steel x2 |
+
+### Manufacturing (🔧)
+| ID | Tier | Name | Cost | Inputs | Outputs |
+|----|------|------|------|--------|---------|
+| workshop | 1 | Workshop | $6K | Wood x3, Iron x1 | Hammer x2 |
+| factory | 2 | Factory | $30K | Steel x2 | Sword x1, Shield x1 |
+
+### Energy (⚡)
+| ID | Tier | Name | Cost | Inputs | Outputs |
+|----|------|------|------|--------|---------|
+| wind_farm | 1 | Wind Farm | $10K | — | Energy +10 |
+| power_plant | 2 | Power Plant | $40K | Coal x5 | Energy +30 |
+
+### Services (🍺)
+| ID | Tier | Name | Cost | Inputs | Revenue |
+|----|------|------|------|--------|---------|
+| inn | 1 | Inn | $3K | Ale x2, Bread x2 | $8/day/lvl |
+| bar | 2 | Bar | $8K | Ale x5, Wine x2 | $15/day/lvl |
+| bank | 3 | Bank | $50K | — | $30/day/lvl |
+
+## Mechanics
+
+### Facility Building
+- `buildFacility(cityId, facId)`
+- Cost = FT[f].cost
+- One facility per type per city (anti-duplicate check)
+- Owner = 'player' for player-built, 'auto' for world-gen
+
+### Facility Upgrade
+- `upgradeFacility(cityId, idx)`
+- Level 1→5
+- Cost = cost × level × 1.8
+- Efficiency +12% per level (cap 150%)
+- Only player-owned facilities can be upgraded
+
+### Auto-Generation
+- Cities generate facilities at world gen based on city type
+- Max facilities: village=1, town=2, city=4, metro=6
+- Only tier 1-2, assigned random owner='auto'
+
+### Production (processFacilities)
+- Runs every game tick (every 3 ticks = 1 day)
+- Consumes inputs from city supply
+- Produces outputs to city supply
+- Service facilities generate gold directly
+
+### Service Revenue
+- Inn: $8 × level × efficiency / day
+- Bar: $15 × level × efficiency / day
+- Bank: $30 × level × efficiency / day
+- Gold goes to facility owner (player or city GDP)
+
+### CEO Company
+- `foundCompany(sector)` — requires $20K
+- Sector selection modal with 10 options:
+  - 5 production (agri, mine, manu, ener, svc)
+  - 5 business (finance, tech, military, logistics, general)
+- Company expansion: $5K + 1% of city pop per city
+- IPO: $50K to go public
+- Hostile takeover: 51% ownership required
+
+## UI
+
+### City Modal
+- Facilities section with build/upgrade UI
+- Shows existing facilities with level bars (■■■□□)
+- "Build New" section grouped by sector
+- Upgrade button shows cost, hidden at max level
+
+### Finance Modal
+- Player-owned facilities with revenue/day display
+- Per-city grouping
+
+### Tech Tree Modal (🔬)
+- All 13 facilities organized by sector
+- Tier indicators, inputs→outputs chain
+- Service revenue chart
+- Accessed via HUD button
+
+### Found Company Modal
+- Sector selector with description cards
+- 10 sectors, cost display
+- Called from city "Found Co" button
+
+## Implementation
+- Functions: buildFacility, upgradeFacility, foundCompany(sector), mdTechTree, mdFoundCompany
+- Patches: 16 (v5.6.0)
+- Lines: ~105 added
