@@ -1655,7 +1655,7 @@ const LAYERS=[
     stars.forEach(s=>{const flicker=0.5+Math.sin(G.tick*0.05+s.x)*0.5;ctx.fillStyle=`rgba(200,220,255,${s.b*flicker})`;ctx.beginPath();ctx.arc(s.x,s.y,s.s,0,Math.PI*2);ctx.fill()});
     ctx.restore();
   }},
-  {name:'warpZones',space:'world',order:8,enabled:true,fn(){
+  {name:'warpZones',space:'world',order:9,enabled:true,fn(){
     const mw=COLS*TILE,mh=ROWS*TILE,T=TILE;
     // Blue glow at all 4 edges (1 tile wide)
     const grad=ctx.createLinearGradient(0,0,T,0);
