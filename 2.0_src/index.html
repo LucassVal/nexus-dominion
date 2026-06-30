@@ -1475,6 +1475,9 @@ function mdTransport(){
     ${p.caravan?`<h3 class="mt8">Caravan</h3><div class="sr"><span class="sl">Capacity</span><span class="sv">${p.caravan.cap}</span></div><div class="sr"><span class="sl">Guards</span><span class="sv">${p.caravan.guards}</span></div><button class="btn btn4 bs" onclick="upgradeCaravan();openModal('transport',true)">+25 Cap $300</button> <button class="btn btn4 bs" onclick="hireGuard();openModal('transport',true)">Hire Guard $20/d</button>`:`<h4 class="mt8">🐎 Mount Shop</h4>
     ${MOUNTS.filter(m=>!m.r||m.r!=='legendary'||G.player.gold>=m.cost).map(m=>{
       const owned=G.player.mount===m.id;
+      const tile=getTile(p.x,p.y);
+      const effSpd=m.terrain&&m.terrain[tile]?m.terrain[tile]:m.spd;
+      const spdColor=effSpd>=2.5?'#2ed573':effSpd>=1.5?'#ffd700':'#ff4757';
       return '<button class="btn btn1 bs" onclick="buyMount(\''+m.id+'\')" style="'+(owned?'border:2px solid #ffd700;':'')+'">'+m.ic+' '+m.n+' $'+fmt(m.cost)+' <span style="font-size:7px;color:#8899aa">'+m.desc+'</span> <span style="color:'+spdColor+';font-weight:700">'+effSpd.toFixed(1)+'x here</span></button>';
     }).join(' ')}
     ${G.player.mount?'<button class="btn btn3 bs mt8" onclick="dismount();openModal(\'transport\',true)">⬇ Dismount</button>':''}
