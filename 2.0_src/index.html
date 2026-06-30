@@ -1155,10 +1155,10 @@ function campAction(){if(!G||!G.player)return;const p=G.player;if(p.camping){p.c
 
 // ─── LOANS ───
 function takeLoan(amount){
-  const p=G.player;const limit=p.creditLimit||20000;
-  const totalDebt=(p.loans||[]).reduce((s,l)=>s+l.remain,0);
-  if(totalDebt+amount>limit)return notify('Credit limit: $'+limit+' (debt: $'+totalDebt+')','er');
   if(!G||!G.player)return;const p=G.player;
+  const limit=p.creditLimit||20000;
+  const totalDebt=(p.loans||[]).reduce((s,l)=>s+l.remain,0);
+  if(totalDebt+amount>limit)return notify('Credit limit: $'+fmt(limit)+' (debt: $'+fmt(totalDebt)+')','er');
   const interest=Math.floor(amount*0.15);p.gold+=amount;
   p.loans.push({id:'ln'+G.tick,principal:amount,remain:amount+interest,daily:Math.ceil((amount+interest)/30)});
   addLog('💰 Loan: $'+fmt(amount)+' at 15% interest');updateUI();
