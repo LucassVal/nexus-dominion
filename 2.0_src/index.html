@@ -891,6 +891,11 @@ function processFacilities(){
           return;
         }
         const qty=Math.floor(out.q*f.eff);
+        // Auto-sell produced goods at market price → gold to owner
+        const price=ct.prices[out.id]||GI[out.id]?.p||10;
+        const income=Math.floor(qty*price*f.level*0.15);
+        if(f.owner==='player'){G.player.gold+=income;}
+        else if(f.owner==='auto'){ct.gdp=(ct.gdp||0)+income*0.1;}
         ct.supply[out.id]=(ct.supply[out.id]||0)+qty;
       });
     });
@@ -1075,6 +1080,22 @@ function gameTick(){
     if(G.player.bounty>500&&RNG.next()<0.04&&!G.cbt){const bh={...EN.merc};bh.n='Bounty Hunter';bh.mhp=bh.hp+Math.floor(G.player.bounty/100);bh.atk+=3;startCombat(bh);addLog('⚖️ A bounty hunter attacks!')}
     // Company revenue — all player companies generate income
     if(G.player.companies&&G.player.companies.length>0)G.player.companies.forEach(co=>{const rev=co.cities.length*(1500+RNG.next()*2000);G.player.gold+=rev;co.rev=rev});
+    // Stock dividends — public companies pay shareholders every 10 days
+    if(G.day%10===0){
+      G.comps.forEach(co=>{
+        if(co.rev>0&&co.shares>0){
+          const payout=Math.floor(co.rev*0.02); // 2% of revenue as dividend
+          if(co.owner==='player'){
+            G.player.gold+=payout; // player-owned company: full dividend
+          }else if(G.player.portfolio&&G.player.portfolio[co.id]){
+            const pt=G.player.portfolio[co.id];
+            const share=Math.floor(payout*pt.shares/co.shares);
+            G.player.gold+=share;
+            if(share>100)addLog('📈 '+co.name+' dividend: $'+fmt(share));
+          }
+        }
+      });
+    }
     // Also CEO role gets bonus
     if(G.player.role==='ceo')G.player.gold+=ri(500,1500);
     // AI CEO behavior (every 15 days)
