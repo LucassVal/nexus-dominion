@@ -943,7 +943,7 @@ function countryAI(){
           }
         }
       }else if(RNG.next()<0.15){const tc=pk(co.cities);a.tx=tc.tx;a.ty=tc.ty}
-      const dx=a.tx*TILE+TILE/2-a.x,dy=a.ty*TILE+TILE/2-a.y,d=Math.hypot(dx,dy);if(d>5){a.x+=dx/d*6;a.y+=dy/d*6;warpEntity(a)}
+      const dx=a.tx*TILE+TILE/2-a.x,dy=a.ty*TILE+TILE/2-a.y,d=Math.hypot(dx,dy);if(d>5){a.x+=dx/d*6;a.y+=dy/d*6;warpEntity(a,false)}
     });
     // Passive relations + embassy income
     co.embassies.forEach(()=>{co.rel['player']=(co.rel['player']||0)+0.2;if(G.day%3===0)G.player.gold+=ri(10,50)});
@@ -1021,10 +1021,10 @@ function gameTick(){
       // Move toward target (lerp smooth)
       if(!nc||RNG.next()<0.15){if(RNG.next()<0.08){const tc=pk(G.cities);t.tx=tc.tx;t.ty=tc.ty}}
       const ttx=t.tx*TILE+TILE/2,tty=t.ty*TILE+TILE/2,dx=ttx-t.x,dy=tty-t.y,d=Math.hypot(dx,dy);
-      if(d>3){t.x=GLOBE.wrapX(t.x+dx*0.08);t.y+=dy*0.08;warpEntity(t)}
+      if(d>3){t.x=GLOBE.wrapX(t.x+dx*0.08);t.y+=dy*0.08;warpEntity(t,false)}
     });
     // Bandits
-    G.bandits.forEach(b=>{if(RNG.next()<0.15){b.tx=cl(b.tx+ri(-2,2),1,COLS-2);b.ty=cl(b.ty+ri(-2,2),1,ROWS-2)}b.x+=(b.tx*TILE+TILE/2-b.x)*0.08;b.y+=(b.ty*TILE+TILE/2-b.y)*0.08;warpEntity(b)});
+    G.bandits.forEach(b=>{if(RNG.next()<0.15){b.tx=cl(b.tx+ri(-2,2),1,COLS-2);b.ty=cl(b.ty+ri(-2,2),1,ROWS-2)}b.x+=(b.tx*TILE+TILE/2-b.x)*0.08;b.y+=(b.ty*TILE+TILE/2-b.y)*0.08;warpEntity(b,false)});
     // Camping
     if(G.player.camping){G.player.hp=Math.min(G.player.mhp,G.player.hp+2);G.player.cturns--;if(G.player.cturns<=0)G.player.camping=false}
     // Country AI
@@ -1112,14 +1112,25 @@ function movePlayer(){
   if(d<spd){p.x=tgt.x;p.y=tgt.y;p.path.shift();if(p.path.length===0){p.moving=false;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<30);if(nc&&!p.vis.includes(nc.id))p.vis.push(nc.id)}}
   else{p.x+=dx/d*spd;p.y+=dy/d*spd}
   // ═══ WARP ZONE (4 edges) ═══
-  warpEntity(p);
+  warpEntity(p,true);
 }
 
 // Warp any entity at edges
-function warpEntity(e){
-  const mw=COLS*TILE,mh=ROWS*TILE;
-  if(e.x<0)e.x+=mw;if(e.x>=mw)e.x-=mw;
-  if(e.y<0)e.y+=mh;if(e.y>=mh)e.y-=mh;
+function warpEntity(e,isPlayer){
+  const mw=COLS*TILE,mh=ROWS*TILE,T=TILE;
+  let warped=false;
+  // Left edge → right side
+  if(e.x<T){e.x=mw-T-2;warped=true;}
+  // Right edge → left side
+  else if(e.x>mw-T){e.x=T+2;warped=true;}
+  // Top edge → bottom
+  if(e.y<T){e.y=mh-T-2;warped=true;}
+  // Bottom edge → top
+  else if(e.y>mh-T){e.y=T+2;warped=true;}
+  if(warped&&isPlayer){
+    particles.push({x:e.x,y:e.y,life:1,vx:(Math.random()-0.5)*3,vy:(Math.random()-0.5)*3,color:'rgba(0,200,255,0.8)'});
+    AE.p(600,'sine',0.15,0.03);
+  }
 }
 function findPath(sx,sy,tx,ty,fly){
   const stx=GLOBE.wrapX(Math.floor(sx/TILE)),sty=Math.floor(sy/TILE),etx=GLOBE.wrapX(Math.floor(tx/TILE)),ety=Math.floor(ty/TILE);
@@ -1643,6 +1654,31 @@ const LAYERS=[
     ctx.save();ctx.translate(camX*0.2,camY*0.2);
     stars.forEach(s=>{const flicker=0.5+Math.sin(G.tick*0.05+s.x)*0.5;ctx.fillStyle=`rgba(200,220,255,${s.b*flicker})`;ctx.beginPath();ctx.arc(s.x,s.y,s.s,0,Math.PI*2);ctx.fill()});
     ctx.restore();
+  }},
+  {name:'warpZones',space:'world',order:8,enabled:true,fn(){
+    const mw=COLS*TILE,mh=ROWS*TILE,T=TILE;
+    // Blue glow at all 4 edges (1 tile wide)
+    const grad=ctx.createLinearGradient(0,0,T,0);
+    grad.addColorStop(0,'rgba(0,150,255,0.5)');grad.addColorStop(1,'rgba(0,150,255,0)');
+    ctx.fillStyle=grad;ctx.fillRect(0,0,T,mh); // left edge
+    const grad2=ctx.createLinearGradient(mw,0,mw-T,0);
+    grad2.addColorStop(0,'rgba(0,150,255,0.5)');grad2.addColorStop(1,'rgba(0,150,255,0)');
+    ctx.fillStyle=grad2;ctx.fillRect(mw-T,0,T,mh); // right edge
+    const grad3=ctx.createLinearGradient(0,0,0,T);
+    grad3.addColorStop(0,'rgba(0,150,255,0.5)');grad3.addColorStop(1,'rgba(0,150,255,0)');
+    ctx.fillStyle=grad3;ctx.fillRect(0,0,mw,T); // top edge
+    const grad4=ctx.createLinearGradient(0,mh,0,mh-T);
+    grad4.addColorStop(0,'rgba(0,150,255,0.5)');grad4.addColorStop(1,'rgba(0,150,255,0)');
+    ctx.fillStyle=grad4;ctx.fillRect(0,mh-T,mw,T); // bottom edge
+    // Pulsing edge lines
+    const pulse=0.5+Math.sin(G.tick*0.1)*0.5;
+    ctx.strokeStyle='rgba(0,200,255,'+(0.3+pulse*0.4)+')';ctx.lineWidth=2;
+    ctx.setLineDash([4,8]);ctx.strokeRect(0,0,mw,mh);ctx.setLineDash([]);
+    // Warp labels
+    ctx.fillStyle='rgba(200,230,255,0.7)';ctx.font='9px sans-serif';ctx.textAlign='center';
+    ctx.fillText('⟳ WARP ⟳',mw/2,14);ctx.fillText('⟳ WARP ⟳',mw/2,mh-4);
+    ctx.fillText('W',8,mh/2);ctx.fillText('A',4,mh/2+12);ctx.fillText('R',4,mh/2+24);ctx.fillText('P',4,mh/2+36);
+    ctx.fillText('W',mw-8,mh/2);ctx.fillText('A',mw-4,mh/2+12);ctx.fillText('R',mw-4,mh/2+24);ctx.fillText('P',mw-4,mh/2+36);
   }},
   {name:'borderGlow',space:'screen',order:2,enabled:true,fn(){
     const grd=ctx.createRadialGradient(canvas.width/2,canvas.height/2,Math.min(canvas.width,canvas.height)*0.3,canvas.width/2,canvas.height/2,Math.max(canvas.width,canvas.height)*0.8);
