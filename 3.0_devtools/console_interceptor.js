@@ -195,8 +195,8 @@ function healthCheck(){
     serverOnline = false;
   });
 }
-setInterval(healthCheck, 10000);
-healthCheck(); // immediate check
+// Health check only when explicitly enabled (offline-first by default)
+// Call NDLog.enableServer() to start periodic health checks
 
 // ─── Start ───
 startFlush();
@@ -222,6 +222,12 @@ window.NDLog = {
   clearFallback: function(){
     fallbackRing = [];
     try{ localStorage.removeItem('nd_log_fallback'); }catch(e){}
+  },
+  enableServer: function(){
+    serverOnline = false;
+    healthCheck();
+    setInterval(healthCheck, 30000);
+    console.log('[ND-Interceptor] Server mode enabled, checking ' + SERVER);
   }
 };
 

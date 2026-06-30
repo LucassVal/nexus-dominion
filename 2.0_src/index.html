@@ -1247,33 +1247,33 @@ function updateUI(){
   const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<70);
   document.getElementById('tbNear').textContent=nc?nc.name+' ('+G.countries[nc.cIdx].name+')':'wilderness';
   // Mount indicator
-  var spdEl=document.getElementById('tbSpd');
+  let spdEl=document.getElementById('tbSpd');
   if(!spdEl){
     spdEl=document.createElement('span');spdEl.id='tbSpd';spdEl.className='it';
     spdEl.innerHTML='<span class="lb">SPD</span><span class="vl grn">1.0x</span>';
     document.getElementById('tbD').parentElement.after(spdEl);
   }
-  var spd=1.0;if(p.mount){var mt=MNT[p.mount];if(mt){var tile=getTile(p.x,p.y);spd=mt.terrain&&mt.terrain[tile]?mt.terrain[tile]:mt.spd}}
+  let spd=1.0;if(p.mount){let mt=MNT[p.mount];if(mt){let tile=getTile(p.x,p.y);spd=mt.terrain&&mt.terrain[tile]?mt.terrain[tile]:mt.spd}}
   spdEl.children[1].textContent=spd.toFixed(1)+'x'+(p.sprinting?'⚡':p.moving?'▶':'·')+(p.mount&&p._mtDur!=null?' ['+p._mtDur+'/'+MNT[p.mount].dur+']':'');
-  var tbM=document.getElementById('tbMount');if(!tbM){
+  let tbM=document.getElementById('tbMount');if(!tbM){
     tbM=document.createElement('span');tbM.id='tbMount';tbM.className='it';
     tbM.innerHTML='<span class="lb">MT</span><span class="vl cyn">—</span>';
     spdEl.after(tbM);
   }
   tbM.children[1].textContent=p.mount?MNT[p.mount].ic||MNT[p.mount].n:'—';
   // Show/hide game-dependent buttons
-  var gActive=!!(G&&G.player&&G.player.role);
+  let gActive=!!(G&&G.player&&G.player.role);
   document.getElementById('tbDiplo').style.display=gActive?'':'none';
   document.getElementById('tbFin').style.display=gActive?'':'none';
   // Update HUD with loans/bounty
-  var hudExtra='';
+  let hudExtra='';
   if(G.player.bounty>0)hudExtra+='💰Bounty:$'+fmt(G.player.bounty)+' ';
   if(G.player.loans&&G.player.loans.length>0)hudExtra+='🏦Debt:$'+fmt(G.player.loans.reduce((s,l)=>s+l.remain,0));
   document.getElementById('tbNear').parentElement.title=hudExtra;
   // Log overlay
   const lo=document.getElementById('logOverlay');
   // Debug bar
-  var dbg=document.getElementById('debugBar');
+  let dbg=document.getElementById('debugBar');
   if(dbg){dbg.innerHTML='x:'+p.x.toFixed(0)+' y:'+p.y.toFixed(0)+' | path:'+(p.path?p.path.length:0)+' | '+p.role.toUpperCase()+(p.moving?' ▶':' ·')+(G.cbt?' ⚔️':'')+' | D'+G.day}
   lo.innerHTML=G.logs.slice(0,10).map(l=>`<div class="le"><span class="ld">D${l.t}</span>${l.m}</div>`).join('');
   // Minimap Pro — pre-baked terrain + layer stack
@@ -1314,7 +1314,7 @@ function notify(m,t='inf'){const e=document.createElement('div');e.className='no
 function addLog(m){G.logs.unshift({t:G.day,m});if(G.logs.length>150)G.logs.pop()}
 function addNews(m,imp){G.news.unshift({d:G.day,m,imp});if(G.news.length>20)G.news.pop();updateNewsTicker()}
 function updateNewsTicker(){
-  var el=document.getElementById('newsScroll');if(!el)return;
+  let el=document.getElementById('newsScroll');if(!el)return;
   el.innerHTML=G.news.slice(0,8).map(n=>`<span style="margin-right:30px;color:${n.imp>=3?'#ff4757':n.imp>=2?'#ffd700':'#8899aa'}">[D${n.d}] ${n.m}</span>`).join('');
 }
 
@@ -1560,7 +1560,7 @@ function zoomMap(delta){
   // Re-center on player
   if(G&&G.player){camX=-G.player.x*zoom+canvas.width/2;camY=-G.player.y*zoom+canvas.height/2}
 }
-function shakeScreen(){var ox=camX,oy=camY;camX+=ri(-6,6);camY+=ri(-4,4);setTimeout(()=>{camX=ox;camY=oy},150);}
+function shakeScreen(){let ox=camX,oy=camY;camX+=ri(-6,6);camY+=ri(-4,4);setTimeout(()=>{camX=ox;camY=oy},150);}
 
 function mdAchievements(){
   const total=ACH.length;const unlocked=Object.keys(G.achs).length;
@@ -1855,9 +1855,9 @@ function render(){
 function loop(){render();requestAnimationFrame(loop)}
 function start(){
   rz();AE.i();AE.am();
-  var rm=document.getElementById('rm');
+  let rm=document.getElementById('rm');
   rm.style.display='flex';
-  var hasSave=!!localStorage.getItem('nd4_save');
+  let hasSave=!!localStorage.getItem('nd4_save');
   if(hasSave){
     var cb=document.createElement('div');
     cb.style.cssText='margin-top:12px;display:flex;gap:8px;justify-content:center';
