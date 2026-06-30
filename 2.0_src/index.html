@@ -943,7 +943,7 @@ function countryAI(){
           }
         }
       }else if(RNG.next()<0.15){const tc=pk(co.cities);a.tx=tc.tx;a.ty=tc.ty}
-      const dx=a.tx*TILE+TILE/2-a.x,dy=a.ty*TILE+TILE/2-a.y,d=Math.hypot(dx,dy);if(d>5){a.x+=dx/d*6;a.y+=dy/d*6}
+      const dx=a.tx*TILE+TILE/2-a.x,dy=a.ty*TILE+TILE/2-a.y,d=Math.hypot(dx,dy);if(d>5){a.x+=dx/d*6;a.y+=dy/d*6;warpEntity(a)}
     });
     // Passive relations + embassy income
     co.embassies.forEach(()=>{co.rel['player']=(co.rel['player']||0)+0.2;if(G.day%3===0)G.player.gold+=ri(10,50)});
@@ -1021,10 +1021,10 @@ function gameTick(){
       // Move toward target (lerp smooth)
       if(!nc||RNG.next()<0.15){if(RNG.next()<0.08){const tc=pk(G.cities);t.tx=tc.tx;t.ty=tc.ty}}
       const ttx=t.tx*TILE+TILE/2,tty=t.ty*TILE+TILE/2,dx=ttx-t.x,dy=tty-t.y,d=Math.hypot(dx,dy);
-      if(d>3){t.x=GLOBE.wrapX(t.x+dx*0.08);t.y+=dy*0.08}
+      if(d>3){t.x=GLOBE.wrapX(t.x+dx*0.08);t.y+=dy*0.08;warpEntity(t)}
     });
     // Bandits
-    G.bandits.forEach(b=>{if(RNG.next()<0.15){b.tx=cl(b.tx+ri(-2,2),1,COLS-2);b.ty=cl(b.ty+ri(-2,2),1,ROWS-2)}b.x+=(b.tx*TILE+TILE/2-b.x)*0.08;b.y+=(b.ty*TILE+TILE/2-b.y)*0.08});
+    G.bandits.forEach(b=>{if(RNG.next()<0.15){b.tx=cl(b.tx+ri(-2,2),1,COLS-2);b.ty=cl(b.ty+ri(-2,2),1,ROWS-2)}b.x+=(b.tx*TILE+TILE/2-b.x)*0.08;b.y+=(b.ty*TILE+TILE/2-b.y)*0.08;warpEntity(b)});
     // Camping
     if(G.player.camping){G.player.hp=Math.min(G.player.mhp,G.player.hp+2);G.player.cturns--;if(G.player.cturns<=0)G.player.camping=false}
     // Country AI
@@ -1105,28 +1105,21 @@ function gameTick(){
 function movePlayer(){
   const p=G.player;if(!p.path||p.path.length===0){p.moving=false;return}
   const tgt=p.path[0];
-  let dx=tgt.x-p.x,dy=tgt.y-p.y;
-  // For wrap: if distance > half map, go the other way
-  const hw=COLS*TILE/2;
-  if(Math.abs(dx)>hw)dx=dx>0?dx-COLS*TILE:dx+COLS*TILE;
-  const d=Math.hypot(dx,dy);
-  // Base speed: terrain modifier
+  const dx=tgt.x-p.x,dy=tgt.y-p.y,d=Math.hypot(dx,dy);
   let spd=5*(TS[getTile(p.x,p.y)]||1);
-  // Sprint boost (Shift key or auto-sprint when far from target)
   if(p.sprinting||d>200)spd*=2;
-  // Mount speed bonus
-  if(p.mount){
-    const mt=MNT[p.mount];if(mt){
-      const tile=getTile(p.x,p.y);
-      const terBonus=(mt.terrain&&mt.terrain[tile])?mt.terrain[tile]:mt.spd;
-      spd*=terBonus;
-      if(G.tick%9===0){p._mtDur=(p._mtDur||mt.dur)-1;
-        if(p._mtDur<=0){addLog('⚠️ '+mt.n+' broke down!');notify(mt.n+' broke!','er');dismount();return}
-      }
-    }
-  }
-  if(d<spd){p.x=tgt.x;p.y=tgt.y;p.path.shift();if(p.path.length===0){p.moving=false;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<30);if(nc&&!p.vis.includes(nc.id)){p.vis.push(nc.id)}}}
-  else{p.x=GLOBE.wrapX(p.x+dx/d*spd);p.y+=dy/d*spd}
+  if(p.mount){const mt=MNT[p.mount];if(mt){const tile=getTile(p.x,p.y);const tb=(mt.terrain&&mt.terrain[tile])?mt.terrain[tile]:mt.spd;spd*=tb;if(G.tick%9===0){p._mtDur=(p._mtDur||mt.dur)-1;if(p._mtDur<=0){addLog('⚠️ '+mt.n+' broke down!');notify(mt.n+' broke!','er');dismount();return}}}}
+  if(d<spd){p.x=tgt.x;p.y=tgt.y;p.path.shift();if(p.path.length===0){p.moving=false;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<30);if(nc&&!p.vis.includes(nc.id))p.vis.push(nc.id)}}
+  else{p.x+=dx/d*spd;p.y+=dy/d*spd}
+  // ═══ WARP ZONE (4 edges) ═══
+  warpEntity(p);
+}
+
+// Warp any entity at edges
+function warpEntity(e){
+  const mw=COLS*TILE,mh=ROWS*TILE;
+  if(e.x<0)e.x+=mw;if(e.x>=mw)e.x-=mw;
+  if(e.y<0)e.y+=mh;if(e.y>=mh)e.y-=mh;
 }
 function findPath(sx,sy,tx,ty,fly){
   const stx=GLOBE.wrapX(Math.floor(sx/TILE)),sty=Math.floor(sy/TILE),etx=GLOBE.wrapX(Math.floor(tx/TILE)),ety=Math.floor(ty/TILE);
