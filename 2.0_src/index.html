@@ -252,14 +252,17 @@ const ORC={
   },
   _initRole(role){
     const p=G.player;
+    const diff=(document.getElementById('cfgDiff')||{}).value||'medium';
+    const mult=diff==='easy'?2:diff==='hard'?0.5:1;
+    p.difficulty=diff;p.creditLimit=diff==='easy'?50000:diff==='hard'?5000:20000;
     switch(role){
-      case'merchant':p.gold=500;p.caravan={cap:50,goods:[],guards:0};p.skills.trading=3;break;
-      case'warrior':p.gold=200;p.mhp=115;p.hp=115;p.atk=8;p.skills.combat=3;p.eq.weapon='sword';break;
-      case'mercenary':p.gold=300;for(let i=0;i<3;i++)p.units.push({n:'Unit '+pk(['Alpha','Bravo','Delta']),hp:60,atk:8,def:4});p.skills.leadership=3;break;
-      case'ceo':p.gold=100000;p.skills.trading=2;p.skills.leadership=2;foundCompany('general');break;
-      case'wanderer':p.gold=100;p.skills.stealth=2;break;
-      case'king':p.gold=200000;p.skills.leadership=4;p.skills.diplomacy=3;break;
-      case'bandit':p.gold=50;p.bounty=500;p.skills.stealth=3;p.skills.combat=2;p.notoriety=0;p.gang=[];p.hideouts=[];break;
+      case'merchant':p.gold=Math.floor(500*mult);p.caravan={cap:50,goods:[],guards:0};p.skills.trading=3;break;
+      case'warrior':p.gold=Math.floor(200*mult);p.mhp=115;p.hp=115;p.atk=8;p.skills.combat=3;p.eq.weapon='sword';break;
+      case'mercenary':p.gold=Math.floor(300*mult);for(let i=0;i<3;i++)p.units.push({n:'Unit '+pk(['Alpha','Bravo','Delta']),hp:60,atk:8,def:4});p.skills.leadership=3;break;
+      case'ceo':p.gold=Math.floor(100000*mult);p.skills.trading=2;p.skills.leadership=2;foundCompany('general');break;
+      case'wanderer':p.gold=Math.floor(100*mult);p.skills.stealth=2;break;
+      case'king':p.gold=Math.floor(200000*mult);p.skills.leadership=4;p.skills.diplomacy=3;break;
+      case'bandit':p.gold=Math.floor(50*mult);p.bounty=500;p.skills.stealth=3;p.skills.combat=2;p.notoriety=0;p.gang=[];p.hideouts=[];break;
     }
   },
   _initEntities(eMult){
@@ -1110,7 +1113,7 @@ function movePlayer(){
   if(p.sprinting||d>200)spd*=2;
   if(p.mount){const mt=MNT[p.mount];if(mt){const tile=getTile(p.x,p.y);const tb=(mt.terrain&&mt.terrain[tile])?mt.terrain[tile]:mt.spd;spd*=tb;if(G.tick%9===0){p._mtDur=(p._mtDur||mt.dur)-1;if(p._mtDur<=0){addLog('⚠️ '+mt.n+' broke down!');notify(mt.n+' broke!','er');dismount();return}}}}
   if(d<spd){p.x=tgt.x;p.y=tgt.y;p.path.shift();if(p.path.length===0){p.moving=false;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<30);if(nc&&!p.vis.includes(nc.id))p.vis.push(nc.id)}}
-  else{p.x+=dx/d*spd;p.y+=dy/d*spd}
+  else{p.x+=dx/d*spd;p.y+=dy/d*spd;if(d>1)p.angle=Math.atan2(dy,dx)}
   // ═══ WARP ZONE (4 edges) ═══
   warpEntity(p,true);
 }
@@ -1152,6 +1155,9 @@ function campAction(){if(!G||!G.player)return;const p=G.player;if(p.camping){p.c
 
 // ─── LOANS ───
 function takeLoan(amount){
+  const p=G.player;const limit=p.creditLimit||20000;
+  const totalDebt=(p.loans||[]).reduce((s,l)=>s+l.remain,0);
+  if(totalDebt+amount>limit)return notify('Credit limit: $'+limit+' (debt: $'+totalDebt+')','er');
   if(!G||!G.player)return;const p=G.player;
   const interest=Math.floor(amount*0.15);p.gold+=amount;
   p.loans.push({id:'ln'+G.tick,principal:amount,remain:amount+interest,daily:Math.ceil((amount+interest)/30)});
@@ -1776,7 +1782,7 @@ const LAYERS=[
       }else{ctx.fillStyle='#8B4513';ctx.beginPath();ctx.ellipse(0,0,10,5,0,0,Math.PI*2);ctx.fill();ctx.fillStyle=mid==='warhorse'?'#2a2a2a':'#6B4226';ctx.fillRect(6,0,8,2);ctx.fillRect(-8,-3,2,6);ctx.fillRect(-4,-3,2,6);ctx.fillRect(2,-3,2,6);ctx.fillStyle='#333';ctx.beginPath();ctx.arc(8,6,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-6,6,2,0,Math.PI*2);ctx.fill();if(mid==='warhorse'){ctx.fillStyle='#888';ctx.fillRect(-9,-6,8,2);}if(mid==='camel'){ctx.fillStyle='#c4a64a';ctx.beginPath();ctx.arc(1,-10,4,0,Math.PI*2);ctx.fill();}}
       ctx.restore();}
     // Rotate toward movement direction
-    let angle=-Math.PI/2;if(p.path.length>0){angle=Math.atan2(p.path[0].y-p.y,p.path[0].x-p.x)}
+    let angle=p.angle!==undefined?p.angle:-Math.PI/2;
     ctx.save();ctx.translate(px,p.y);ctx.rotate(angle);
     ctx.fillStyle='#ffd700';ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(-10,10);ctx.lineTo(10,10);ctx.closePath();ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
     ctx.fillStyle='rgba(255,215,0,0.3)';ctx.beginPath();ctx.arc(0,14,2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(0,19,1.5,0,Math.PI*2);ctx.fill();
