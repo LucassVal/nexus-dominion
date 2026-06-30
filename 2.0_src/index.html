@@ -5,7 +5,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<script>if(!location.search.includes('v='))location.search='?v='+Date.now()</script>
+<script>if(!location.search.includes('v='))location.search+=(location.search?'&':'?')+'v='+Date.now()</script>
 <title>Nexus Dominion v7</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script>
@@ -179,6 +179,8 @@ body{background:radial-gradient(ellipse at 50% 0%,#0a1628 0%,#050a14 60%,#020510
 <span class="it"><span class="lb">Gold</span><span class="vl gld" id="tbG">0</span></span>
 <span class="it"><span class="lb">Day</span><span class="vl" id="tbD">1</span></span>
 <span class="it"><span class="lb">Role</span><span class="vl grn" id="tbR">—</span></span>
+<span class="it" id="tbSpd"><span class="lb">Spd</span><span class="vl cyn">1.0x</span></span>
+<span class="it" id="tbMount"><span class="lb">Mount</span><span class="vl gld">—</span></span>
 <span class="it"><span class="lb">Near</span><span class="vl cyn" id="tbNear">—</span></span>
 <button style="margin-left:auto" onclick="saveGame()">💾 Save</button>
 <button onclick="openModal('settings')" style="background:#1a2740;color:#ffd700;font-weight:bold;padding:4px 10px;font-size:10px">⚙️ SET</button>
