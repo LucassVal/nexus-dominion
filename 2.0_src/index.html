@@ -485,6 +485,11 @@ const FT=[
   {id:'inn',sec:'svc',tier:1,n:'Inn',ic:'🍺',cost:3000,in:[{id:'ale',q:2},{id:'bread',q:2}],out:[{id:'gold_ingot',q:0,svc:'rest'}],lab:3,upk:100},
   {id:'bar',sec:'svc',tier:2,n:'Bar',ic:'🍻',cost:8000,in:[{id:'ale',q:5},{id:'wine',q:2}],out:[{id:'gold_ingot',q:0,svc:'social'}],lab:5,upk:300},
   {id:'bank',sec:'svc',tier:3,n:'Bank',ic:'🏦',cost:50000,in:[],out:[{id:'gold_ingot',q:0,svc:'finance'}],lab:8,upk:2000},
+  // RAW MATERIALS (new — fixes dead supply chain)
+  {id:'ranch',sec:'agri',tier:1,n:'Ranch',ic:'🐄',cost:4000,in:[{id:'grain',q:3}],out:[{id:'meat',q:4}],lab:4,upk:150},
+  {id:'lumber_mill',sec:'agri',tier:1,n:'Lumber Mill',ic:'🪓',cost:3500,in:[],out:[{id:'wood',q:6}],lab:5,upk:120},
+  {id:'brewery',sec:'svc',tier:2,n:'Brewery',ic:'🍺',cost:12000,in:[{id:'grain',q:4}],out:[{id:'ale',q:5}],lab:6,upk:400},
+  {id:'winery',sec:'svc',tier:2,n:'Winery',ic:'🍷',cost:15000,in:[{id:'fruits',q:3}],out:[{id:'wine',q:4}],lab:6,upk:500},
 ];
 
 // ─── DOMAIN: ENEMIES ───
@@ -870,8 +875,16 @@ function upgradeFacility(cityId,idx){
 }
 function processFacilities(){
   G.cities.forEach(ct=>{if(!ct.facilities)return;
+    // Energy bonus: wind farm +5%, power plant +12% per level
+    let energyBonus=1;
+    ct.facilities.forEach(f=>{
+      if(f.type==='wind_farm')energyBonus+=0.05*f.level;
+      if(f.type==='power_plant')energyBonus+=0.12*f.level;
+    });
     ct.facilities.forEach(f=>{
       const ft=FT.find(x=>x.id===f.type);if(!ft)return;
+      // Skip energy facilities themselves (they boost others)
+      if(ft.sec==='ener')return;
       // Buy inputs from city market
       let canProduce=true;
       ft.in.forEach(inp=>{
@@ -890,7 +903,7 @@ function processFacilities(){
           else{ct.gdp=(ct.gdp||0)+rev*0.1;}
           return;
         }
-        const qty=Math.floor(out.q*f.eff);
+        const qty=Math.floor(out.q*f.eff*energyBonus);
         // Auto-sell produced goods at market price → gold to owner
         const price=ct.prices[out.id]||GI[out.id]?.p||10;
         const income=Math.floor(qty*price*f.level*0.15);
