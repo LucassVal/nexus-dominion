@@ -217,7 +217,7 @@ const ORC={
   init(role,cfg){
     const hc={step:'start',errors:[]};
     try{
-    G=newState();hc.step='newState';G.player.role=role;G.seed=cfg.seed||Math.floor(Date.now()%99999)+1;
+    G=newState();hc.step='newState';G.player.role=role;G.seed=cfg.seed||Math.floor(Date.now()%99999)+1;G.mapType=cfg.mapType||'default';
     hc.step='mapSize';
     const sizes={tiny:[30,22],small:[40,30],medium:[60,45],large:[80,60],epic:[100,75]};
     const sz=sizes[cfg.mapSize]||[60,45];G.mapCols=sz[0];G.mapRows=sz[1];
@@ -1214,7 +1214,7 @@ function addBounty(amt){G.player.bounty=(G.player.bounty||0)+amt;}
 // ─── APPLICATION: SAVE/LOAD ───
 function saveGame(){
   if(!G||!G.player)return;
-  const d={v:4,player:{mount:G.player.mount||null,name:G.player.name,role:G.player.role,gold:G.player.gold,x:G.player.x,y:G.player.y,hp:G.player.hp,mhp:G.player.mhp,atk:G.player.atk,def:G.player.def,lvl:G.player.lvl,xp:G.player.xp,sp:G.player.sp,skills:G.player.skills,institutions:G.player.institutions||[],advances:G.player.advances||[],inv:G.player.inv,eq:G.player.eq,caravan:G.player.caravan,units:G.player.units,path:[],moving:false,camping:false,cturns:0,edef:G.player.edef,vis:G.player.vis,trades:G.player.trades,bounty:G.player.bounty||0,joinedArmy:G.player.joinedArmy,abilityCd:G.player.abilityCd,loans:G.player.loans,companies:G.player.companies,portfolio:G.player.portfolio,investments:G.player.investments||[],kingdom:G.player.kingdom||null,corsair:G.player.corsair||null},day:G.day,tick:G.tick,seed:G.seed,achs:G.achs,news:G.news.slice(-40),logs:G.logs.slice(-60),
+  const d={v:4,player:{mount:G.player.mount||null,name:G.player.name,role:G.player.role,gold:G.player.gold,x:G.player.x,y:G.player.y,hp:G.player.hp,mhp:G.player.mhp,atk:G.player.atk,def:G.player.def,lvl:G.player.lvl,xp:G.player.xp,sp:G.player.sp,skills:G.player.skills,institutions:G.player.institutions||[],advances:G.player.advances||[],inv:G.player.inv,eq:G.player.eq,caravan:G.player.caravan,units:G.player.units,path:[],moving:false,camping:false,cturns:0,edef:G.player.edef,vis:G.player.vis,trades:G.player.trades,bounty:G.player.bounty||0,joinedArmy:G.player.joinedArmy,abilityCd:G.player.abilityCd,loans:G.player.loans,companies:G.player.companies,portfolio:G.player.portfolio,investments:G.player.investments||[],kingdom:G.player.kingdom||null,corsair:G.player.corsair||null},day:G.day,tick:G.tick,seed:G.seed,mapType:G.mapType||'default',achs:G.achs,news:G.news.slice(-40),logs:G.logs.slice(-60),
     cities:G.cities.map(c=>({id:c.id,name:c.name,cIdx:c.cIdx,tx:c.tx,ty:c.ty,x:c.x,y:c.y,pop:c.pop,gdp:c.gdp,stab:c.stab,owner:c.owner,supply:c.supply,demand:c.demand,prices:c.prices,facilities:c.facilities||[]})),
     countries:G.countries.map(co=>({name:co.name,color:co.color,cIds:co.cities.map(c=>c.id),cx:co.cx,cy:co.cy,gov:co.gov||co.gov,mil:co.mil,treasury:co.treasury,tax:co.tax,rel:co.rel,atWar:co.atWar,personality:co.pers,coastal:co.coastal,investments:co.investments.slice(-5),embassies:co.embassies,armies:co.armies.map(a=>({id:a.id,c:a.c,sz:a.sz,x:a.x,y:a.y,tx:a.tx,ty:a.ty,ord:a.ord}))})),
     bandits:G.bandits,aiTraders:G.aiTraders,gangs:G.gangs||[],misions:G.missions,roads:G.roads,trains:G.trains,ships:G.ships,comps:G.comps,aiCEOs:G.aiCEOs||[],
@@ -1223,8 +1223,8 @@ function saveGame(){
 }
 function loadGame(){
   try{const r=localStorage.getItem('nd4_save');if(!r)return false;const d=JSON.parse(r);
-    G=newState();G.player=d.player;G.day=d.day;G.tick=d.tick;G.seed=d.seed;G.achs=d.achs||{};G.news=d.news||[];G.logs=d.logs||[];G.bandits=d.bandits||[];G.aiTraders=d.aiTraders||[];G.gangs=d.gangs||[];G.missions=d.misions||[];G.comps=d.comps||[];G.aiCEOs=d.aiCEOs||[];G.nextEventDay=d.nextEventDay||10;G.weather=d.weather||{type:'clear',intensity:0,startDay:G.day,dur:0};G.islands=d.islands||[];G.player.ships=d.ships||[];
-    genTerrain(G.seed);
+    G=newState();G.player=d.player;G.day=d.day;G.tick=d.tick;G.seed=d.seed;G.mapType=d.mapType||'default';G.achs=d.achs||{};G.news=d.news||[];G.logs=d.logs||[];G.bandits=d.bandits||[];G.aiTraders=d.aiTraders||[];G.gangs=d.gangs||[];G.missions=d.misions||[];G.comps=d.comps||[];G.aiCEOs=d.aiCEOs||[];G.nextEventDay=d.nextEventDay||10;G.weather=d.weather||{type:'clear',intensity:0,startDay:G.day,dur:0};G.islands=d.islands||[];G.player.ships=d.ships||[];
+    genTerrain(G.seed,G.mapType);
     G.cities=d.cities;G.cities.forEach(c=>{c.facilities=c.facilities||[]});G.roads=d.roads||[];G.trains=d.trains||[];G.ships=d.ships||[];
     G.countries=d.countries.map((cd,i)=>{const co={name:cd.name,color:cd.color,cities:[],cx:cd.cx,cy:cd.cy,gov:typeof cd.gov==='string'?{type:cd.gov,name:cd.gov,ic:'?',taxRate:20,tradeTax:10,licenseFee:'medium',stab:50,corpPolicy:'standard'}:cd.gov||{type:'monarchy',name:'Monarchy',ic:'👑',taxRate:25,tradeTax:15,licenseFee:'high',stab:70,corpPolicy:'standard'},mil:cd.mil,treasury:cd.treasury,tax:cd.tax,rel:cd.rel||{},armies:cd.armies||[],atWar:cd.atWar||[],pop:0,pers:cd.personality,coastal:cd.coastal,investments:cd.investments||[],embassies:cd.embassies||[],territory:cd.territory||[],factions:[]};co.cities=cd.cIds.map(cid=>G.cities.find(c=>c.id===cid)).filter(Boolean);return co});
     if(G.player.mount&&MNT[G.player.mount]&&MNT[G.player.mount].cargoBonus&&G.player.caravan){G.player.caravan.cap=50+MNT[G.player.mount].cargoBonus;}
