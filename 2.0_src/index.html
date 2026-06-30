@@ -256,7 +256,7 @@ const ORC={
     hc.step='initRole';this._initRole(role);hc.step='initEntities';this._initEntities(cfg.entities);hc.step='initCompanies';this._initCompanies();
     genMissions();document.getElementById('rm').style.display='none';
     G.logs=[{t:1,m:'World generated. Role: '+role.toUpperCase()+'. Seed: '+G.seed}];
-    hc.step='done';AE.ok();notify('Living world generated!','inf');updateUI();saveGame();
+    initFactions();injectAchievementCSS();hc.step='done';AE.ok();initTutorial();playActionSound('discover');notify('Living world generated!','inf');updateUI();saveGame();
     }catch(e){G.logs=[{t:1,m:'❌ INIT FAILED at step: '+hc.step+' — '+e.message}];console.error('ORC.init failed at',hc.step,e);notify('World gen failed: '+e.message,'er');G.cities=[];G.countries=[];G.roads=[];G.trains=[];G.ships=[];G.player.x=200;G.player.y=200;updateUI();}
   },
   _initRole(role){
@@ -676,7 +676,7 @@ function declareWar(countryName,cb){
   if(!co.atWar.includes('player'))co.atWar.push('player');
   co.rel['player']=Math.min(-50,co.rel['player']-40);
   addLog('WAR declared on '+countryName+'! Casus belli: '+cb);addNews(G.player.name+' declares war on '+countryName+' ('+cb+')!',6);
-  AE.al();notify('WAR! '+countryName,'er');updateUI();
+  AE.al();playActionSound('warn');notify('WAR! '+countryName,'er');updateUI();
 }
 function dipAction(countryName,action){
   const p=G.player;const co=G.countries.find(c=>c.name===countryName);if(!co)return;
@@ -749,7 +749,7 @@ function cbtAtk(){
   const patk=(p.atk+(wep?wep.atk||0:0)+(acc?acc.atk||0:0)+mtBonus)*(1+p.skills.combat*0.04);
   const pdef=(p.def+(arm?arm.def||0:0)+(acc?acc.def||0:0))*(1+p.skills.combat*0.03);
   const crit=RNG.next()<0.08+p.skills.combat*0.02;
-  let dmg=Math.max(1,Math.floor(patk-c.enemy.def*(c.ignoreDef?1-c.ignoreDef:1)+ri(-2,3)));if(c.dmgBoost){dmg=Math.floor(dmg*c.dmgBoost);delete c.dmgBoost}if(c.adaptBonus){dmg=Math.floor(dmg*(1+c.adaptBonus));delete c.adaptBonus}if(crit)dmg=Math.floor(dmg*1.8);c.ignoreDef=null;
+  let dmg=Math.max(1,Math.floor(patk-c.enemy.def*(c.ignoreDef?1-c.ignoreDef:1)+ri(-2,3)));if(c.dmgBoost){dmg=Math.floor(dmg*c.dmgBoost);delete c.dmgBoost}if(c.adaptBonus){dmg=Math.floor(dmg*(1+c.adaptBonus));delete c.adaptBonus}const compBonus=companionAssist();dmg+=compBonus;if(crit)dmg=Math.floor(dmg*1.8);c.ignoreDef=null;
   c.enemy.hp-=dmg;c.log.unshift((crit?'💥CRIT! ':'')+'You hit for '+dmg);
   if(crit){shakeScreen()};AE.ht();
   // Apply status from enemy ability
@@ -790,7 +790,7 @@ function victory(){const c=G.cbt,p=G.player;p.xp+=c.enemy.xp;p.gold+=ri(c.enemy.
   if(RNG.next()<0.4){const loot=c.enemy.type==='wolf'?'leather':c.enemy.type==='bandit'?'dagger':'iron';
       // Bandit role: chance to recruit defeated bandits
       if(G.player.role==='bandit'&&c.enemy.type==='bandit'&&G.player.gang&&G.player.gang.length<(3+Math.floor((G.player.notoriety||0)/15))&&RNG.next()<0.3+(G.player.notoriety||0)/100){const gn=pk(['Scar','Fang','Blade','Shadow','Razor','Vex','Dagger']);G.player.gang.push({name:gn,hp:35+ri(0,20),atk:6+ri(0,5),def:2+ri(0,4),loyalty:60+ri(0,30)});addLog('🦹 Recruited '+gn+' to your gang!');}const inv=p.caravan?p.caravan.goods:p.inv;const ex=inv.find(x=>x.id===loot);if(ex)ex.qty++;else inv.push({id:loot,qty:1});addLog('📦 Loot: '+GI[loot].n)}
-  AE.ok();addLog('Defeated '+c.enemy.n+'! +'+c.enemy.xp+'XP');if(c.enemy.type){const bi=G.bandits.findIndex(b=>b.id===c.enemy.id);if(bi>=0)G.bandits.splice(bi,1)}lvlCheck();G.cbt=null;closeModal();updateUI()}
+  AE.ok();addLog('Defeated '+c.enemy.n+'! +'+c.enemy.xp+'XP');const wep=GI[p.eq.weapon];if(wep)gainWeaponXP(wep.cat||'weapon');if(c.enemy.type){const bi=G.bandits.findIndex(b=>b.id===c.enemy.id);if(bi>=0)G.bandits.splice(bi,1)}lvlCheck();G.cbt=null;closeModal();updateUI()}
 function defeat(){const p=G.player;p.hp=p.mhp*0.25;p.gold=Math.floor(p.gold*0.7);const nc=G.cities.reduce((b,c)=>{const d=dt(p.x,p.y,c.x,c.y);return d<b.d?{c,d}:b},{c:G.cities[0],d:Infinity});p.x=nc.c.x;p.y=nc.c.y;p.path=[];p.moving=false;AE.er();addLog('Defeated! Lost 70% gold.');notify('Defeated!','er');G.cbt=null;closeModal();updateUI()}
 function lvlCheck(){const p=G.player;while(p.xp>=p.lvl*100){p.xp-=p.lvl*100;p.lvl++;p.sp++;p.mhp+=8;p.hp=Math.min(p.mhp,p.hp+8);addLog('⭐ LEVEL '+p.lvl+'!');notify('Level '+p.lvl+'!','ok')}}
 
@@ -803,7 +803,7 @@ function buyGood(gid,qty){
   if(used+qty*(g.w||1)>cap){notify('No capacity!','er');return}
   p.gold-=total;const inv=p.caravan?p.caravan.goods:p.inv;
   const ex=inv.find(x=>x.id===gid);if(ex){if(g.per)ex.perDays=Math.min(ex.perDays||g.per,g.per);ex.qty+=qty}else{inv.push({id:gid,qty,perDays:g.per||0})}
-  nc.supply[gid]=Math.max(1,(nc.supply[gid]||50)-qty);AE.cn();updateUI();openModal('market',true);
+  nc.supply[gid]=Math.max(1,(nc.supply[gid]||50)-qty);playActionSound('buy');AE.cn();updateUI();openModal('market',true);
 }
 function sellGood(gid,qty){
   const p=G.player;const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<50);if(!nc)return;
@@ -811,7 +811,7 @@ function sellGood(gid,qty){
   const g=GI[gid];const price=nc.prices[gid]||g.p;
   p.gold+=Math.floor(price*qty*(1+p.skills.trading*0.03));ex.qty-=qty;
   if(ex.qty<=0){const i=inv.indexOf(ex);inv.splice(i,1)}p.trades++;
-  nc.demand[gid]=Math.max(1,(nc.demand[gid]||50)-qty);AE.cn();updateUI();openModal('market',true);
+  nc.demand[gid]=Math.max(1,(nc.demand[gid]||50)-qty);playActionSound('buy');AE.cn();updateUI();openModal('market',true);
 }
 function totWt(){const p=G.player;const inv=p.caravan?p.caravan.goods:p.inv;return inv.reduce((s,x)=>{const g=GI[x.id];return s+(g?g.w||1:1)*x.qty},0)}
 
@@ -1074,7 +1074,7 @@ function gameTick(){
     // Process loans
     if(G.day%3===0)processLoans();
     // Process facilities — auto production
-    processFacilities();
+    processFacilities();processAutoTrade();updateHappiness();processBuildQueue();processMigration();processFactions();checkSeasonalEvent();checkDungeon();
     // World events + weather
     if(G.day>=G.nextEventDay){
       const et=pk(['boom','recession','scandal','disaster','golden','war','crash','tech']);
@@ -1641,7 +1641,7 @@ function mdProfile(){
     <div class="pb"><div class="pf" style="width:${p.xp/(p.lvl*100)*100}%;background:#ffd700"></div></div>
     <div class="sr"><span class="sl">Skill Points</span><span class="sv gld">${p.sp}</span></div></div>
     <div class="card"><h3>🎯 Skills</h3>
-    ${Object.entries(p.skills).map(([k,v])=>`<div class="sr"><span class="sl">${k.toUpperCase()}</span><span class="sv">Lvl ${v}</span></div>`).join('')}</div>
+    ${Object.entries(p.skills).map(([k,v])=>`<div class="sr"><span class="sl">${k.toUpperCase()}</span><span class="sv">Lvl ${v}</span></div>`).join('')}${p.weaponSkills?Object.entries(p.weaponSkills).filter(([k,v])=>v>=10).map(([k,v])=>`<div class="sr"><span class="sl">⚔️ ${k.toUpperCase()}</span><span class="sv">Lvl ${Math.floor(v/10)} (${v} uses)</span></div>`).join(''):''}</div>
     <div class="card"><h3>🎒 Equipment</h3>
     <div class="sr"><span class="sl">Weapon</span><span class="sv">${wep} ${p.eq._wDur!=null?'['+p.eq._wDur+'/'+GI[p.eq.weapon].dur+']':''}</span></div>
     <div class="sr"><span class="sl">Armor</span><span class="sv">${arm} ${p.eq._aDur!=null?'['+p.eq._aDur+'/'+GI[p.eq.armor].dur+']':''}</span></div>
@@ -1673,13 +1673,15 @@ function mdKingdom(){
         <div class="sr"><span><strong>${i===0?'⭐ ':''}${c.name}</strong></span><span style="font-size:9px;color:#8899aa">${getCityType(c.pop).toUpperCase()}</span></div>
         <div class="sr"><span class="sl">Pop</span><span class="sv">${fmt(c.pop)}</span></div>
         <div class="sr"><span class="sl">Stab</span><span class="sv">${c.stab.toFixed(0)}%</span></div>
+        <div class="sr"><span class="sl">😊 Happiness</span><span class="sv" style="color:${(c.happiness||50)>60?'#2ed573':(c.happiness||50)>30?'#ffd700':'#ff4757'}">${(c.happiness||50).toFixed(0)}%</span></div>
         <div class="sr"><span class="sl">Dev</span><span class="sv">Lvl ${dev}</span></div>
         <div class="sr"><span class="sl">Walls</span><span class="sv">${c.walls||0}</span></div>
         <div class="sr"><span class="sl">Garrison</span><span class="sv">${c.garrison||0}</span></div>
         <div class="flex-row mt8" style="gap:3px">
         <button class="btn btn4 bs" onclick="upgradeDev(${c.id})">📈 Dev $${fmt(dev*5000)}</button>
         <button class="btn btn1 bs" onclick="buildWalls(${c.id})">🧱 Walls $${fmt((c.walls+1)*3000)}</button>
-        <button class="btn btn3 bs" onclick="recruitGarrison(${c.id})">⚔️ Garrison $${fmt((c.garrison+1)*200)}</button>
+        <button class="btn btn3 bs" onclick="recruitGarrison(${c.id})">⚔️ Garrison $${fmt((c.garrison+1)*200)}</button><br>
+        <select onchange="setCityFocus(${c.id},this.value)" style="background:#0a0f18;color:#8899aa;border:1px solid #1e2d45;padding:2px 4px;border-radius:4px;font-size:8px;margin-top:3px"><option value="">🎯 Specialize...</option><option value="agri">🌾 Agriculture $2K</option><option value="mine">⛏️ Mining $3K</option><option value="manu">🔧 Manuf $5K</option><option value="trade">💰 Trade $4K</option><option value="military">⚔️ Military $6K</option></select>
         </div></div>`;
     }).join('')}
     <h3 class="mt8">📜 Policies</h3>
@@ -1691,6 +1693,9 @@ function mdKingdom(){
     <div class="card"><h3>⚔️ Military</h3>
     <div class="sr"><span class="sl">Armies</span><span class="sv">${pk.armies?pk.armies.length:0}</span></div>
     <button class="btn btn3 bs" onclick="raiseArmy()">⚔️ Raise $${fmt(pk.mil*50)}</button></div>
+    </div>
+    <h3 class="mt8">🏗️ Build Queue</h3>
+    ${pk.cities.map(c=>{if(!c.buildQueue||c.buildQueue.length===0)return'';return'<div class="card"><strong>'+c.name+'</strong>: '+c.buildQueue.map(j=>FT.find(x=>x.id===j.facId)?.ic||'?').join(' → ')+' ('+c.buildQueue[0].remaining+'d)</div>';}).join('')}
   </div>`;
 }
 function upgradeDev(cid){const p=G.player;const pk=p.kingdom;if(!pk)return;const c=pk.cities.find(x=>x.id===cid);if(!c||p.gold<5000)return;const d=c.development||1;const cost=d*5000;if(p.gold<cost){notify('Need $'+fmt(cost),'er');return}p.gold-=cost;c.development=d+1;c.pop=Math.floor(c.pop*1.05);c.stab=Math.min(100,c.stab+2);AE.cn();updateUI();openModal('kingdom',true)}
@@ -1699,6 +1704,352 @@ function recruitGarrison(cid){const p=G.player;const pk=p.kingdom;if(!pk)return;
 function setTax(rate){const pk=G.player.kingdom;if(!pk)return;const old=pk.tax;pk.tax=Math.max(5,Math.min(50,rate));pk.cities.forEach(c=>{c.stab=Math.max(10,Math.min(100,c.stab+(rate>old?-3:3)))});AE.cn();updateUI();openModal('kingdom',true)}
 function raiseArmy(){const p=G.player;const pk=p.kingdom;if(!pk)return;const cost=pk.mil*50;if(p.gold<cost){notify('Need $'+fmt(cost),'er');return}p.gold-=cost;const cap=pk.cities[0];const aid='a_pk_'+Date.now();pk.armies.push({id:aid,c:pk.name,sz:pk.mil,x:cap.x,y:cap.y,tx:cap.tx,ty:cap.ty,ord:'defend'});pk.mil+=Math.floor(pk.mil*0.1);AE.al();updateUI();openModal('kingdom',true)}
 
+
+
+
+
+
+// ═══ BATCH 5: Tutorial Quest Chain + Keyboard Shortcuts ═══
+// Tutorial system
+function initTutorial(){
+  if(localStorage.getItem('nd_tutorial_done'))return;
+  G.tutorial={step:0,active:true,steps:[
+    {title:'Welcome!',text:'You are in a living world. Click anywhere to move.',action:'move'},
+    {title:'First City',text:'Move near a city (colored circle) and click City in the HUD.',action:'city'},
+    {title:'Trade',text:'Buy low, sell high! Open Market and trade goods for profit.',action:'trade'},
+    {title:'Combat',text:'Enemies lurk in forests and mountains. Fight them for XP and gold!',action:'combat'},
+    {title:'Save',text:'Your progress is saved automatically. Use 💾 to save manually.',action:'save'},
+    {title:'You are ready!',text:'Explore, trade, fight, and build your empire!',action:'done'},
+  ]};
+  showTutorialStep(0);
+}
+function showTutorialStep(i){
+  if(!G||!G.tutorial)return;
+  const step=G.tutorial.steps[i];if(!step)return;
+  G.tutorial.step=i;
+  const el=document.createElement('div');
+  el.id='tutorialBox';
+  el.style.cssText='position:fixed;bottom:80px;left:10px;right:10px;max-width:400px;background:rgba(13,19,32,0.95);backdrop-filter:blur(20px);border:1px solid rgba(0,212,255,0.3);border-radius:12px;padding:14px;z-index:250;font-size:11px;color:#c0c8d4;box-shadow:0 8px 32px rgba(0,0,0,0.6)';
+  el.innerHTML='<div style=color:#00d4ff;font-weight:700;margin-bottom:4px>📖 '+step.title+' ('+(i+1)+'/'+G.tutorial.steps.length+')</div><div style=margin-bottom:8px>'+step.text+'</div><button class="btn btn1 bs" onclick="advanceTutorial()" style=float:right>Next ➤</button>';
+  const old=document.getElementById('tutorialBox');if(old)old.remove();
+  document.body.appendChild(el);
+}
+function advanceTutorial(){
+  if(!G||!G.tutorial)return;
+  const next=G.tutorial.step+1;
+  if(next>=G.tutorial.steps.length){
+    const el=document.getElementById('tutorialBox');if(el)el.remove();
+    G.tutorial.active=false;localStorage.setItem('nd_tutorial_done','1');
+    notifyAchievement('Tutorial Complete!','You are ready to conquer Nexus Dominion!');
+    return;
+  }
+  showTutorialStep(next);
+}
+// Keyboard shortcuts
+function handleKeyboard(e){
+  if(!G||!G.player||G.modal)return;
+  switch(e.key.toLowerCase()){
+    case'm':openModal('market');break;
+    case'i':openModal('inv');break;
+    case'c':interactCity();break;
+    case't':openModal('transport');break;
+    case's':saveGame();notify('Game saved','ok');break;
+    case'd':openModal('diplomacy');break;
+    case'f':openModal('finance');break;
+    case'k':if(G.player.kingdom)openModal('kingdom');break;
+    case'p':openModal('profile');break;
+    case'escape':closeModal();break;
+    case'+':case'=':zoomMap(0.15);break;
+    case'-':zoomMap(-0.15);break;
+  }
+}
+document.addEventListener('keydown',handleKeyboard);
+// ═══ BATCH 4: Companions + Achievement Animations + Sound FX ═══
+// Companion system
+function hireCompanion(){
+  const p=G.player;if(!p||p.gold<500)return;
+  if(!p.companions)p.companions=[];
+  if(p.companions.length>=3){notify('Max 3 companions','er');return}
+  const names=['Aldric the Bold','Lyra Shadowstep','Thorin Ironfist','Elena Stormwind','Garrick Black'];
+  const roles=['Warrior','Rogue','Mage','Healer','Ranger'];
+  const i=Math.floor(Math.random()*names.length);
+  if(p.gold<500){notify('Need $500','er');return}
+  p.gold-=500;
+  const comp={name:names[i],role:roles[i],hp:60,atk:8+ri(0,6),def:4+ri(0,4),loyalty:60+ri(0,40),xp:0};
+  p.companions.push(comp);
+  AE.ok();addLog(comp.name+' ('+comp.role+') joined!');notify(comp.name+' hired!','ok');updateUI();
+}
+function companionAssist(){
+  if(!G||!G.player||!G.player.companions||!G.cbt)return 0;
+  let bonus=0;
+  G.player.companions.forEach(c=>{
+    if(Math.random()<0.3){bonus+=c.atk;c.xp=(c.xp||0)+1;}
+  });
+  if(bonus>0)G.cbt.log.unshift('👥 Companions assist! +'+bonus+' damage');
+  return bonus;
+}
+// Achievement notification system
+function notifyAchievement(name,desc){
+  const el=document.createElement('div');
+  el.style.cssText='position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:300;background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(0,212,255,0.1));backdrop-filter:blur(16px);border:2px solid rgba(255,215,0,0.4);border-radius:12px;padding:10px 20px;font-size:11px;color:#ffd700;text-align:center;animation:achIn 0.5s ease,achOut 0.5s ease 4s forwards;box-shadow:0 0 30px rgba(255,215,0,0.3)';
+  el.innerHTML='<div style=font-size:14px>🏆</div><strong>'+name+'</strong><div style=font-size:9px;color:#8899aa>'+desc+'</div>';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),4500);
+  AE.ok();
+}
+// Add achievement animation CSS
+function injectAchievementCSS(){
+  if(document.getElementById('achCSS'))return;
+  const s=document.createElement('style');s.id='achCSS';
+  s.textContent='@keyframes achIn{from{opacity:0;transform:translateX(-50%) translateY(-20px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}@keyframes achOut{from{opacity:1;transform:translateX(-50%) translateY(0)}to{opacity:0;transform:translateX(-50%) translateY(-20px)}}';
+  document.head.appendChild(s);
+}
+// Enhanced sound effects for all actions
+function playActionSound(action){
+  if(!AE||!AE.c)return;
+  const sounds={attack:{f:300,t:'square',d:0.08,v:0.04},defend:{f:200,t:'sine',d:0.1,v:0.03},
+    buy:{f:600,t:'sine',d:0.06,v:0.03},sell:{f:800,t:'sine',d:0.06,v:0.03},
+    build:{f:400,t:'triangle',d:0.15,v:0.04},upgrade:{f:500,t:'triangle',d:0.12,v:0.04},
+    travel:{f:250,t:'sine',d:0.2,v:0.02},discover:{f:700,t:'sine',d:0.3,v:0.05},
+    warn:{f:150,t:'sawtooth',d:0.15,v:0.05},celebrate:function(){AE.p(523,'sine',0.08,0.04);setTimeout(()=>AE.p(659,'sine',0.08,0.04),70);setTimeout(()=>AE.p(784,'sine',0.1,0.04),140);}};
+  const s=sounds[action];if(!s)return;
+  if(action==='celebrate'){sounds.celebrate();return}
+  AE.p(s.f,s.t,s.d,s.v);
+}
+// ═══ BATCH 3: Seasonal Events + Dungeons + Weapon Skills ═══
+// Seasonal events system
+function checkSeasonalEvent(){
+  if(!G||G.day%25!==0)return;
+  const seasons=['Harvest Festival','War Season','Trade Boom','Plague Outbreak','Golden Age','Religious Pilgrimage'];
+  const evt=seasons[Math.floor(Math.random()*seasons.length)];
+  G.seasonalEvent={name:evt,day:G.day,dur:5+Math.floor(Math.random()*5)};
+  addNews(evt+' begins! Lasts '+G.seasonalEvent.dur+' days.',4);
+  switch(evt){
+    case'Harvest Festival':G.cities.forEach(c=>{c.supply.grain=(c.supply.grain||0)+50;c.happiness=Math.min(100,(c.happiness||50)+10)});break;
+    case'War Season':G.countries.forEach(co=>{if(Math.random()<0.3&&co.atWar.length===0){const tg=G.countries.filter(c=>c!==co);if(tg.length>0){const t=tg[Math.floor(Math.random()*tg.length)];co.atWar.push(t.name);t.atWar.push(co.name);addLog('⚔️ WAR: '+co.name+' vs '+t.name+'!')}}});break;
+    case'Trade Boom':G.player.gold+=Math.floor(G.player.gold*0.05);G.cities.forEach(c=>{GD.forEach(g=>{c.prices[g.id]=Math.floor(c.prices[g.id]*1.2)})});break;
+    case'Plague Outbreak':G.cities.forEach(c=>{c.pop=Math.floor(c.pop*0.95);c.happiness=Math.max(0,(c.happiness||50)-15)});break;
+    case'Golden Age':G.player.gold+=1000;G.cities.forEach(c=>{c.stab=Math.min(100,c.stab+10);c.happiness=Math.min(100,(c.happiness||50)+15)});break;
+    case'Religious Pilgrimage':G.cities.forEach(c=>{c.happiness=Math.min(100,(c.happiness||50)+5)});G.player.gold+=ri(200,800);break;
+  }
+}
+// Random dungeon system
+function checkDungeon(){
+  if(!G||!G.player||G.cbt)return;
+  if(G.tick%45===0&&Math.random()<0.15){
+    const tile=getTile(G.player.x,G.player.y);
+    if(tile===T.MOUNTAIN||tile===T.FOREST){
+      const bosses=[{n:'Cave Troll',hp:120,atk:18,def:10,lt:[500,1500],xp:80,ab:'stun'},
+        {n:'Skeleton King',hp:150,atk:20,def:12,lt:[800,2000],xp:100,ab:'poison'},
+        {n:'Dragon Whelp',hp:200,atk:25,def:15,lt:[1500,3000],xp:150,ab:'bleed'}];
+      const b=bosses[Math.floor(Math.random()*bosses.length)];
+      addLog('🏰 Dungeon found! '+b.n+' appears!');
+      notify('Dungeon: '+b.n+'!','ok');
+      startCombat({...b,mhp:b.hp,type:'dungeon'});
+    }
+  }
+}
+// Weapon skill proficiency system
+const WPN_SKILLS={};
+function gainWeaponXP(wpnType){
+  if(!G||!G.player)return;
+  if(!G.player.weaponSkills)G.player.weaponSkills={};
+  const ws=G.player.weaponSkills;
+  ws[wpnType]=(ws[wpnType]||0)+1;
+  const lvl=Math.floor(ws[wpnType]/10);
+  if(lvl>0&&ws[wpnType]%10===0){
+    addLog('⚔️ '+wpnType.toUpperCase()+' skill Lvl '+lvl+'! (+'+(lvl*2)+' ATK)');
+    notify(wpnType+' Lvl '+lvl+'!','ok');
+  }
+}
+function getWeaponBonus(){
+  if(!G||!G.player||!G.player.weaponSkills)return 0;
+  const wep=G.player.eq.weapon;if(!wep||!GI[wep])return 0;
+  const cat=GI[wep].cat||'weapon';
+  const skill=G.player.weaponSkills[cat]||0;
+  return Math.floor(skill/10)*2; // +2 ATK per 10 uses
+}
+// Wire weapon XP into combat
+function cbtAtkWithSkill(){
+  if(!G.cbt||!G.cbt.pt)return;const c=G.cbt,p=G.player;
+  const wep=GI[p.eq.weapon],arm=GI[p.eq.armor],acc=GI[p.eq.accessory];
+  const wpnBonus=getWeaponBonus();
+  const patk=(p.atk+(wep?wep.atk||0:0)+(acc?acc.atk||0:0)+wpnBonus)*(1+p.skills.combat*0.04);
+  const pdef=(p.def+(arm?arm.def||0:0)+(acc?acc.def||0:0))*(1+p.skills.combat*0.03);
+  const crit=Math.random()<0.08+p.skills.combat*0.02;
+  let dmg=Math.max(1,Math.floor(patk-c.enemy.def*(c.ignoreDef?1-c.ignoreDef:1)+ri(-2,3)));
+  if(c.dmgBoost){dmg=Math.floor(dmg*c.dmgBoost);delete c.dmgBoost}
+  if(c.adaptBonus){dmg=Math.floor(dmg*(1+c.adaptBonus));delete c.adaptBonus}
+  const compBonus=companionAssist();dmg+=compBonus;if(crit)dmg=Math.floor(dmg*1.8);c.ignoreDef=null;
+  c.enemy.hp-=dmg;c.log.unshift((crit?'💥CRIT! ':'')+'You hit for '+dmg);
+  if(crit)shakeScreen();AE.ht();
+  if(wep&&GI[wep])gainWeaponXP(GI[wep].cat||'weapon');
+  if(c.enemy.ab&&Math.random()<0.3&&!c.status.find(s=>s.type===c.enemy.ab)){
+    const st=STATUS[c.enemy.ab];c.status.push({type:c.enemy.ab,dur:st.dur});c.log.unshift(st.ic+' Enemy '+c.enemy.ab+'!');
+  }
+  if(wep&&wep.dur){p.eq._wDur=(p.eq._wDur||wep.dur)-1;if(p.eq._wDur<=0){p.eq.weapon=null;p.eq._wDur=0;addLog('⚠ Weapon broke!')}}
+  if(c.enemy.hp<=0){victory();return}
+  c.pt=false;
+  c.status.forEach(s=>{const st=STATUS[s.type];if(st.dmg>0){p.hp-=st.dmg;c.log.unshift(st.ic+' '+s.type+' deals '+st.dmg)}s.dur--;if(s.dur<=0){c.status=c.status.filter(x=>x!==s);c.log.unshift(s.type+' wore off')}});
+  const edmg=Math.max(1,Math.floor(c.enemy.atk-pdef+ri(-1,2)));p.hp-=edmg;c.log.unshift(c.enemy.n+' hits for '+edmg);
+  if(arm&&arm.dur){p.eq._aDur=(p.eq._aDur||arm.dur)-1;if(p.eq._aDur<=0){p.eq.armor=null;p.eq._aDur=0;addLog('⚠ Armor broke!')}}
+  if(p.hp<=0){defeat();return}
+  c.pt=true;updateUI();openModal('combat',true);
+}
+// ═══ BATCH 2: Building Queue + Migration + Faction Reputation ═══
+// Building queue system per city
+function queueBuild(cityId,facId){
+  const p=G.player;const pk=p.kingdom;const c=(pk?pk.cities.find(x=>x.id===cityId):null)||G.cities.find(x=>x.id===cityId);
+  if(!c)return;const ft=FT.find(x=>x.id===facId);if(!ft)return;
+  if(!c.buildQueue)c.buildQueue=[];
+  if(c.buildQueue.length>=3){notify('Queue full (max 3)','er');return}
+  c.buildQueue.push({facId,remaining:3,owner:'player'});
+  notify(ft.n+' queued in '+c.name,'ok');AE.cn();updateUI();
+}
+function processBuildQueue(){
+  if(!G||G.day%2!==0)return;
+  G.cities.forEach(c=>{
+    if(!c.buildQueue||c.buildQueue.length===0)return;
+    const job=c.buildQueue[0];job.remaining--;
+    if(job.remaining<=0){
+      const ft=FT.find(x=>x.id===job.facId);if(!ft)return;
+      if(!c.facilities)c.facilities=[];
+      if(!c.facilities.find(x=>x.type===job.facId)){
+        if(G.player.gold>=ft.cost){
+          G.player.gold-=ft.cost;
+          c.facilities.push({type:job.facId,level:1,eff:0.7+Math.random()*0.3,owner:job.owner||'player'});
+          addLog('🏗️ '+ft.n+' built in '+c.name);
+          notify(ft.n+' completed!','ok');
+        }
+      }
+      c.buildQueue.shift();
+    }
+  });
+}
+// Migration between cities
+function processMigration(){
+  if(!G||G.day%10!==0)return;
+  const cities=G.cities.filter(c=>c.pop>1000);
+  if(cities.length<2)return;
+  for(let i=0;i<Math.floor(cities.length/3);i++){
+    const from=cities[Math.floor(Math.random()*cities.length)];
+    const to=cities[Math.floor(Math.random()*cities.length)];
+    if(from===to)continue;
+    const fromHappy=from.happiness||50;const toHappy=to.happiness||50;
+    const toDev=to.development||1;const fromDev=from.development||1;
+    const pull=(toHappy-fromHappy)*0.3+(toDev-fromDev)*5;
+    if(pull>5&&from.pop>500){
+      const migrants=Math.floor(Math.min(from.pop*0.02,50+Math.random()*100));
+      from.pop-=migrants;to.pop+=migrants;
+      if(migrants>30)addLog('👥 '+migrants+' migrated to '+to.name);
+    }
+  }
+}
+// Faction reputation system
+function initFactions(){
+  if(!G.factions)G.factions=[
+    {id:'merchants',n:'Merchant Guild',power:30,rep:0,demands:'Low taxes'},
+    {id:'nobles',n:'Nobility',power:40,rep:10,demands:'Land rights'},
+    {id:'clergy',n:'Clergy',power:20,rep:20,demands:'Piety'},
+    {id:'peasants',n:'Peasantry',power:50,rep:0,demands:'Food & safety'},
+    {id:'military',n:'Military',power:25,rep:15,demands:'War & funding'},
+  ];
+}
+function processFactions(){
+  if(!G||G.day%12!==0)return;
+  if(!G.factions)initFactions();
+  const p=G.player;
+  G.factions.forEach(f=>{
+    // Rep decays slowly
+    f.rep=Math.max(-100,Math.min(100,f.rep+(Math.random()-0.5)*2));
+    // Faction events
+    if(f.rep<-50&&Math.random()<0.08){
+      addLog('⚠️ '+f.n+' is furious! '+f.demands);
+      notify(f.n+' demands action!','er');
+      if(p.kingdom){p.kingdom.cities[0].stab-=5;}
+    }
+    if(f.rep>70&&Math.random()<0.05){
+      p.gold+=Math.floor(f.power*10);
+      addLog('🎁 '+f.n+' supports you! +$'+fmt(Math.floor(f.power*10)));
+    }
+  });
+}
+function boostFaction(fid,amount){
+  const p=G.player;if(!G.factions||p.gold<amount)return;
+  const f=G.factions.find(x=>x.id===fid);if(!f)return;
+  p.gold-=amount;f.rep=Math.min(100,f.rep+Math.floor(amount/100));
+  AE.cn();notify(f.n+' reputation +'+Math.floor(amount/100),'ok');updateUI();
+}
+// ═══ BATCH 1: Trade Routes + City Specialization + Happiness ═══
+function autoTradeCaravan(){
+  if(!G||!G.player||!G.player.caravan)return;
+  const p=G.player;const cc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<50);
+  if(!cc)return;
+  // Find best trade in visited cities
+  let bestProfit=0,bestCity=null,bestGood=null;
+  G.cities.filter(c=>p.vis.includes(c.id)&&c.id!==cc.id).forEach(c=>{
+    p.caravan.goods.forEach(g=>{
+      const good=GI[g.id];if(!good)return;
+      const buyPrice=cc.prices[g.id]||good.p;
+      const sellPrice=c.prices[g.id]||good.p;
+      const profit=sellPrice-buyPrice;
+      if(profit>bestProfit&&g.qty>0){
+        bestProfit=profit;bestCity=c;bestGood={id:g.id,qty:Math.min(g.qty,5),profit:profit*g.qty};
+      }
+    });
+  });
+  if(bestCity&&bestGood&&bestGood.profit>20){
+    const g=GI[bestGood.id];
+    const total=Math.floor(bestGood.profit*0.7);
+    p.gold+=total;
+    const ex=p.caravan.goods.find(x=>x.id===bestGood.id);
+    if(ex){ex.qty-=bestGood.qty;if(ex.qty<=0)p.caravan.goods=p.caravan.goods.filter(x=>x.id!==bestGood.id)}
+    bestCity.supply[bestGood.id]=(bestCity.supply[bestGood.id]||0)+bestGood.qty;
+    addLog('📦 Caravan auto-traded '+g.n+' x'+bestGood.qty+' to '+bestCity.name+' (+$'+fmt(total)+')');
+  }
+}
+// City specialization system
+function setCityFocus(cityId,focus){
+  const pk=G.player.kingdom;if(!pk)return;
+  const c=pk.cities.find(x=>x.id===cityId);if(!c)return;
+  const costs={agri:2000,mine:3000,manu:5000,trade:4000,military:6000};
+  if(G.player.gold<costs[focus]){notify('Need $'+fmt(costs[focus]),'er');return}
+  G.player.gold-=costs[focus];c.focus=focus;
+  // Apply bonuses
+  if(focus==='agri'){c.pop=Math.floor(c.pop*1.02);}
+  if(focus==='mine'){c.gdp=(c.gdp||0)+10;}
+  if(focus==='manu'){if(c.facilities)c.facilities.forEach(f=>f.eff=Math.min(1.5,f.eff+0.1));}
+  if(focus==='trade'){G.player.gold+=Math.floor(c.pop*0.01);c.stab=Math.min(100,c.stab+5);}
+  if(focus==='military'){c.garrison=(c.garrison||0)+10;pk.mil+=20;}
+  AE.cn();notify(c.name+' focused on '+focus.toUpperCase(),'ok');updateUI();openModal('kingdom',true);
+}
+// Happiness system with revolt risk
+function updateHappiness(){
+  if(!G||G.day%3!==0)return;
+  G.cities.forEach(c=>{
+    c.happiness=c.happiness||50;
+    // Factors affecting happiness
+    const co=G.countries[c.cIdx];
+    const taxEffect=(co.tax-15)*-0.3; // high tax = unhappy
+    const stabEffect=(c.stab-50)*0.1;  // stability boosts happiness
+    const warEffect=co.atWar.length>0?-8:0;
+    const garrisonEffect=(c.garrison||0)>0?3:-2; // protection vs oppression
+    c.happiness=Math.max(0,Math.min(100,c.happiness+taxEffect+stabEffect+warEffect+garrisonEffect));
+    // Revolt check
+    if(c.happiness<15&&Math.random()<0.05&&c.owner!=='player'){
+      c.stab-=10;c.pop=Math.floor(c.pop*0.9);
+      addLog('🔥 Revolt in '+c.name+'! Pop: '+fmt(c.pop)+' Stability: '+c.stab.toFixed(0));
+      notify('Revolt in '+c.name+'!','er');
+    }
+    if(c.happiness>80&&c.pop<1000000)c.pop=Math.floor(c.pop*1.003); // growth from happiness
+  });
+}
+// Process caravan auto-trade every 15 days
+// Called from gameTick
+function processAutoTrade(){
+  if(!G||G.day%15!==0)return;
+  if(G.player.caravan&&G.player.caravan.goods&&G.player.caravan.goods.length>0)autoTradeCaravan();
+}
 // ─── PRESENTATION: CANVAS ───
 const canvas=document.getElementById('mapCanvas'),ctx=canvas.getContext('2d');
 let camX=600,camY=450,zoom=0.5,drag=false,dsx,dsy,dscx,dscy,particles=[],clickMarker=null;
