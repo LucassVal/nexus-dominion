@@ -42,13 +42,13 @@ body{background:radial-gradient(ellipse at 50% 0%,#0a1628 0%,#050a14 60%,#020510
 #hud .sp{width:1px;background:var(--glass-border)}
 /* ─── GLASS MODAL ─── */
 #modalOverlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-#modalOverlay.on{display:flex}
-.modal{background:var(--glass-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:16px;width:94vw;max-width:820px;max-height:85vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,0.7),inset 0 1px 0 var(--glass-highlight)}
-.mh{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--glass-border);position:sticky;top:0;background:rgba(13,19,32,0.85);backdrop-filter:blur(20px);z-index:1;border-radius:16px 16px 0 0}
+#modalOverlay.on{display:flex;align-items:flex-start;padding-top:70px}
+.modal{background:var(--glass-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:16px;width:94vw;max-width:820px;max-height:calc(100vh - 120px);overflow-y:auto;overflow-x:hidden;box-shadow:0 25px 80px rgba(0,0,0,0.7),inset 0 1px 0 var(--glass-highlight);-webkit-overflow-scrolling:touch}
+.mh{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--glass-border);position:sticky;top:0;background:rgba(13,19,32,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:10;border-radius:16px 16px 0 0;flex-shrink:0}
 .mh h2{font-size:14px;color:#e0e8f0;font-weight:600;text-shadow:0 0 10px rgba(0,212,255,0.2)}
 .mc{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:4px 10px;border-radius:6px;transition:all .2s}
 .mc:hover{color:var(--red);background:rgba(255,71,87,0.1)}
-.mb{padding:12px}
+.mb{padding:12px;min-height:60px}
 /* ─── 3D BUTTONS ─── */
 .btn{display:inline-block;padding:6px 12px;border-radius:7px;font-size:10px;cursor:pointer;border:1px solid transparent;font-weight:500;transition:all .2s;text-shadow:0 1px 2px rgba(0,0,0,0.5)}
 .btn1{background:linear-gradient(180deg,rgba(0,212,255,0.15),rgba(0,150,200,0.08));color:var(--accent);border-color:rgba(0,212,255,0.2)}
@@ -199,6 +199,7 @@ body{background:radial-gradient(ellipse at 50% 0%,#0a1628 0%,#050a14 60%,#020510
 <button id="hudTech" onclick="openModal('techtree')" title="Tech Tree — facility chains">🔬</button><span class="sp"></span>
 <button id="hudAch" onclick="openModal('achievements')" title="Conquistas desbloqueadas">🏆</button><span class="sp"></span>
 <button id="hudCamp" onclick="campAction()" title="Acampar para recuperar HP (precisa estar parado)">🏕️ Camp</button><span class="sp"></span>
+<button id="hudKingdom" onclick="openModal('kingdom')" title="Gerenciar reino (apenas King)" style="display:none">👑 Realm</button><span class="sp" id="hudKingdomSp" style="display:none"></span>
 <button onclick="zoomMap(0.15)" title="Zoom in">🔍+</button>
 <button onclick="zoomMap(-0.15)" title="Zoom out">🔍-</button>
 </div>
@@ -1279,6 +1280,7 @@ function updateUI(){
   document.getElementById('tbH').textContent=Math.max(0,p.hp).toFixed(0)+'/'+p.mhp;
   document.getElementById('tbL').textContent=p.lvl;document.getElementById('tbG').textContent='$'+fmt(p.gold);
   document.getElementById('tbD').textContent='Day '+G.day;document.getElementById('tbR').textContent=p.role.toUpperCase();
+  const isKing=!!p.kingdom;document.getElementById('hudKingdom').style.display=isKing?'':'none';document.getElementById('hudKingdomSp').style.display=isKing?'':'none';
   // Nearby city
   const nc=G.cities.find(c=>dt(p.x,p.y,c.x,c.y)<70);
   document.getElementById('tbNear').textContent=nc?nc.name+' ('+G.countries[nc.cIdx].name+')':'wilderness';
@@ -1366,6 +1368,7 @@ function openModal(nm,ref){
     case'achievements':h=mdAchievements();break;
     case'techtree':h=mdTechTree();break;
     case'profile':h=mdProfile();break;
+    case'kingdom':h=mdKingdom();break;
   }
   mc.innerHTML=h;if(!ref)ov.classList.add('on');
 }
@@ -1652,6 +1655,49 @@ function mdProfile(){
     <div class="sr"><span class="sl">Loans</span><span class="sv red">$${fmt(p.loans?p.loans.reduce((s,l)=>s+l.remain,0):0)}</span></div></div>
   </div>`;
 }
+
+
+function mdKingdom(){
+  if(!G||!G.player||!G.player.kingdom)return'<div class="mh"><h2>No Kingdom</h2></div><div class="mb">Found one first</div>';
+  const pk=G.player.kingdom;const p=G.player;
+  return`<div class="mh"><h2>👑 ${pk.name} — Kingdom</h2><button class="mc" onclick="closeModal()">x</button></div><div class="mb">
+    <div class="card"><h3>📊 Overview</h3>
+    <div class="sr"><span class="sl">Treasury</span><span class="sv gld">$${fmt(pk.treasury||0)}</span></div>
+    <div class="sr"><span class="sl">Population</span><span class="sv">${fmt(pk.cities.reduce((s,c)=>s+c.pop,0))}</span></div>
+    <div class="sr"><span class="sl">Cities</span><span class="sv">${pk.cities.length}</span></div>
+    <div class="sr"><span class="sl">Tax</span><span class="sv red">${pk.tax||20}%</span></div></div>
+    <h3 class="mt8">🏙️ Cities</h3>
+    ${pk.cities.map((c,i)=>{
+      const dev=c.development||1;
+      return`<div class="card">
+        <div class="sr"><span><strong>${i===0?'⭐ ':''}${c.name}</strong></span><span style="font-size:9px;color:#8899aa">${getCityType(c.pop).toUpperCase()}</span></div>
+        <div class="sr"><span class="sl">Pop</span><span class="sv">${fmt(c.pop)}</span></div>
+        <div class="sr"><span class="sl">Stab</span><span class="sv">${c.stab.toFixed(0)}%</span></div>
+        <div class="sr"><span class="sl">Dev</span><span class="sv">Lvl ${dev}</span></div>
+        <div class="sr"><span class="sl">Walls</span><span class="sv">${c.walls||0}</span></div>
+        <div class="sr"><span class="sl">Garrison</span><span class="sv">${c.garrison||0}</span></div>
+        <div class="flex-row mt8" style="gap:3px">
+        <button class="btn btn4 bs" onclick="upgradeDev(${c.id})">📈 Dev $${fmt(dev*5000)}</button>
+        <button class="btn btn1 bs" onclick="buildWalls(${c.id})">🧱 Walls $${fmt((c.walls+1)*3000)}</button>
+        <button class="btn btn3 bs" onclick="recruitGarrison(${c.id})">⚔️ Garrison $${fmt((c.garrison+1)*200)}</button>
+        </div></div>`;
+    }).join('')}
+    <h3 class="mt8">📜 Policies</h3>
+    <div class="card">
+    <div class="sr"><span class="sl">Tax Rate</span><span class="sv">${pk.tax}%</span></div>
+    <button class="btn btn4 bs" onclick="setTax(${Math.min(50,pk.tax+5)})">📈 +5%</button>
+    <button class="btn btn3 bs" onclick="setTax(${Math.max(5,pk.tax-5)})">📉 -5%</button>
+    </div>
+    <div class="card"><h3>⚔️ Military</h3>
+    <div class="sr"><span class="sl">Armies</span><span class="sv">${pk.armies?pk.armies.length:0}</span></div>
+    <button class="btn btn3 bs" onclick="raiseArmy()">⚔️ Raise $${fmt(pk.mil*50)}</button></div>
+  </div>`;
+}
+function upgradeDev(cid){const p=G.player;const pk=p.kingdom;if(!pk)return;const c=pk.cities.find(x=>x.id===cid);if(!c||p.gold<5000)return;const d=c.development||1;const cost=d*5000;if(p.gold<cost){notify('Need $'+fmt(cost),'er');return}p.gold-=cost;c.development=d+1;c.pop=Math.floor(c.pop*1.05);c.stab=Math.min(100,c.stab+2);AE.cn();updateUI();openModal('kingdom',true)}
+function buildWalls(cid){const p=G.player;const pk=p.kingdom;if(!pk)return;const c=pk.cities.find(x=>x.id===cid);if(!c||p.gold<3000)return;const w=c.walls||0;const cost=(w+1)*3000;if(p.gold<cost){notify('Need $'+fmt(cost),'er');return}p.gold-=cost;c.walls=w+1;c.stab=Math.min(100,c.stab+1);AE.cn();updateUI();openModal('kingdom',true)}
+function recruitGarrison(cid){const p=G.player;const pk=p.kingdom;if(!pk)return;const c=pk.cities.find(x=>x.id===cid);if(!c||p.gold<200)return;const g=c.garrison||0;const cost=(g+1)*200;if(p.gold<cost){notify('Need $'+fmt(cost),'er');return}p.gold-=cost;c.garrison=g+1;pk.mil+=5;AE.cn();updateUI();openModal('kingdom',true)}
+function setTax(rate){const pk=G.player.kingdom;if(!pk)return;const old=pk.tax;pk.tax=Math.max(5,Math.min(50,rate));pk.cities.forEach(c=>{c.stab=Math.max(10,Math.min(100,c.stab+(rate>old?-3:3)))});AE.cn();updateUI();openModal('kingdom',true)}
+function raiseArmy(){const p=G.player;const pk=p.kingdom;if(!pk)return;const cost=pk.mil*50;if(p.gold<cost){notify('Need $'+fmt(cost),'er');return}p.gold-=cost;const cap=pk.cities[0];const aid='a_pk_'+Date.now();pk.armies.push({id:aid,c:pk.name,sz:pk.mil,x:cap.x,y:cap.y,tx:cap.tx,ty:cap.ty,ord:'defend'});pk.mil+=Math.floor(pk.mil*0.1);AE.al();updateUI();openModal('kingdom',true)}
 
 // ─── PRESENTATION: CANVAS ───
 const canvas=document.getElementById('mapCanvas'),ctx=canvas.getContext('2d');
