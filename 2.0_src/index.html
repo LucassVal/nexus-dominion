@@ -290,7 +290,62 @@ const ORC={
     G.comps.forEach(c=>{c.avail=Math.floor(c.shares*0.4)});
     G.aiCEOs=[];for(let i=0;i<4;i++){const ai={id:'ceo_'+i,name:pk(['Lord Ashford','Lady Vex','Baron Krul','Duchess Mira']),personality:pk(['aggressive','conservative','innovative']),wealth:50000+ri(0,200000),companies:[],territory:pk(G.countries).name};G.aiCEOs.push(ai)}
     G.countries.forEach(co=>{if(RNG.next()<0.4){const sn=pk(['Royal','Crown','Imperial'])+' '+pk(['Resources','Trading Co','Armory']);const cid=G.comps.length;const bp2=15+RNG.next()*60;G.comps.push({id:cid,name:sn+' ('+co.name+')',cash:100000+RNG.next()*500000,ct:10+RNG.next()*70,emp:ri(100,1000),rev:10000+ri(0,50000),stock:bp2,hist:Array(30).fill(bp2),shares:20000+ri(0,80000),avail:0,owner:co.name,ownerType:'kingdom_state'});G.comps[G.comps.length-1].avail=Math.floor(G.comps[G.comps.length-1].shares*0.2)}});
+  },
+  tick(){
+    if(!G||!G.player)return;G.day++;
+    if(G.player.path.length>0&&G.player.moving)movePlayer();
+    this._tickEntities();
+    if(G.day%8===0)countryAI();
+    if(G.day%6===0&&G.missions.filter(function(m){return !m.ok}).length<3)genMissions();
+    checkSeasonalEvent();
+    if(G.day%2===0)G.comps.forEach(function(c){c.stock=Math.max(1,c.stock*(1+(RNG.next()-0.48)*0.05));c.hist.push(c.stock);if(c.hist.length>30)c.hist.shift()});
+    updateStocks();
+    if(G.day%3===0)G.cities.forEach(function(c){GD.forEach(function(g){c.prices[g.id]=Math.max(1,g.p*(1+(c.demand[g.id]-c.supply[g.id])*0.003+rf(-0.08,0.08)))})});
+    processDecay();processLoans();processFacilities();processAutoTrade();
+    this._tickEconomy();
+    updateHappiness();processMigration();processFactions();
+    if(G.day>=G.nextEventDay)this._triggerWorldEvent();
+    if(G.day%10===0)this._payDividends();
+    if(G.day%5===0)this._collectTaxes();
+    if(G.player&&G.player.abilityCd>0)G.player.abilityCd--;
+    if(G.player.role==='ceo')G.player.gold+=ri(500,1500);
+    if(G.player.companies&&G.player.companies.length>0)G.player.companies.forEach(function(co){var rev=co.cities.length*(1500+RNG.next()*2000);G.player.gold+=rev;co.rev=rev});
+    processBuildQueue();
+    if(G.tick%15===0)checkAchievements();
+    updateUI();
+  },
+  _tickEntities(){
+    G.aiTraders.forEach(function(t){var nc=G.cities.find(function(c){return dt(t.x,t.y,c.x,c.y)<50});
+    if(nc&&RNG.next()<0.3){var cheap=GD.filter(function(g){return nc.prices[g.id]<g.p*0.9&&t.gold>=nc.prices[g.id]}).slice(0,3);
+    cheap.forEach(function(g){var qty=ri(1,5),cost=nc.prices[g.id]*qty;if(t.gold>=cost){t.gold-=cost;var ex=t.goods.find(function(x){return x.id===g.id});if(ex)ex.qty+=qty;else t.goods.push({id:g.id,qty:qty});nc.supply[g.id]=Math.max(1,(nc.supply[g.id]||50)-qty)}});
+    for(var i=t.goods.length-1;i>=0;i--){var x=t.goods[i];var g=GI[x.id];if(g&&nc.prices[g.id]>g.p*1.1){t.gold+=nc.prices[g.id]*x.qty;nc.demand[g.id]=Math.max(1,(nc.demand[g.id]||50)-x.qty);t.goods.splice(i,1)}}}
+    if(!nc||RNG.next()<0.15){if(RNG.next()<0.08){var tc=pk(G.cities);t.tx=tc.tx;t.ty=tc.ty}}
+    var ttx=t.tx*TILE+TILE/2,tty=t.ty*TILE+TILE/2,dx=ttx-t.x,dy=tty-t.y,d=Math.hypot(dx,dy);
+    if(d>3){t.x=GLOBE.wrapX(t.x+dx*0.08);t.y=cl(t.y+dy*0.08,0,MR()*TILE);warpEntity(t,false)}});
+    G.bandits.forEach(function(b){if(RNG.next()<0.15){b.tx=cl(b.tx+ri(-2,2),1,MC()-2);b.ty=cl(b.ty+ri(-2,2),1,MR()-2)}b.x+=(b.tx*TILE+TILE/2-b.x)*0.08;b.y+=(b.ty*TILE+TILE/2-b.y)*0.08;warpEntity(b,false)});
+    if(G.player.camping){G.player.hp=Math.min(G.player.mhp,G.player.hp+2);G.player.cturns--;if(G.player.cturns<=0)G.player.camping=false}
+    if(G.player.moving&&RNG.next()<0.06&&!G.cbt){var tile=getTile(G.player.x,G.player.y);if(tile===T.WATER&&G.player.corsair&&G.player.corsair.active){if(RNG.next()<0.3){var ship={n:pk(['Merchant Galley','Trade Cargo','Royal Frigate','Pirate Sloop']),hp:60+ri(0,40),atk:10+ri(0,10),def:4+ri(0,6),lt:[200,800],xp:30,ab:'bleed'};startCombat({n:ship.n,hp:ship.hp,atk:ship.atk,def:ship.def,lt:ship.lt,xp:ship.xp,ab:ship.ab,mhp:ship.hp,type:'ship'});}}else{var t=pk(Object.keys(EN));var e=EN[t];startCombat({n:e.n,hp:e.hp,atk:e.atk,def:e.def,lt:e.lt,xp:e.xp,ab:e.ab,mhp:e.hp,type:t})}}
+    if(G.player.bounty>500&&RNG.next()<0.04&&!G.cbt){var bh={hp:EN.merc.hp+Math.floor(G.player.bounty/100),atk:EN.merc.atk+3,def:EN.merc.def,lt:EN.merc.lt,xp:EN.merc.xp,ab:EN.merc.ab};bh.n='Bounty Hunter';bh.mhp=bh.hp;startCombat(bh);addLog('Bounty hunter!')}
+    checkDungeon();
+  },
+  _tickEconomy(){
+    if(G.day%15===0&&G.aiCEOs)G.aiCEOs.forEach(function(ai){ai.wealth+=ri(100,2000);if(ai.wealth>30000&&RNG.next()<0.25){var cn2=pk(['Nova','Atlas','Zenith','Apex','Prime'])+' '+pk(['Ventures','Holdings','Labs','Group']);var cid2=G.comps.length;var bp4=3+RNG.next()*30;G.comps.push({id:cid2,name:cn2,cash:10000+RNG.next()*100000,ct:1+RNG.next()*30,emp:ri(5,100),rev:1000+ri(0,5000),stock:bp4,hist:Array(30).fill(bp4),shares:3000+ri(0,15000),avail:0,owner:'ai',ownerType:'ai_private',ceoId:ai.id});G.comps[G.comps.length-1].avail=Math.floor(G.comps[G.comps.length-1].shares*0.3);ai.wealth-=10000;}});
+  },
+  _triggerWorldEvent(){
+    var et=pk(['boom','recession','scandal','disaster','golden','war','crash','tech']);
+    G.nextEventDay=G.day+ri(5,15);
+    if(et==='boom'){G.cities.forEach(function(c){c.gdp+=10});addNews('Economic boom!',3)}
+    else if(et==='golden'){G.comps.forEach(function(c){c.stock*=1.2});addNews('Golden Age!',3)}
+    else addNews(et.toUpperCase()+' event!',3);
+  },
+  _payDividends(){
+    G.comps.forEach(function(co){if(co.rev>0&&co.shares>0){var payout=Math.floor(co.rev*0.02);if(co.owner==='player'){G.player.gold+=payout}else if(G.player.portfolio&&G.player.portfolio[co.id]){var pt=G.player.portfolio[co.id];var share=Math.floor(payout*pt.shares/co.shares);G.player.gold+=share;if(share>100)addLog('Dividend: $'+fmt(share))}}});
+  },
+  _collectTaxes(){
+    if(G.player.companies)G.player.companies.forEach(function(co){if(co.cities&&co.cities.length>0)co.cities.forEach(function(cid){var ct=G.cities.find(function(c){return c.id===cid});if(ct){var country=G.countries[ct.cIdx];var taxRate=(country.gov&&country.gov.taxRate)||15;var tax=Math.floor(co.rev*taxRate/100);G.player.gold-=tax;country.treasury+=tax;}})});
+    if(G.player.gold>100000){var wealthTax=Math.floor(G.player.gold*0.01);G.player.gold-=wealthTax;}
   }
+
 };
 
 // ─── INFRASTRUCTURE: AUDIO [CONTEXT: RENDER] ───
@@ -1035,120 +1090,10 @@ function getStateSnapshot(){
 function gameTick(){
   if(!G||!G.player)return;
   G.tick++;
-  // Player movement — every tick
-  if(G.player.path&&G.player.path.length>0&&G.player.moving)movePlayer();
   if(G.tick%3===0){
     G.day++;
-    // AI traders - actually trade + smooth movement
-    G.aiTraders.forEach(t=>{
-      // Check if at a city
-      const nc=G.cities.find(c=>dt(t.x,t.y,c.x,c.y)<50);
-      if(nc&&RNG.next()<0.3){
-        // Buy low
-        const cheap=GD.filter(g=>nc.prices[g.id]<g.p*0.9&&t.gold>=nc.prices[g.id]).slice(0,3);
-        cheap.forEach(g=>{const qty=ri(1,5),cost=nc.prices[g.id]*qty;if(t.gold>=cost){t.gold-=cost;const ex=t.goods.find(x=>x.id===g.id);if(ex)ex.qty+=qty;else t.goods.push({id:g.id,qty});nc.supply[g.id]=Math.max(1,(nc.supply[g.id]||50)-qty)}});
-        // Sell high
-        for(let i=t.goods.length-1;i>=0;i--){const x=t.goods[i];const g=GI[x.id];if(g&&nc.prices[g.id]>g.p*1.1){t.gold+=nc.prices[g.id]*x.qty;nc.demand[g.id]=Math.max(1,(nc.demand[g.id]||50)-x.qty);t.goods.splice(i,1)}}
-      }
-      // Move toward target (lerp smooth)
-      if(!nc||RNG.next()<0.15){if(RNG.next()<0.08){const tc=pk(G.cities);t.tx=tc.tx;t.ty=tc.ty}}
-      const ttx=t.tx*TILE+TILE/2,tty=t.ty*TILE+TILE/2,dx=ttx-t.x,dy=tty-t.y,d=Math.hypot(dx,dy);
-      if(d>3){t.x=GLOBE.wrapX(t.x+dx*0.08);t.y=cl(t.y+dy*0.08,0,MR()*TILE);warpEntity(t,false)}
-    });
-    // Bandits
-    G.bandits.forEach(b=>{if(RNG.next()<0.15){b.tx=cl(b.tx+ri(-2,2),1,COLS-2);b.ty=cl(b.ty+ri(-2,2),1,ROWS-2)}b.x+=(b.tx*TILE+TILE/2-b.x)*0.08;b.y+=(b.ty*TILE+TILE/2-b.y)*0.08;warpEntity(b,false)});
-    // Camping
-    if(G.player.camping){G.player.hp=Math.min(G.player.mhp,G.player.hp+2);G.player.cturns--;if(G.player.cturns<=0)G.player.camping=false}
-    // Country AI
-    if(G.day%8===0)countryAI();
-    // Missions
-    if(G.day%6===0&&G.missions.filter(m=>!m.ok).length<3)genMissions();
-    // Stock prices
-    if(G.day%2===0)G.comps.forEach(c=>{c.stock=Math.max(1,c.stock*(1+(RNG.next()-0.48)*0.05));c.hist.push(c.stock);if(c.hist.length>30)c.hist.shift()});
-    // Update facility-owned company stocks (from takeovers)
-    updateStocks();
-    // City prices
-    if(G.day%3===0)G.cities.forEach(c=>{GD.forEach(g=>{c.prices[g.id]=Math.max(1,g.p*(1+(c.demand[g.id]-c.supply[g.id])*0.003+rf(-0.08,0.08)))})});
-    // Decay
-    processDecay();
-    // Process loans
-    if(G.day%3===0)processLoans();
-    // Process facilities — auto production
-    processFacilities();processAutoTrade();updateHappiness();processBuildQueue();processMigration();processFactions();checkSeasonalEvent();checkDungeon();
-    // World events + weather
-    if(G.day>=G.nextEventDay){
-      const et=pk(['boom','recession','scandal','disaster','golden','war','crash','tech']);
-      addLog('🌍 World Event: '+et);G.nextEventDay=G.day+ri(8,15);
-      // Actual effects
-      if(et==='boom')G.cities.forEach(c=>{Object.keys(c.prices).forEach(k=>{c.prices[k]=Math.floor(c.prices[k]*1.25)})});
-      if(et==='recession'||et==='crash')G.cities.forEach(c=>{Object.keys(c.prices).forEach(k=>{c.prices[k]=Math.floor(c.prices[k]*0.75)})});
-      if(et==='disaster'){const c=pk(G.cities);c.stab=Math.max(5,c.stab-30);addLog('💥 '+c.name+' hit by disaster!');addNews('Disaster strikes '+c.name+'!',3)}
-      if(et==='golden'){G.player.gold+=ri(500,2000);notify('Golden Age bonus!','ok');addNews('Golden Age brings prosperity!',2)}
-      if(et==='boom')addNews('Economic boom — prices surge 25%!',2);
-      if(et==='recession')addNews('Recession hits — prices drop 25%',2);
-    }
-    if(G.day>=G.weather.startDay+G.weather.dur){G.weather={type:pk(['clear','clear','rain','rain','fog']),intensity:rf(0.3,1),startDay:G.day,dur:ri(3,8)};if(G.weather.type!=='clear')addLog('🌦️ '+G.weather.type.toUpperCase()+' for '+G.weather.dur+' days')}
-    // Random encounter
-    if(G.player.moving&&RNG.next()<0.06&&!G.cbt){const tile=getTile(G.player.x,G.player.y);if(tile===T.WATER&&G.player.corsair&&G.player.corsair.active){if(RNG.next()<0.3){const ship={n:pk(['Merchant Galley','Trade Cargo','Royal Frigate','Pirate Sloop']),hp:60+ri(0,40),atk:10+ri(0,10),def:4+ri(0,6),lt:[200,800],xp:30,ab:'bleed'};startCombat({...ship,mhp:ship.hp,type:'ship'});}}else{const t=pk(Object.keys(EN));const e=EN[t];startCombat({...e,n:e.n,mhp:e.hp,type:t})}}
-    // Bounty hunter spawns if bounty > 500
-    if(G.player.bounty>500&&RNG.next()<0.04&&!G.cbt){const bh={...EN.merc};bh.n='Bounty Hunter';bh.mhp=bh.hp+Math.floor(G.player.bounty/100);bh.atk+=3;startCombat(bh);addLog('⚖️ A bounty hunter attacks!')}
-    // Company revenue — all player companies generate income
-    if(G.player.companies&&G.player.companies.length>0)G.player.companies.forEach(co=>{const rev=co.cities.length*(1500+RNG.next()*2000);G.player.gold+=rev;co.rev=rev});
-    // Stock dividends — public companies pay shareholders every 10 days
-    if(G.day%10===0){
-      G.comps.forEach(co=>{
-        if(co.rev>0&&co.shares>0){
-          const payout=Math.floor(co.rev*0.02); // 2% of revenue as dividend
-          if(co.owner==='player'){
-            G.player.gold+=payout; // player-owned company: full dividend
-          }else if(G.player.portfolio&&G.player.portfolio[co.id]){
-            const pt=G.player.portfolio[co.id];
-            const share=Math.floor(payout*pt.shares/co.shares);
-            G.player.gold+=share;
-            if(share>100)addLog('📈 '+co.name+' dividend: $'+fmt(share));
-          }
-        }
-      });
-    }
-    // Also CEO role gets bonus
-    if(G.player.role==='ceo')G.player.gold+=ri(500,1500);
-    // AI CEO behavior (every 15 days)
-    if(G.day%15===0&&G.aiCEOs){
-      G.aiCEOs.forEach(ai=>{
-        ai.wealth+=ri(100,2000); // passive income
-        if(ai.wealth>30000&&RNG.next()<0.25){
-          // AI tries to expand or found new company
-          const cn2=pk(['Nova','Atlas','Zenith','Apex','Prime'])+' '+pk(['Ventures','Holdings','Labs','Group']);
-          const cid2=G.comps.length;const bp4=3+RNG.next()*30;
-          G.comps.push({id:cid2,name:cn2,cash:10000+RNG.next()*100000,ct:1+RNG.next()*30,emp:ri(5,100),rev:1000+ri(0,5000),stock:bp4,hist:Array(30).fill(bp4),shares:3000+ri(0,15000),avail:0,owner:'ai',ownerType:'ai_private',ceoId:ai.id});
-          G.comps[G.comps.length-1].avail=Math.floor(G.comps[G.comps.length-1].shares*0.3);
-          ai.wealth-=10000;
-        }
-      });
-    }
-    // Player ability cooldown
-    if(G.player&&G.player.abilityCd>0)G.player.abilityCd--;
-    // === MULTI-LAYER TAXATION (every 5 days) ===
-    if(G.day%5===0){
-      // 1. Kingdom corporate tax on player companies
-      if(G.player.companies)G.player.companies.forEach(co=>{
-        if(co.cities&&co.cities.length>0){
-          co.cities.forEach(cid=>{
-            const ct=G.cities.find(c=>c.id===cid);
-            if(ct){const country=G.countries[ct.cIdx];const taxRate=(country.gov&&country.gov.taxRate)||15;
-              const tax=Math.floor(co.rev*taxRate/100);G.player.gold-=tax;country.treasury+=tax;}
-          });
-        }
-      });
-      // 2. Territory license check (warn if operating without license)
-      // (licenses system TBD — currently free pass)
-      // 3. Wealth tax on player gold (>100K: 1% per 5 days)
-      if(G.player.gold>100000){const wealthTax=Math.floor(G.player.gold*0.01);G.player.gold-=wealthTax;}
-    }
+    ORC.tick();
   }
-  // Achievements + bounty
-  if(G.tick%15===0)checkAchievements();
-  updateUI();
 }
 function movePlayer(){
   const p=G.player;if(!p.path||p.path.length===0){p.moving=false;return}
